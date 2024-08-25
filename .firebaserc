@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "rl80-43fed"
+  },
+  "targets": {},
+  "etags": {
+    "rl80-43fed": {
+      "extensionInstances": {}
+    }
+  },
+  "dataconnectEmulatorConfig": {}
+}
