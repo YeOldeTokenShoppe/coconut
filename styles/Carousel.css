@@ -1,0 +1,267 @@
+@import url("https://fonts.cdnfonts.com/css/poppins");
+
+.carousel-container {
+  font-family: "Poppins", sans-serif;
+  color: #333;
+  height: 35rem;
+  width: 100%;
+  transform: scale(1);
+  /* background: radial-gradient(
+      circle at 60% 50%,
+      #ff4a4a 0 4vmin,
+      #fff0 50vmin 100%
+    ),
+    repeating-conic-gradient(
+      from 0deg at 60% 50%,
+      #ff4a4a 0 6deg,
+      #e6282a 0 12deg
+    ); */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  position: relative;
+}
+
+#carousel {
+  width: 150px;
+  height: 250px;
+  transform: perspective(1000px);
+  margin-top: 0px;
+  transform-style: preserve-3d;
+  animation: var(--rotation-time) carousel linear reverse infinite;
+  rotate: x 0deg;
+  transition: margin-top 1s ease-in-out;
+  transform: scale(0.5);
+}
+
+#carousel:hover {
+  /* margin-top: -150px; */
+  /* rotate: x -15deg; */
+}
+
+#carousel::after,
+#carousel::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 900px;
+  height: 900px;
+  border-radius: 50%;
+  transform: translate(-50%, 50%) rotateX(90deg);
+  background: radial-gradient(
+      circle at 50% 50%,
+      /* Same position */ #ff4a4a 0 4vmin,
+      /* Red color for the inner circle */ #fff0 50vmin 100%
+        /* Transparent for the outer area */
+    ),
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      /* Same position and angle */ #ff4a4a 0 6deg,
+      /* Red color for the first segment */ #e6282a 0 12deg
+        /* Darker red for the second segment */
+    ),
+    conic-gradient(
+      from 180deg,
+      /* Starting angle for a different rotation */ #ff4a4a,
+      /* Red color */ #e6282a /* Darker red */
+    );
+  z-index: -1;
+}
+/* Add the mirrored structure on top of the circle */
+#carousel::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0; /* Position it at the top */
+  transform: translate(-50%, -50%) rotateX(90deg);
+  width: 900px; /* Same width as the bottom */
+  height: 900px; /* Same height as the bottom */
+  border-radius: 50%; /* Keep it circular */
+  z-index: -1; /* Send it behind the carousel */
+
+  /* Mirroring the bottom gradient and background */
+  background: radial-gradient(
+      circle at center,
+      transparent 40 350px,
+      /* Adjust as needed */ #d00 350px,
+      #900 400px,
+      #d00 450px
+    ),
+    conic-gradient(
+      from 180deg,
+      /* Use the same gradient or colors as the bottom */ #ff4a4a,
+      #e6282a
+    );
+}
+/* #carousel::before {
+  bottom: auto;
+  top: 0;
+  transform: translate(-50%, -50%) rotateX(90deg);
+  background-image: url("/pinwheel.webp");
+} */
+
+.element {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #b8860b, #ffd700, #b8860b) 70px / 10px
+    no-repeat;
+  transform: rotateY(calc((var(--item) - 1) * 360deg / var(--elements)))
+    translateZ(400px);
+  transform-style: preserve-3d;
+}
+
+.element::after,
+.element::before {
+  position: absolute;
+  bottom: -52px;
+  border: 1px solid #9097a0;
+  background: linear-gradient(to bottom, #c0c7d0 0%, #606770 100%);
+  height: 50px;
+}
+
+.element::after {
+  content: ""; /* Reset the content property */
+  background-image: url("/circusStars.jpg"); /* Set the background image */
+  background-size: contain; /* Make the image as large as possible within the div, without stretching the image */
+
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 50px;
+  transform: translateZ(35px);
+}
+
+.element::before {
+  content: ""; /* Reset the content property */
+  background-image: url("/stripes.jpg"); /* Set the background image */
+  background-size: contain; /* Make the image as large as possible within the div, without stretching the image */
+
+  left: 150px;
+  width: 82px;
+  transform-origin: left center;
+  transform: translateZ(35px) rotateY(16deg);
+}
+
+.horse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  height: 150px;
+  width: 150px;
+  transform: translate(-50%, -50%);
+  background-size: contain;
+  background-repeat: no-repeat; /* Added to prevent repeating of the image */
+  animation: calc(var(--rotation-time) / var(--elements)) horse ease-in-out
+    infinite;
+  animation-delay: calc(var(--item) * -0.5s);
+}
+@keyframes carousel {
+  0% {
+    transform: perspective(1000px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateY(360deg);
+  }
+}
+
+@keyframes horse {
+  0%,
+  100% {
+    transform: translate(-50%, -30%);
+  }
+  50% {
+    transform: translate(-50%, -70%);
+  }
+}
+/* Media Queries for Different Screen Sizes */
+@media (min-width: 1200px) {
+  .carousel-container {
+    height: 10rem;
+    transform: scale(1); /* Full size */
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
+  .carousel-container {
+    height: 5rem; /* Adjust height */
+    transform: scale(0.7); /* Scaled down */
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+  .carousel-container {
+    height: 5rem; /* Adjust height */
+    transform: scale(0.7); /* Scaled down */
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .carousel-container {
+    height: 25rem; /* Adjust height */
+    transform: scale(0.7); /* Scaled down further */
+  }
+}
+
+@media (max-width: 575px) {
+  .carousel-container {
+    height: 25rem; /* Adjust height */
+    transform: scale(0.6); /* Smallest scale */
+  }
+}
+@media (max-width: 375px) {
+  .carousel-container {
+    height: 5rem;
+    transform: scale(0.4);
+  }
+}
+
+.pageBackground {
+  /* background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite; */
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.top-structure {
+  position: absolute;
+  left: 50%;
+  top: 0; /* Position it at the top */
+  width: 900px; /* Same width as the bottom */
+  height: 900px; /* Same height as the bottom */
+  border-radius: 50%; /* Keep it circular */
+  transform: translate(-50%, -50%) rotateX(90deg); /* Align it flat */
+  z-index: -1; /* Place behind the carousel elements */
+  transform: rotateY(calc((var(--item) - 1) * 360deg / var(--elements)))
+    translateZ(400px);
+  transform-style: preserve-3d;
+  /* Mirroring the bottom gradient and background */
+  background: radial-gradient(
+      circle at center,
+      transparent 40 350px,
+      /* Adjust as needed */ #d00 350px,
+      #900 400px,
+      #d00 450px
+    ),
+    conic-gradient(from 180deg, #ff4a4a, #e6282a);
+}

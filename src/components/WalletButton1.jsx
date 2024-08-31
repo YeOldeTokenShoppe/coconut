@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Link, Button, secondaryButtonText, Box } from "@chakra-ui/react";
 import { ConnectButton, lightTheme } from "thirdweb/react";
 import { CHAIN2 } from "../utilities/constants";
-import { thirdwebClient } from "../../src/utilities/client";
+import { client } from "../../src/utilities/client";
 import { createWallet, walletConnect, inAppWallet } from "thirdweb/wallets";
 import { ThirdwebProvider } from "../utilities/thirdweb";
 import { useClient } from "wagmi";
@@ -44,7 +44,7 @@ function WalletButton1() {
   return (
     <ConnectButton
       label={"sign-in"}
-      client={thirdwebClient}
+      client={client}
       chain={CHAIN2}
       // autoConnect={true}
       wallets={wallets}

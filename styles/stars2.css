@@ -1,0 +1,84 @@
+:root {
+  --unique-blackberry: #1e1f2a;
+  --unique-wisteria: #c79de2;
+  --unique-bubblegum: #fca8ce;
+  --unique-lemon-drop: #fecb40;
+  --unique-grass: #99c868;
+  --unique-serene-sea: #60c5dd;
+}
+
+.star-badge__char {
+  --char-width: 2rem;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--char-width);
+  height: var(--char-width);
+  /* border-radius: 50%; */
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  background: linear-gradient(
+    to right,
+    var(--unique-wisteria),
+    var(--unique-bubblegum),
+    var(--unique-lemon-drop),
+    var(--unique-grass),
+    var(--unique-serene-sea)
+  );
+}
+
+@keyframes rotateBadge {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.star-badge {
+  --badge-size: 12rem;
+  --badge-color: var(--black);
+
+  justify-content: center;
+  align-items: center;
+  width: 11rem;
+  height: 11rem;
+  background: var(--black);
+  /* border-radius: 100%; */
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}
+
+.rotating-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: rotateBadge 20s linear infinite;
+}
+
+.content-wrapper {
+  margin: 0;
+  /* display: block; */
+  position: relative;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  width: 11rem;
+  height: 11rem;
+}

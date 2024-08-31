@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-}
+module.exports = {
+  reactStrictMode: false,
+  webpack: (config, { isServer, dev }) => {
+    // Enable source maps in production
+    if (!dev && !isServer) {
+      config.devtool = "source-map";
+    }
 
-module.exports = nextConfig
+    return config;
+  },
+};
