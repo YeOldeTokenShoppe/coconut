@@ -108,8 +108,10 @@ export default function BurningEffect() {
         0
       );
 
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+    }
 
     gsap.set(".page", {
       opacity: 1,

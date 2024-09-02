@@ -968,8 +968,8 @@ ul.icons li .icon:hover:active {
 } */
 /* Styles for logo */
 #logo img {
-  width: 8rem;
-  height: 8rem;
+  width: 6em;
+  height: 6em;
   object-fit: contain;
   display: block;
   /* animation: pulse 2s infinite; */
@@ -1594,24 +1594,22 @@ h3 {
 }
 .socials {
   transition: transform 0.3s ease-in-out;
-  position: relative;
-  z-index: 99999;
+  /* position: relative; */
 }
 
 .socials:hover {
   transform: scale(1.2);
-  z-index: 99999;
+
   color: #b26e9c !important;
 }
 .socials1 {
   transition: transform 0.3s ease-in-out;
-  position: relative;
-  z-index: 99999;
+  /* position: relative; */
 }
 
 .socials1:hover {
   transform: scale(1.2);
-  z-index: 99999;
+
   color: goldenrod !important;
 }
 /* .socials {
@@ -1989,7 +1987,7 @@ s.box .shimmer {
   margin-bottom: 2rem;
 }
 
-/* @media screen and (max-width: 1280px) {
+@media screen and (max-width: 1280px) {
   #footer .inner {
     padding: 6rem 0 4rem 0;
   }
@@ -2011,7 +2009,7 @@ s.box .shimmer {
   #footer .inner {
     padding: 2rem 0 0.1rem 0;
   }
-} */
+}
 
 /* Statistical Displays */
 .box {
@@ -2271,8 +2269,8 @@ ul.icons li .icon:hover:active {
 } */
 /* Styles for logo */
 #logo img {
-  width: 110px;
-  height: 110px;
+  width: 6rem;
+  height: 6rem;
   object-fit: contain;
   display: block;
   /* animation: pulse 2s infinite; */
@@ -3831,4 +3829,50 @@ div.css-161tt0w {
   align-items: center;
   position: relative;
   left: 20%;
+}
+.tw-connect-wallet .css-5kp5o2 {
+  z-index: 911;
+}
+#header > div.menu-wrapper > button.tw-connect-wallet.css-5kp5o2 {
+  z-index: 911 !important;
+}
+/* AuthModal styles */
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  z-index: 1000;
+  left: 40%;
+  /* top: 50%; */
+  /* width: 100%; */
+  height: auto;
+  overflow: hidden; /* Prevent scrolling */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  border-radius: 10px;
+}
+
+.modal-content {
+  background-color: #8e662b;
+  padding: 20px;
+  border-radius: 8px;
+  width: auto; /* Automatically size based on content */
+  max-width: 100%; /* Prevent the modal from exceeding the screen width */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+/* Close button for the modal */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #ff4a4a; /* Change color on hover */
 }

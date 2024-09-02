@@ -1,23 +1,19 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from "react";
-import { slide as Menu } from "react-burger-menu";
-import Link from "next/link";
-import Image from "next/image";
-import { Container } from "@chakra-ui/react";
-import { useUser, UserButton, useClerk } from "@clerk/nextjs";
-import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from "next/router";
+import { auth } from "../utilities/firebaseClient";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { slide as Menu } from "react-burger-menu";
+import { Button, Container } from "@chakra-ui/react";
+import Link from "next/link";
 import WalletButton1 from "../components/WalletButton1";
 import RotatingBadge2 from "./RotatingBadge2";
+import AuthModal from "./AuthModal";
 
 function Header2() {
-  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
-  const { isSignedIn } = useUser();
-  const { openSignIn, openSignUp, signOut } = useClerk();
+  const [user, setUser] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [emoji, setEmoji] = useState("😇");
-  const account = useActiveAccount();
   const node = useRef();
   const router = useRouter();
   const currentUrl = router.asPath;
@@ -37,6 +33,42 @@ function Header2() {
     setMenuOpen(!menuOpen);
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/home"); // Redirect to home after sign out
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (node.current && !node.current.contains(e.target)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [node]);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (node.current && !node.current.contains(e.target)) {
@@ -58,49 +90,27 @@ function Header2() {
     return () => clearInterval(emojiInterval);
   }, []);
 
-  const handleSignInClick = () => {
-    sessionStorage.setItem("redirectUrl", currentUrl);
-    openSignIn({
-      redirectUrl: currentUrl,
-    });
-  };
-
-  const handleSignUpClick = () => {
-    sessionStorage.setItem("redirectUrl", currentUrl);
-    openSignUp({
-      redirectUrl: currentUrl,
-    });
-  };
-
-  useEffect(() => {
-    const redirectUrl = sessionStorage.getItem("redirectUrl");
-    if (isSignedIn && redirectUrl) {
-      sessionStorage.removeItem("redirectUrl");
-      router.push(redirectUrl);
-    }
-  }, [isSignedIn, router]);
-
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 760) {
-        setMenuWidth("100%");
-      } else {
-        setMenuWidth("35%");
+      if (typeof window !== "undefined") {
+        if (window.innerWidth <= 760) {
+          setMenuWidth("100%");
+        } else {
+          setMenuWidth("35%");
+        }
       }
     };
 
-    window.addEventListener("resize", handleResize);
-    handleResize();
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize);
+      handleResize();
+    }
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", handleResize);
+      }
     };
-  }, []);
-
-  useEffect(() => {
-    const logoImage = new window.Image();
-    logoImage.src = "/NEWRL80.png";
-    logoImage.onload = () => setIsLogoLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -119,9 +129,6 @@ function Header2() {
     }
     addBubbles();
   }, []);
-  //   if (!mounted) {
-  //     return null;
-  //   }
 
   return (
     <>
@@ -148,52 +155,6 @@ function Header2() {
               <div className="menu-wrapper">
                 <div className="logo-menu-container">
                   <div id="logo">
-                    {/* <div
-                      style={{
-                        position: "absolute",
-                        fontFamily: "Caesar Dressing",
-                        fontSize: ".8rem",
-                        bottom: "0",
-                        left: "31%",
-                        top: "5%",
-                        color: "#debc88",
-                      }}
-                    >
-                      {"PERPETUUM"}
-                    </div>
-                    <Image
-                      src="/NEWRL80.png"
-                      alt="Logo"
-                      width={180}
-                      height={180}
-                      priority
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        fontFamily: "Caesar Dressing",
-                        fontSize: ".8rem",
-                        bottom: "0",
-                        left: "18%",
-                        color: "#debc88",
-                        transform: "rotate(20deg)",
-                      }}
-                    >
-                      {"LUCRUM "}
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        fontFamily: "Caesar Dressing",
-                        fontSize: ".8rem",
-                        bottom: "0",
-                        right: "16%",
-                        color: "#debc88",
-                        transform: "rotate(-20deg)",
-                      }}
-                    >
-                      {" GAUDIUM"}
-                    </div> */}
                     <RotatingBadge2 />
                   </div>
                 </div>
@@ -244,9 +205,10 @@ function Header2() {
 
                 <WalletButton1 />
 
-                {isSignedIn ? (
-                  <UserButton
-                    afterSignOutUrl="/home"
+                {user ? (
+                  <Button
+                    id="sign-out-button"
+                    onClick={handleSignOut}
                     style={{
                       position: "absolute",
                       top: "3rem",
@@ -256,31 +218,31 @@ function Header2() {
                       height: "3rem",
                       zIndex: "911",
                     }}
-                  />
+                  ></Button>
                 ) : (
-                  <>
-                    <button
-                      id="sign-in-button"
-                      onClick={handleSignInClick}
-                      style={{
-                        top: "3rem",
-                        right: "5%",
-                        position: "absolute",
-                        width: "3rem",
-                        minWidth: "3rem",
-                        height: "3rem",
-                        zIndex: "911",
-                      }}
-                    >
-                      <span style={{ fontSize: "2.5rem" }}>{emoji}</span>
-                    </button>
-                  </>
+                  <Button
+                    id="sign-in-button"
+                    onClick={openAuthModal}
+                    style={{
+                      top: "3rem",
+                      right: "5%",
+                      position: "absolute",
+                      width: "3rem",
+                      minWidth: "3rem",
+                      height: "3rem",
+                      zIndex: "911",
+                    }}
+                  >
+                    <span style={{ fontSize: "2.5rem" }}>{emoji}</span>
+                  </Button>
                 )}
               </div>
             </header>
           </div>
         </Container>
       </div>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </>
   );
 }

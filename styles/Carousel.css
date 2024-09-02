@@ -146,7 +146,7 @@
   transform: translateZ(35px) rotateY(16deg);
 }
 
-.horse {
+.beast {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -156,7 +156,7 @@
   transform: translate(-50%, -50%);
   background-size: contain;
   background-repeat: no-repeat; /* Added to prevent repeating of the image */
-  animation: calc(var(--rotation-time) / var(--elements)) horse ease-in-out
+  animation: calc(var(--rotation-time) / var(--elements)) beast ease-in-out
     infinite;
   animation-delay: calc(var(--item) * -0.5s);
 }
@@ -169,7 +169,7 @@
   }
 }
 
-@keyframes horse {
+@keyframes beast {
   0%,
   100% {
     transform: translate(-50%, -30%);
@@ -181,22 +181,22 @@
 /* Media Queries for Different Screen Sizes */
 @media (min-width: 1200px) {
   .carousel-container {
-    height: 10rem;
-    transform: scale(1); /* Full size */
+    height: 5rem;
+    transform: scale(1.2); /* Full size */
   }
 }
 
 @media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
   .carousel-container {
     height: 5rem; /* Adjust height */
-    transform: scale(0.7); /* Scaled down */
+    transform: scale(0.8); /* Scaled down */
   }
 }
 
 @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
   .carousel-container {
     height: 5rem; /* Adjust height */
-    transform: scale(0.7); /* Scaled down */
+    transform: scale(0.8); /* Scaled down */
   }
 }
 
@@ -209,14 +209,14 @@
 
 @media (max-width: 575px) {
   .carousel-container {
-    height: 25rem; /* Adjust height */
-    transform: scale(0.6); /* Smallest scale */
+    height: 10rem; /* Adjust height */
+    transform: scale(0.7); /* Smallest scale */
   }
 }
 @media (max-width: 375px) {
   .carousel-container {
-    height: 5rem;
-    transform: scale(0.4);
+    height: 7rem;
+    transform: scale(0.7);
   }
 }
 
@@ -243,25 +243,24 @@
     background-position: 0% 50%;
   }
 }
-.top-structure {
+.rider-container {
   position: absolute;
+  top: 50px; /* Adjust this value based on your carousel layout */
   left: 50%;
-  top: 0; /* Position it at the top */
-  width: 900px; /* Same width as the bottom */
-  height: 900px; /* Same height as the bottom */
-  border-radius: 50%; /* Keep it circular */
-  transform: translate(-50%, -50%) rotateX(90deg); /* Align it flat */
-  z-index: -1; /* Place behind the carousel elements */
-  transform: rotateY(calc((var(--item) - 1) * 360deg / var(--elements)))
-    translateZ(400px);
-  transform-style: preserve-3d;
-  /* Mirroring the bottom gradient and background */
-  background: radial-gradient(
-      circle at center,
-      transparent 40 350px,
-      /* Adjust as needed */ #d00 350px,
-      #900 400px,
-      #d00 450px
-    ),
-    conic-gradient(from 180deg, #ff4a4a, #e6282a);
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none; /* Ensure clicks pass through to the beast */
+}
+
+.rider-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Circular avatar */
+  border: 2px solid #fff; /* Optional: a white border around the avatar */
+}
+
+.rider-name {
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: #fff; /* Adjust color as needed */
 }

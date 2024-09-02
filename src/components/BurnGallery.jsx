@@ -24,20 +24,24 @@ import {
 } from "@chakra-ui/react";
 import Image from "next/image";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { useUser, useClerk } from "@clerk/nextjs";
-import Candle from "./Candle";
-import { db } from "../utilities/firebaseClient";
+import { db, auth } from "../utilities/firebaseClient";
 import dynamic from "next/dynamic";
 import { resolveMethod, createThirdwebClient, getContract } from "thirdweb";
 import { useReadContract } from "thirdweb/react";
 import { defineChain } from "thirdweb/chains";
-import { utils } from "ethers";
-import { ethers } from "ethers";
+import { utils, ethers } from "ethers";
 import styled from "styled-components";
+import {
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithRedirect,
+} from "firebase/auth";
+import Candle from "../components/Candle";
 
 const BurnModal = dynamic(() => import("./BurnModal"), {
   ssr: false,
 });
+
 const infuraKey = process.env.NEXT_PUBLIC_INFURA_KEY;
 const provider = new ethers.providers.JsonRpcProvider(
   `https://sepolia.infura.io/v3/${infuraKey}`
@@ -52,6 +56,7 @@ const contract = getContract({
   chain: defineChain(11155111),
   address: "0xde7Cc5B93e0c1A2131c0138d78d0D0a33cc36e42",
 });
+
 const ImageSelectionModal = dynamic(() => import("./ImageSelectionModal"), {
   ssr: false,
 });
@@ -59,8 +64,18 @@ const ImageSelectionModal = dynamic(() => import("./ImageSelectionModal"), {
 const BurnGallery = () => {
   const router = useRouter();
   const [isBurnModalOpen, setIsBurnModalOpen] = useState(false);
-  const { user, isSignedIn } = useUser();
-  const clerk = useClerk();
+  const [user, setUser] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+
+  // Firebase Auth State Listener
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setUser(user); // Set the user state when signed in
+      setIsSignedIn(!!user); // Update isSignedIn state
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   useEffect(() => {
     const openModal = router.query.burnModal === "open";
@@ -69,20 +84,20 @@ const BurnGallery = () => {
 
   const handleOpenBurnModal = () => {
     if (!isSignedIn) {
-      clerk.openSignIn({
-        redirectUrl: `${window.location.origin}/gallery?burnModal=open`,
-      });
+      const provider = new GoogleAuthProvider();
+      signInWithRedirect(auth, provider)
+        .then(() => {
+          if (typeof window !== "undefined") {
+            router.push(`${window.location.origin}/gallery?burnModal=open`);
+          }
+        })
+        .catch((error) => {
+          console.error("Sign-in error:", error);
+        });
     } else if (!isBurnModalOpen) {
       setIsBurnModalOpen(true);
     }
   };
-  useEffect(() => {
-    // Logic to handle user data
-    if (user) {
-      const originalAvatarUrl = user.imageUrl; // Ensure this is the unmodified URL
-      // Process originalAvatarUrl for backend or critical operations
-    }
-  }, [user]);
   useEffect(() => {
     if (isBurnModalOpen && router.query.burnModal !== "open") {
       router.push("/gallery?burnModal=open", undefined, { shallow: true });
@@ -199,6 +214,7 @@ const BurnGallery = () => {
       </Box>
     );
   };
+
   const {
     data: tokensBurned,
     isLoading,
@@ -307,7 +323,6 @@ const BurnGallery = () => {
                       display: "flex", // This will make the div a flex container
                       justifyContent: "center", // This will center the image horizontally
                       alignItems: "center", // This will center the image vertically
-                      // top: "-1rem",
                     }}
                   >
                     <Image
@@ -321,7 +336,6 @@ const BurnGallery = () => {
                         opacity: 0.8,
                         zindex: "-1",
                         position: "relative",
-                        // top: "10%",
                       }}
                     />
                   </div>
@@ -333,7 +347,6 @@ const BurnGallery = () => {
                       position: "relative",
                       bottom: "-1px",
                     }}
-                    className="gradient-background1"
                   >
                     <Candle />
                   </div>
@@ -393,7 +406,7 @@ const BurnGallery = () => {
                   </Accordion>
                   <Flex justify="center" mt={3}>
                     <div>
-                      {/* Button to open the InfoModal */}
+                      {/* Button to open the BurnModal */}
                       <Button
                         className="burnButton"
                         onClick={handleOpenBurnModal}
@@ -417,22 +430,6 @@ const BurnGallery = () => {
               overflow: "hidden", // Prevents overflow of the background
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: "url(/purple.jpg)",
-                opacity: 0.5,
-                backgroundRepeat: "repeat",
-                backgroundSize: "cover", // Cover the entire area
-                zIndex: 0, // Ensure it's behind other content
-                pointerEvents: "none", // Ensure the background doesn't interfere with user interactions
-                border: "3px solid black",
-              }}
-            />
             <Grid
               height={"75%"}
               templateColumns={{

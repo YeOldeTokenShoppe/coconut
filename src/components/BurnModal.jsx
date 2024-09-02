@@ -15,16 +15,9 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
   Spinner,
   Box,
   Image as ChakraImage,
-  Avatar,
   Text,
 } from "@chakra-ui/react";
 import { useDisconnect } from "thirdweb/react";
@@ -35,6 +28,8 @@ import { burn } from "thirdweb/extensions/erc20";
 import { CONTRACT } from "../utilities/constants";
 import ImageSelectionModal from "./ImageSelectionModal";
 import TokenText from "./TokenText";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../utilities/firebaseClient";
 
 const normalizeUrl = (url) => {
   try {
@@ -62,11 +57,21 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
   const [isResultSaved, setIsResultSaved] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [userConfirmed, setUserConfirmed] = useState(false);
+  const [user, setUser] = useState(null);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const cancelRef = useRef(null);
   const [errorMessage, setErrorMessage] = useState(null);
+
+  // Firebase Auth State Listener
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setUser(user); // Set the user state when signed in
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -85,7 +90,11 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
   };
 
   const handleOpenImageSelectionModal = () => {
-    setIsImageSelectionModalOpen(true);
+    if (user) {
+      setIsImageSelectionModalOpen(true);
+    } else {
+      alert("You must be signed in to join the Hall of Flame.");
+    }
   };
 
   const handleCloseImageSelectionModal = () => {

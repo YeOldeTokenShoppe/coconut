@@ -1,7 +1,7 @@
 "use client";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { getAuth, signInWithCustomToken } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -16,23 +16,24 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase app
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Connect to Firestore
-export const db = getFirestore(app);
+export { db, auth };
 
-// Connect to Firebase auth
-export const auth = getAuth(app);
+// Initialize FirebaseUI (only when on the client side)
+export function initializeFirebaseUI() {
+  if (typeof window !== "undefined") {
+    // Import firebaseui dynamically
+    const firebaseui = require("firebaseui");
 
-// Sign in with Clerk and Firebase
-export const signIntoFirebaseWithClerk = async (getToken) => {
-  try {
-    const token = await getToken({ template: "integration_firebase" });
-    console.log("Retrieved JWT token:", token);
-
-    const userCredentials = await signInWithCustomToken(auth, token || "");
-    console.log("User:", userCredentials.user);
-  } catch (error) {
-    console.error("Error signing in with Clerk and Firebase:", error);
+    // Check if an AuthUI instance already exists, else create one
+    if (!firebaseui.auth.AuthUI.getInstance()) {
+      return new firebaseui.auth.AuthUI(auth);
+    } else {
+      return firebaseui.auth.AuthUI.getInstance();
+    }
   }
-};
+  return null; // Return null if not on the client side
+}

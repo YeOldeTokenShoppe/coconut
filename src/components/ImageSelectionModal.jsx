@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Image as ChakraImage,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -16,13 +15,8 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
-import { db } from "../utilities/firebaseClient";
-import {
-  getAuth,
-  signInWithCustomToken,
-  onAuthStateChanged,
-} from "firebase/auth";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { db, auth } from "../utilities/firebaseClient";
+import { onAuthStateChanged } from "firebase/auth";
 import Carousel8 from "./Carousel8";
 
 function ImageSelectionModal({
@@ -33,10 +27,9 @@ function ImageSelectionModal({
   isResultSaved,
   setIsResultSaved,
   setSaveMessage,
-  onSaveResult, // new prop
+  onSaveResult,
 }) {
-  const { user } = useUser();
-  const { getToken, userId } = useAuth();
+  const [user, setUser] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
   const [showLoginError, setShowLoginError] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
@@ -44,7 +37,16 @@ function ImageSelectionModal({
   const [selectedImageObject, setSelectedImageObject] = useState(null);
   const [showImageWarning, setShowImageWarning] = useState(false);
 
-  let avatarUrl = user ? user.imageUrl : "/default-avatar.png";
+  // Firebase Auth State Listener
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setUser(user); // Set the user state when signed in
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  let avatarUrl = user ? user.photoURL : "/defaultAvatar.png";
   const params = new URLSearchParams();
   params.set("height", "100px");
   params.set("width", "100px");
@@ -63,6 +65,7 @@ function ImageSelectionModal({
     "/smoke.gif",
     "/fever.gif",
     "/thing1.gif",
+    // "/sacred.gif",
     "/corndog.gif",
     "/thing2.gif",
     "/sponge.gif",
@@ -71,6 +74,7 @@ function ImageSelectionModal({
     "/devito.gif",
     "/thing3.gif",
     "/thisisfine.gif",
+
     "/candles.gif",
   ];
 
@@ -84,21 +88,6 @@ function ImageSelectionModal({
       });
     }
   }, [selectedImage, avatarUrl]);
-
-  useEffect(() => {
-    if (userId) {
-      signIntoFirebaseWithClerk();
-    }
-  }, [userId]);
-
-  const signIntoFirebaseWithClerk = async () => {
-    try {
-      const token = await getToken({ template: "integration_firebase" });
-      await signInWithCustomToken(getAuth(), token);
-    } catch (error) {
-      console.error("Error signing in with Clerk token:", error);
-    }
-  };
 
   const handleOpen = () => {
     onOpen();
@@ -115,25 +104,17 @@ function ImageSelectionModal({
   const normalizeUrl = (url) => {
     try {
       const urlObj = new URL(url);
-      return urlObj.origin + urlObj.pathname; // This strips out search parameters
+      return urlObj.origin + urlObj.pathname;
     } catch (error) {
       console.error("Invalid URL", error);
-      return url; // Fallback to the original URL in case of an error
+      return url;
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
-      console.log(user);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const handleSaveResult = async () => {
     if (!selectedImage) {
       console.error("No image selected");
-      setShowImageWarning(true); // Show the warning message
+      setShowImageWarning(true);
       return;
     }
     setShowImageWarning(false);
@@ -145,32 +126,16 @@ function ImageSelectionModal({
       isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl,
     });
 
-    if (!selectedImage) {
-      console.error("No image selected");
-      return;
-    }
-    const image = {
-      src: normalizedSelectedImageUrl,
-      isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl,
-    };
-
     if (!user) {
       console.error("User is not defined");
+      setShowLoginError(true);
       return;
     }
 
-    const userName =
-      user.username ||
-      user.firstName ||
-      user.lastName ||
-      user.primaryEmailAddress ||
-      "Unknown User";
-    const userId = user.id;
+    const userName = user.displayName || "Anonymous";
+    const userId = user.uid;
 
     try {
-      const token = await getToken({ template: "integration_firebase" });
-      await signInWithCustomToken(getAuth(), token);
-
       await setDoc(doc(db, "results", userId), {
         userName,
         image: {
@@ -215,7 +180,6 @@ function ImageSelectionModal({
           border="2px"
           borderColor="#8e662b"
           height={"530px"}
-          // overflowY="hidden"
         >
           <ModalHeader style={{ textAlign: "center" }} paddingTop={5}>
             <span
@@ -227,7 +191,7 @@ function ImageSelectionModal({
             >
               Than<span style={{ fontFamily: "New Rocker" }}>{"k"}</span>s,{" "}
               <span style={{ fontFamily: "New Rocker" }}>
-                {user ? user.username : "Guest"}!
+                {user ? user.displayName : "Guest"}!
               </span>{" "}
               You&apos;re a Saint!
             </span>
@@ -236,7 +200,6 @@ function ImageSelectionModal({
               Select an image to feature in the main gallery.
             </Text>
           </ModalHeader>
-          {/* <ModalCloseButton /> */}
 
           <ModalBody>
             {showWarning && (
@@ -261,14 +224,7 @@ function ImageSelectionModal({
               <Carousel8
                 images={imageUrls.map((url) => ({
                   url: url,
-
-                  content: (
-                    <img
-                      src={url}
-                      alt="Carousel item"
-                      // style={{ width: "100%", height: "100%" }}
-                    />
-                  ),
+                  content: <img src={url} alt="Carousel item" />,
                 }))}
                 avatarUrl={avatarUrl}
                 onImageSelect={(image) => setSelectedImage(image.url)}

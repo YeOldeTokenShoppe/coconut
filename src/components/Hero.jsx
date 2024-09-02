@@ -128,7 +128,10 @@ const Hero = () => {
   const coinRef = useRef(null);
 
   useEffect(() => {
-    if (!coinRef.current || window.innerWidth <= 550) {
+    if (
+      (typeof window !== "undefined" && !coinRef.current) ||
+      window.innerWidth <= 550
+    ) {
       return;
     }
 
@@ -466,14 +469,14 @@ const Hero = () => {
               >
                 The
                 <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> token
-                lets you pay homage to the Patron Saint of Day Traders herself,
-                or any entity in need of some divinity. Keep{" "}
-                <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> in
-                your wallet as a good luck charm. Hang out at The{" "}
-                <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>Fair
-                and play guilt-free games of chance to win more tokens. Whatever
-                you do, Our Lady of Perpetual Profit is your personal guide up
-                and to the right.
+                lets you pay homage to the Patron Saint of Day Traders herself.
+                Hold <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
+                in your wallet as a good luck charm and to ward off evil. Hang
+                out at The{" "}
+                <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>
+                Fair and play guilt-free games of chance to win more tokens.
+                Whatever you do, and wherever you go, Our Lady of Perpetual
+                Profit is your personal guide up and to the right.
               </StyledText>
             </div>
           </Box>

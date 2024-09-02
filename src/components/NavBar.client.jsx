@@ -156,14 +156,20 @@ const NavBar = () => {
 
   useEffect(() => {
     const checkWindowSize = () => {
-      setShowNavBar(window.innerWidth >= 778);
+      if (typeof window !== "undefined") {
+        setShowNavBar(window.innerWidth >= 778);
+      }
     };
 
-    checkWindowSize();
-    window.addEventListener("resize", checkWindowSize);
+    if (typeof window !== "undefined") {
+      checkWindowSize();
+      window.addEventListener("resize", checkWindowSize);
+    }
 
     return () => {
-      window.removeEventListener("resize", checkWindowSize);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", checkWindowSize);
+      }
     };
   }, []);
 

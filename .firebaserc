@@ -8,5 +8,9 @@
       "extensionInstances": {}
     }
   },
-  "dataconnectEmulatorConfig": {}
+  "dataconnectEmulatorConfig": {
+    "postgres": {
+      "localConnectionString": "postgresql://localhost:5432?sslmode=disable"
+    }
+  }
 }

@@ -15,6 +15,7 @@ import "../../styles/stars.css";
 import "../../styles/stars2.css";
 import "../../styles/safaristars.css";
 import "../../styles/coin.css";
+import "firebaseui/dist/firebaseui.css";
 import type { AppProps } from "next/app";
 import { ThirdwebProvider } from "@/utilities/thirdweb";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
@@ -48,7 +49,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   const isIndexPage = router.pathname === "/";
-  const isCommunionPage = router.pathname === "/communion";
+  const isCommunionPage = router.pathname === "/x";
   const isNumerologyPage = router.pathname === "/numerology";
 
   return (
@@ -68,70 +69,70 @@ function MyApp({ Component, pageProps }: AppProps) {
           </ChakraProvider>
         </ThirdwebProvider>
       ) : isNumerologyPage ? (
-        <ClerkProvider
-          appearance={{
-            baseTheme: shadesOfPurple,
-          }}
-        >
-          <ThirdwebProvider>
-            <ChakraProvider theme={theme}>
-              <Head>
-                <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
-                <meta name="description" content="A token to believe in." />
-                <meta
-                  name="viewport"
-                  content="width=device-width, initial-scale=1"
-                />
-              </Head>
-              <div className="app-container">
-                <div
-                  style={{
-                    width: "100%",
+        // <ClerkProvider
+        //   appearance={{
+        //     baseTheme: shadesOfPurple,
+        //   }}
+        // >
+        <ThirdwebProvider>
+          <ChakraProvider theme={theme}>
+            <Head>
+              <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
+              <meta name="description" content="A token to believe in." />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+              />
+            </Head>
+            <div className="app-container">
+              <div
+                style={{
+                  width: "100%",
 
-                    margin: "0",
-                    // display: "block",
-                  }}
-                >
-                  <Header2 />
-                  <Component {...pageProps} />
-                </div>
+                  margin: "0",
+                  // display: "block",
+                }}
+              >
+                <Header2 />
+                <Component {...pageProps} />
               </div>
-            </ChakraProvider>
-          </ThirdwebProvider>
-        </ClerkProvider>
+            </div>
+          </ChakraProvider>
+        </ThirdwebProvider>
       ) : (
-        <ClerkProvider
-          appearance={{
-            baseTheme: shadesOfPurple,
-          }}
-        >
-          <ThirdwebProvider>
-            <ChakraProvider theme={theme}>
-              <Head>
-                <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
-                <meta name="description" content="A token to believe in." />
-                <meta
-                  name="viewport"
-                  content="width=device-width, initial-scale=1"
-                />
-              </Head>
-              <div className="app-container">
-                <div
-                  style={{
-                    width: "100%",
+        // </ClerkProvider>
+        // <ClerkProvider
+        //   appearance={{
+        //     baseTheme: shadesOfPurple,
+        //   }}
+        // >
+        <ThirdwebProvider>
+          <ChakraProvider theme={theme}>
+            <Head>
+              <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
+              <meta name="description" content="A token to believe in." />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+              />
+            </Head>
+            <div className="app-container">
+              <div
+                style={{
+                  width: "100%",
 
-                    margin: "0",
-                    // display: "block",
-                  }}
-                >
-                  <Header />
+                  margin: "0",
+                  // display: "block",
+                }}
+              >
+                <Header />
 
-                  <Component {...pageProps} />
-                </div>
+                <Component {...pageProps} />
               </div>
-            </ChakraProvider>
-          </ThirdwebProvider>
-        </ClerkProvider>
+            </div>
+          </ChakraProvider>
+        </ThirdwebProvider>
+        // </ClerkProvider>
       )}
     </>
   );
