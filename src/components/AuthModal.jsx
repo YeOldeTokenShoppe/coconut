@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { initializeFirebaseUI } from "../utilities/firebaseClient";
 import { TwitterAuthProvider, EmailAuthProvider } from "firebase/auth";
+import { useRouter } from "next/router";
 
-export default function AuthModal({ isOpen, onClose, onSignIn }) {
+export default function AuthModal({ isOpen, onClose, onSignIn, redirectTo }) {
   const [ui, setUi] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
@@ -16,7 +18,7 @@ export default function AuthModal({ isOpen, onClose, onSignIn }) {
     if (ui && isOpen) {
       ui.start("#firebaseui-auth-container", {
         signInFlow: "popup", // Ensure popup mode is enabled
-        signInSuccessUrl: "/home",
+        signInSuccessUrl: redirectTo || "/home", // Use redirectTo if provided
         signInOptions: [
           {
             provider: TwitterAuthProvider.PROVIDER_ID,
@@ -38,6 +40,10 @@ export default function AuthModal({ isOpen, onClose, onSignIn }) {
             }
 
             onClose(); // Close the modal on successful sign-in
+
+            // Use the redirectTo prop or fall back to "/home"
+            router.push(redirectTo || "/home");
+
             return false; // Prevent the default redirect
           },
         },
@@ -49,7 +55,7 @@ export default function AuthModal({ isOpen, onClose, onSignIn }) {
         ui.reset();
       }
     };
-  }, [ui, isOpen, onClose, onSignIn]);
+  }, [ui, isOpen, onClose, onSignIn, redirectTo, router]);
 
   return isOpen ? (
     <div className="modal">

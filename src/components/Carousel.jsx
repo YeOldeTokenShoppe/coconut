@@ -14,6 +14,7 @@ import {
 import { db, auth } from "../utilities/firebaseClient";
 import AuthModal from "./AuthModal";
 import { Button } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 
 const Carousel = ({ images }) => {
   const [user, setUser] = useState(null);
@@ -21,6 +22,8 @@ const Carousel = ({ images }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [riders, setRiders] = useState({});
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const router = useRouter();
+  const currentUrl = router.asPath;
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -36,6 +39,8 @@ const Carousel = ({ images }) => {
 
     setSelectedImage({ ...image, beastId });
   };
+
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const handleRideBeast = async (beastId) => {
     if (!user) {
@@ -100,12 +105,13 @@ const Carousel = ({ images }) => {
         ...prevRiders,
         [beastId]: newRiderData,
       }));
+
+      setSelectedImage(null); // Clear the selected image to hide the modal box
     } catch (error) {
       console.error("Failed to ride beast:", error);
       alert("Failed to ride beast. Please try again.");
     }
   };
-
   useEffect(() => {
     const intervalId = setInterval(async () => {
       for (let index = 0; index < images.length; index++) {
@@ -171,23 +177,26 @@ const Carousel = ({ images }) => {
                 data-item={index + 1}
                 key={index}
               >
-                <div className="rider-container">
+                <div
+                  className="rider-beast-group" // New container for grouping rider and beast
+                  style={{ "--item": index + 1 }}
+                >
                   {rider && (
-                    <>
+                    <div className="rider-container">
                       <p className="rider-name">{rider.username}</p>
                       <img
                         src={rider.avatarUrl}
                         alt={rider.username}
                         className="rider-avatar"
                       />
-                    </>
+                    </div>
                   )}
+                  <div
+                    className="beast"
+                    style={{ backgroundImage: `url(${image.src})` }}
+                    onClick={() => handleImageClick(image, beastId)}
+                  ></div>
                 </div>
-                <div
-                  className="beast"
-                  style={{ backgroundImage: `url(${image.src})` }}
-                  onClick={() => handleImageClick(image, beastId)}
-                ></div>
               </div>
             );
           })}
@@ -237,6 +246,7 @@ const Carousel = ({ images }) => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        redirectTo={currentUrl}
       />
     </div>
   );

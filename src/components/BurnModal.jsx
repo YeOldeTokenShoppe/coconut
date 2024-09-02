@@ -7,7 +7,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   NumberInput,
@@ -15,7 +14,6 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Spinner,
   Box,
   Image as ChakraImage,
   Text,
@@ -30,6 +28,7 @@ import ImageSelectionModal from "./ImageSelectionModal";
 import TokenText from "./TokenText";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../utilities/firebaseClient";
+import AuthModal from "./AuthModal";
 
 const normalizeUrl = (url) => {
   try {
@@ -47,7 +46,6 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
   const { disconnect } = useDisconnect();
   const [isFlameVisible, setIsFlameVisible] = useState(false);
   const [value, setValue] = useState(1000);
-  const show = isOpen;
   const [transactionStatus, setTransactionStatus] = useState("idle");
   const [transactionCompleted, setTransactionCompleted] = useState(false);
   const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
@@ -58,16 +56,15 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [userConfirmed, setUserConfirmed] = useState(false);
   const [user, setUser] = useState(null);
-  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // Added for AuthModal
+  const [errorMessage, setErrorMessage] = useState(null);
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
-  const cancelRef = useRef(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-
   // Firebase Auth State Listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setUser(user); // Set the user state when signed in
+      setUserName(user ? user.displayName || "Anonymous" : ""); // Set userName based on the user state
     });
 
     return () => unsubscribeAuth();
@@ -93,16 +90,12 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
     if (user) {
       setIsImageSelectionModalOpen(true);
     } else {
-      alert("You must be signed in to join the Hall of Flame.");
+      setIsAuthModalOpen(true); // Open AuthModal if not signed in
     }
   };
 
   const handleCloseImageSelectionModal = () => {
     setIsImageSelectionModalOpen(false);
-  };
-
-  const confirmTransaction = () => {
-    setIsAlertDialogOpen(true);
   };
 
   const handleSaveResult = ({ userName, image, userMessage }) => {
@@ -146,7 +139,7 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
             </Text>
           )}
           {transactionStatus === "completed" && (
-            <Text fontSize="small" align={"left"} ml={7} mr={7}>
+            <Text fontSize="small" align={"center"} ml={7} mr={7}>
               Your transaction has been completed successfully.
             </Text>
           )}
@@ -200,8 +193,11 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                   position="relative"
                   display="inline-block"
                   boxSize="9rem"
-                  mb="5"
+                  mb="8"
+                  mt="5"
                 >
+                  {console.log("isFirstImage:", selectedImage.isFirstImage)}{" "}
+                  {/* Debugging */}
                   {selectedImage.isFirstImage && (
                     <ChakraImage
                       src="/frame.png"
@@ -218,10 +214,10 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                     src={selectedImage.src}
                     alt="Selected"
                     position="absolute"
-                    top="58%"
+                    top="60%"
                     left="50%"
                     transform="translate(-50%, -50%)"
-                    width="calc(100% - 2.5rem)"
+                    width="calc(100% - 2rem)"
                     height="auto"
                     zIndex="-1"
                   />
@@ -230,7 +226,6 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                 <p>{saveMessage}</p>
               </div>
             )}
-
             {transactionStatus === "idle" && (
               <div
                 style={{
@@ -327,6 +322,10 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
           setIsResultSaved={setIsResultSaved}
           setSaveMessage={setSaveMessage}
           onSaveResult={handleSaveResult} // Pass the new prop
+        />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
         />
       </Modal>
     </>

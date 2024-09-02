@@ -66,11 +66,16 @@ const BurnGallery = () => {
   const [isBurnModalOpen, setIsBurnModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [userName, setUserName] = useState(""); // Store user name
+  const [userPhotoURL, setUserPhotoURL] = useState(""); // Store user photo URL
 
   // Firebase Auth State Listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setUser(user); // Set the user state when signed in
+      setUserName(user ? user.displayName || "Anonymous" : ""); // Set userName based on the user state
+      // setUserPhotoURL(user ? user.photoURL || "/defaultAvatar.png" : "");
+      setUserPhotoURL(user.photoURL);
       setIsSignedIn(!!user); // Update isSignedIn state
     });
 
@@ -98,6 +103,7 @@ const BurnGallery = () => {
       setIsBurnModalOpen(true);
     }
   };
+
   useEffect(() => {
     if (isBurnModalOpen && router.query.burnModal !== "open") {
       router.push("/gallery?burnModal=open", undefined, { shallow: true });
@@ -113,12 +119,7 @@ const BurnGallery = () => {
 
   const ImageBox = ({ image }) => {
     let imageUrl = image.src;
-    const params = new URLSearchParams();
-    params.set("height", "400");
-    params.set("width", "400");
-    params.set("quality", "1000");
-    params.set("fit", "crop");
-    imageUrl = `${imageUrl}?${params.toString()}`;
+
     return (
       <Box
         textAlign="center"
@@ -156,21 +157,21 @@ const BurnGallery = () => {
               display="inline-block"
               width="100%"
               height="auto"
-              boxSize="8.5rem"
+              boxSize="9.5rem"
             >
+              {/* Frame */}
               <Image
                 src="/frame.png"
                 alt="Frame"
-                position="absolute"
-                top="0"
                 layout="fill"
                 objectFit="contain"
                 zIndex="200"
                 unoptimized
               />
+              {/* User's Image */}
               <Avatar
-                src={imageUrl} // Use the modified URL here
-                alt={image.alt}
+                src={imageUrl} // Fallback to default if imageUrl is null
+                alt={image.alt || "User image"}
                 position="absolute"
                 top="50%"
                 left="50%"
@@ -182,8 +183,8 @@ const BurnGallery = () => {
             </Box>
           ) : (
             <Image
-              src={imageUrl} // And here
-              alt={image.alt}
+              src={imageUrl || "/defaultAvatar.png"} // Fallback to default if imageUrl is null
+              alt={image.alt || "User image"}
               layout="fill"
               loading="lazy"
               unoptimized
@@ -208,7 +209,7 @@ const BurnGallery = () => {
           {image.message && (
             <Text color="lt grey" fontWeight="normal">
               "{image.message}"
-            </Text> // Change 'blue' to your desired color
+            </Text>
           )}
         </Text>
       </Box>
@@ -234,6 +235,7 @@ const BurnGallery = () => {
   const [topBurners, setTopBurners] = useState([]);
   const [recentSubmissions, setRecentSubmissions] = useState([]);
 
+  // Fetch data from Firestore
   useEffect(() => {
     const fetchData = async () => {
       const q = query(collection(db, "results"), orderBy("createdAt", "desc"));
@@ -308,7 +310,6 @@ const BurnGallery = () => {
       width: calc(50% - 20px); // Subtract margins
     }
   `;
-
   return (
     <>
       <Box py="0" mb="5em">

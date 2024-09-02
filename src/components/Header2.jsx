@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { auth } from "../utilities/firebaseClient";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"; // Ensure you're importing these correctly
 import { slide as Menu } from "react-burger-menu";
 import { Button, Container } from "@chakra-ui/react";
 import Link from "next/link";
 import WalletButton1 from "../components/WalletButton1";
 import RotatingBadge2 from "./RotatingBadge2";
 import AuthModal from "./AuthModal";
+import Image from "next/image";
 
 function Header2() {
   const [user, setUser] = useState(null);
@@ -26,6 +26,11 @@ function Header2() {
     setMounted(true);
   }, []);
 
+  const handleSignIn = ({ username, photoURL }) => {
+    setUser({ username, photoURL });
+    console.log("User signed in:", username, photoURL);
+  };
+
   const closeMenu = () => setMenuOpen(false);
 
   const toggleMenu = (event) => {
@@ -34,6 +39,7 @@ function Header2() {
   };
 
   useEffect(() => {
+    const auth = getAuth(); // Correctly get the auth instance
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
@@ -50,25 +56,14 @@ function Header2() {
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      const auth = getAuth(); // Correctly get the auth instance
+      await signOut(auth); // Use signOut with the auth instance
       router.push("/home"); // Redirect to home after sign out
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (node.current && !node.current.contains(e.target)) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [node]);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (node.current && !node.current.contains(e.target)) {
@@ -204,21 +199,30 @@ function Header2() {
                 </div>
 
                 <WalletButton1 />
-
                 {user ? (
                   <Button
                     id="sign-out-button"
                     onClick={handleSignOut}
                     style={{
                       position: "absolute",
+                      width: "3rem",
+                      height: "3rem",
                       top: "3rem",
                       right: "5%",
-                      width: "3rem",
                       minWidth: "3rem",
-                      height: "3rem",
                       zIndex: "911",
                     }}
-                  ></Button>
+                  >
+                    {" "}
+                    <Image
+                      id="user-avatar"
+                      src={user.photoURL}
+                      // src={user.imageUrl || "🥸"}
+                      alt="User Avatar"
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                  </Button>
                 ) : (
                   <Button
                     id="sign-in-button"
@@ -242,7 +246,12 @@ function Header2() {
         </Container>
       </div>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        onSignIn={handleSignIn}
+        redirectTo={currentUrl} // Pass the current URL to AuthModal for proper redirection
+      />
     </>
   );
 }

@@ -18,6 +18,7 @@ import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../utilities/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
 import Carousel8 from "./Carousel8";
+import AuthModal from "./AuthModal";
 
 function ImageSelectionModal({
   isOpen,
@@ -36,6 +37,7 @@ function ImageSelectionModal({
   const [userMessage, setUserMessage] = useState("");
   const [selectedImageObject, setSelectedImageObject] = useState(null);
   const [showImageWarning, setShowImageWarning] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // Added for AuthModal
 
   // Firebase Auth State Listener
   useEffect(() => {
@@ -65,7 +67,6 @@ function ImageSelectionModal({
     "/smoke.gif",
     "/fever.gif",
     "/thing1.gif",
-    // "/sacred.gif",
     "/corndog.gif",
     "/thing2.gif",
     "/sponge.gif",
@@ -74,7 +75,6 @@ function ImageSelectionModal({
     "/devito.gif",
     "/thing3.gif",
     "/thisisfine.gif",
-
     "/candles.gif",
   ];
 
@@ -90,7 +90,11 @@ function ImageSelectionModal({
   }, [selectedImage, avatarUrl]);
 
   const handleOpen = () => {
-    onOpen();
+    if (!user) {
+      setIsAuthModalOpen(true); // Open AuthModal if not signed in
+    } else {
+      onOpen();
+    }
   };
 
   const handleClose = () => {
@@ -155,7 +159,10 @@ function ImageSelectionModal({
 
       onSaveResult({
         userName,
-        image: { src: normalizedSelectedImageUrl },
+        image: {
+          src: normalizedSelectedImageUrl,
+          isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl, // Ensure this is passed
+        },
         avatarUrl: normalizedAvatarUrl,
       });
       onClose();
@@ -269,6 +276,12 @@ function ImageSelectionModal({
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Render the AuthModal when needed */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </>
   );
 }

@@ -67,26 +67,28 @@ export default function CommunionPage() {
             ]}
           />
         </div>
-
-        <Box
-          style={{
-            position: "relative",
-            bottom: isMobile ? "0" : "-6rem",
-            right: "0",
-          }}
-        >
-          <iframe
-            src="/html/recordPlayer.html"
-            style={{
-              width: isMobile ? "80vw" : "32vw",
-              height: isMobile ? "50vh" : "20vh",
-              border: "none",
-              transform: "scale(1)",
-            }}
-            allowFullScreen
-          />
-        </Box>
       </div>
+
+      <Box
+        style={{
+          position: "absolute",
+          // bottom: isMobile ? "0" : "-6rem",
+          bottom: "0",
+          right: "0",
+        }}
+      >
+        <iframe
+          src="/html/recordPlayer.html"
+          style={{
+            width: "100%",
+            height: "17rem",
+            border: "none",
+            transform: "scale(1)",
+          }}
+          scrolling="no"
+          allowFullScreen
+        />
+      </Box>
     </>
   );
 }

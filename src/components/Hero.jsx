@@ -224,39 +224,26 @@ const Hero = () => {
     };
 
     let current_star_count = 0;
-    let intervalId;
+    const intervalId = setInterval(() => {
+      if (current_star_count >= MAX_STARS) {
+        return;
+      }
 
-    const startEffect = () => {
-      intervalId = setInterval(() => {
-        if (current_star_count >= MAX_STARS) {
-          return;
-        }
+      current_star_count++;
 
-        current_star_count++;
+      const newStar = new Star();
+      newStar.draw();
 
-        const newStar = new Star();
-        newStar.draw();
-
-        setTimeout(() => {
-          current_star_count--;
-          newStar.pop();
-        }, newStar.life * 1000);
-      }, STAR_INTERVAL);
-    };
-
-    const stopEffect = () => {
-      clearInterval(intervalId);
-    };
-
-    sparkle.addEventListener("mouseenter", startEffect);
-    sparkle.addEventListener("mouseleave", stopEffect);
+      setTimeout(() => {
+        current_star_count--;
+        newStar.pop();
+      }, newStar.life * 1000);
+    }, STAR_INTERVAL);
 
     return () => {
       clearInterval(intervalId);
-      sparkle.removeEventListener("mouseenter", startEffect);
-      sparkle.removeEventListener("mouseleave", stopEffect);
     };
-  }, [coinRef]);
+  }, []);
   const [isLargerThan768] = useMediaQuery("(min-width: 37rem)");
   const [isChromeBrowser, setIsChromeBrowser] = useState(false);
   const [isSmallScreen] = useMediaQuery("(max-width: 600px)");
@@ -493,7 +480,7 @@ const Hero = () => {
       >
         <Flex direction={{ base: "column", md: "row" }} flexWrap="nowrap">
           <Box flex="1" mt={3}>
-            <Heading fontSize={"3rem"} lineHeight={".9"}>
+            <Heading fontSize={"3.9rem"} lineHeight={".9"}>
               Reflected Glory
             </Heading>
             <StyledText

@@ -221,7 +221,8 @@ function Header() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={closeAuthModal}
-        onSignIn={handleSignIn} // Pass the onSignIn callback
+        onSignIn={handleSignIn}
+        redirectTo={currentUrl} // Pass the current URL to AuthModal for proper redirection
       />
     </>
   );
