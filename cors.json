@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "http://localhost:3000",
+      "https://rl80-43fed.web.app/",
+      "https://ourlady.io",
+      "https://rl80.xyz",
+      "https://rl80-43fed.firebaseapp.com/"
+    ],
+    "method": ["GET", "POST", "PUT"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization"]
+  }
+]

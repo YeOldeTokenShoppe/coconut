@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Flex,
@@ -29,18 +29,22 @@ import TokenText from "./TokenText";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../utilities/firebaseClient";
 import AuthModal from "./AuthModal";
+import { doc, getDoc } from "firebase/firestore"; // For Firestore document access
+import { db } from "../utilities/firebaseClient"; // Ensure this points to your Firebase config file
 
-const normalizeUrl = (url) => {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.origin + urlObj.pathname; // This will ignore search and hash
-  } catch (error) {
-    console.error("Error normalizing URL:", error);
-    return url; // Fallback to the original URL if there's an error
-  }
-};
-
-function BurnModal({ isOpen, onClose, onTransactionComplete }) {
+function BurnModal({
+  isOpen,
+  onClose,
+  onTransactionComplete,
+  selectedImage,
+  setSelectedImage,
+  burnedAmount,
+  setBurnedAmount,
+  setIsResultSaved,
+  setSaveMessage,
+  isResultSaved, // Accept isResultSaved as a prop
+  saveMessage, // Accept saveMessage as a prop
+}) {
   const account = useActiveAccount();
   const signer = account?.address || "";
   const { disconnect } = useDisconnect();
@@ -50,16 +54,30 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
   const [transactionCompleted, setTransactionCompleted] = useState(false);
   const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
     useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
-  const [burnedAmount, setBurnedAmount] = useState(0);
-  const [isResultSaved, setIsResultSaved] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+
   const [userConfirmed, setUserConfirmed] = useState(false);
   const [user, setUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // Added for AuthModal
   const [errorMessage, setErrorMessage] = useState(null);
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
+  const shouldShowFrame = (imageUrl) => {
+    return imageUrl.includes("userImages") || imageUrl === user.photoURL;
+  };
+
+  let avatarUrl = user ? user.photoURL : "/defaultAvatar.png"; // Fallback to default if user has no profile image
+  useEffect(() => {
+    console.log("Selected Image in BurnModal after save:", selectedImage);
+  }, [selectedImage]);
+  const getFormattedImageUrl = (url) => {
+    if (!url) return "";
+    // Only add `?alt=media` for Firebase URLs
+    if (url.includes("firebasestorage")) {
+      return url.includes("alt=media") ? url : `${url}&alt=media`;
+    }
+    return url; // Return the URL as-is for external links (like Twitter)
+  };
+
   // Firebase Auth State Listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -82,6 +100,46 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleFetchImage = async () => {
+      try {
+        const userId = user.uid;
+        const resultRef = doc(db, "results", userId);
+        const resultSnap = await getDoc(resultRef);
+        if (resultSnap.exists()) {
+          const resultData = resultSnap.data();
+          // Ensure uploaded image is fetched
+          setSelectedImage(resultData.image);
+          console.log("Image fetched for BurnModal:", resultData.image);
+        }
+      } catch (error) {
+        console.error("Error fetching saved image:", error);
+      }
+    };
+
+    if (transactionStatus === "completed" && isResultSaved) {
+      handleFetchImage(); // Fetch the image from Firestore once the save is confirmed
+    }
+  }, [transactionStatus, isResultSaved]);
+
+  // Make sure the fetched image is displayed correctly
+  {
+    selectedImage && selectedImage.src && (
+      <Box
+        as="img"
+        src={getFormattedImageUrl(selectedImage.src)}
+        alt="Selected"
+        position="absolute"
+        top="60%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        width="calc(100% - 2rem)"
+        height="auto"
+        zIndex="-1"
+        borderRadius={selectedImage.isFirstImage ? "50%" : "0"}
+      />
+    );
+  }
   const handleClose = () => {
     onClose();
   };
@@ -127,19 +185,20 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
               ? "Transaction Complete!"
               : "Burn an Offering?"}
           </ModalHeader>
-          {transactionStatus === "idle" && (
+          {/* {transactionStatus === "idle" && (
+            
             <Text fontSize="small" align={"left"} ml={7} mr={7}>
               Enter any amount of tokens to burn, but it is recommended that you
-              burn only a minimal amount, as sometimes the process can fail to
-              complete. Burning RL80 tokens should primarily be a symbolic
-              gesture rather than a painful sacrifice. Every 1000 tokens burned
-              is an entry for the week's treasury giveaway. The top 3 burners
-              will remain eligible for subsequent drawings as long as they
-              remain in the top 3. Have fun!
+              burn only a minimal amount, as sometimes the transaction can fail.
+              Burning RL80 tokens should primarily be a symbolic gesture rather
+              than a painful sacrifice. Every 1000 tokens burned is an entry for
+              the week's treasury giveaway. The top 3 burners will remain
+              eligible for subsequent drawings as long as they remain in the top
+              3. Have fun!
             </Text>
-          )}
+          )} */}
           {transactionStatus === "completed" && (
-            <Text fontSize="small" align={"center"} ml={7} mr={7}>
+            <Text fontSize="large" align={"center"} ml={7} mr={7}>
               Your transaction has been completed successfully.
             </Text>
           )}
@@ -189,6 +248,7 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
             {transactionStatus === "completed" && isResultSaved && (
               <div style={{ textAlign: "center" }}>
                 <p>{`Thanks, ${userName}!`}</p>
+
                 <Box
                   position="relative"
                   display="inline-block"
@@ -196,36 +256,48 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                   mb="8"
                   mt="5"
                 >
-                  {console.log("isFirstImage:", selectedImage.isFirstImage)}{" "}
-                  {/* Debugging */}
-                  {selectedImage.isFirstImage && (
-                    <ChakraImage
-                      src="/frame.png"
-                      alt="Frame"
+                  {/* Display frame based on frameChoice */}
+                  {selectedImage &&
+                    selectedImage.frameChoice &&
+                    shouldShowFrame(selectedImage.src) && (
+                      <ChakraImage
+                        src={`/${selectedImage.frameChoice}.png`} // Apply the correct frame
+                        alt="Frame"
+                        position="absolute"
+                        top="0"
+                        objectFit="contain"
+                        zIndex="200"
+                        unoptimized
+                      />
+                    )}
+
+                  {/* Display the selected image */}
+                  {selectedImage && selectedImage.src && (
+                    <Box
+                      as="img"
+                      src={getFormattedImageUrl(selectedImage.src)} // Use the updated function
+                      alt="Selected Image"
                       position="absolute"
-                      top="0"
-                      objectFit="contain"
-                      zIndex="200"
-                      unoptimized
+                      top="60%"
+                      left="50%"
+                      transform="translate(-50%, -50%)"
+                      width="calc(100% - 2rem)"
+                      height="auto"
+                      zIndex="-1"
+                      borderRadius={
+                        selectedImage.isFirstImage ||
+                        selectedImage.src === avatarUrl
+                          ? "50%"
+                          : "0"
+                      } // Conditionally apply border radius for profile image
                     />
                   )}
-                  <Box
-                    as="img"
-                    src={selectedImage.src}
-                    alt="Selected"
-                    position="absolute"
-                    top="60%"
-                    left="50%"
-                    transform="translate(-50%, -50%)"
-                    width="calc(100% - 2rem)"
-                    height="auto"
-                    zIndex="-1"
-                  />
                 </Box>
                 <p>{userMessage}</p>
                 <p>{saveMessage}</p>
               </div>
             )}
+
             {transactionStatus === "idle" && (
               <div
                 style={{
@@ -261,6 +333,7 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
             {!account ? (
               <ConnectButton2 />
             ) : transactionStatus !== "completed" && !isResultSaved ? (
+              // Show burn button until the transaction is completed
               <TransactionButton
                 className="burnButton"
                 transaction={() =>
@@ -277,6 +350,9 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                   setTransactionStatus("completed");
                   setTransactionCompleted(true);
                   setBurnedAmount(value);
+
+                  console.log("Image after transaction:", selectedImage); // Debug log
+
                   if (typeof onTransactionComplete === "function") {
                     onTransactionComplete();
                   }
@@ -295,8 +371,9 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                 <span className="shimmer"></span>
               </TransactionButton>
             ) : transactionCompleted && !isResultSaved ? (
+              // Show 'Join the Hall of Flame' button after transaction is completed but before saving the image
               <Button
-                className="shimmer-button burnButton pulse"
+                className="shimmer-button"
                 onClick={handleOpenImageSelectionModal}
               >
                 <span className="text">
@@ -306,6 +383,7 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
                 <span className="shimmer"></span>
               </Button>
             ) : (
+              // Show 'Return to Gallery' button after the image is saved
               <Button mt={0} className="shimmer-button" onClick={handleClose}>
                 Return to Gallery
                 <span className="shimmer"></span>
@@ -315,13 +393,15 @@ function BurnModal({ isOpen, onClose, onTransactionComplete }) {
         </ModalContent>
         <ImageSelectionModal
           isOpen={isImageSelectionModalOpen}
-          onOpen={handleOpenImageSelectionModal}
           onClose={handleCloseImageSelectionModal}
           setSelectedImage={setSelectedImage}
           burnedAmount={burnedAmount}
           setIsResultSaved={setIsResultSaved}
           setSaveMessage={setSaveMessage}
-          onSaveResult={handleSaveResult} // Pass the new prop
+          onSaveResult={(savedImage) => {
+            console.log("Saving image in BurnModal:", savedImage); // Debug log
+            setSelectedImage(savedImage); // Set the image in BurnModal
+          }}
         />
         <AuthModal
           isOpen={isAuthModalOpen}

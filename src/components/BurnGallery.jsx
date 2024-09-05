@@ -3,26 +3,27 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import {
   Accordion,
-  AccordionItem,
+  Avatar,
   AccordionButton,
-  AccordionPanel,
   AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Link,
   Box,
   Button,
   Flex,
   Heading,
+  Image,
   Text,
   Grid,
   GridItem,
   Badge,
-  Avatar,
   Stat,
   StatGroup,
   StatLabel,
   StatNumber,
   StatHelpText,
 } from "@chakra-ui/react";
-import Image from "next/image";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../utilities/firebaseClient";
 import dynamic from "next/dynamic";
@@ -31,14 +32,14 @@ import { useReadContract } from "thirdweb/react";
 import { defineChain } from "thirdweb/chains";
 import { utils, ethers } from "ethers";
 import styled from "styled-components";
-import {
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithRedirect,
-} from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import AuthModal from "./AuthModal";
 import Candle from "../components/Candle";
 
 const BurnModal = dynamic(() => import("./BurnModal"), {
+  ssr: false,
+});
+const ImageSelectionModal = dynamic(() => import("./ImageSelectionModal"), {
   ssr: false,
 });
 
@@ -57,51 +58,78 @@ const contract = getContract({
   address: "0xde7Cc5B93e0c1A2131c0138d78d0D0a33cc36e42",
 });
 
-const ImageSelectionModal = dynamic(() => import("./ImageSelectionModal"), {
-  ssr: false,
-});
-
 const BurnGallery = () => {
   const router = useRouter();
-  const [isBurnModalOpen, setIsBurnModalOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [userName, setUserName] = useState(""); // Store user name
-  const [userPhotoURL, setUserPhotoURL] = useState(""); // Store user photo URL
+  const [isBurnModalOpen, setIsBurnModalOpen] = useState(false);
+  const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
+    useState(false);
+  const [isResultSaved, setIsResultSaved] = useState(false); // Define isResultSaved here
+  const [saveMessage, setSaveMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // Firebase Auth State Listener
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const currentUrl = router.asPath;
+  const [burnedAmount, setBurnedAmount] = useState(0); // Already defined in BurnGallery
+  const [images, setImages] = useState([]);
+
+  const getFormattedImageUrl = (url) => {
+    if (!url) return "";
+    // Only add `?alt=media` for Firebase URLs
+    if (url.includes("firebasestorage")) {
+      return url.includes("alt=media") ? url : `${url}&alt=media`;
+    }
+    return url; // Return external URLs as-is
+  };
+  const displayImageWithFrame = (imageData) => {
+    const { src, frameChoice } = imageData;
+    return (
+      <Box position="relative">
+        <Image
+          src={`/${frameChoice}.png`} // Apply the correct frame
+          alt="Frame"
+          position="absolute"
+          top="0"
+          zIndex="1"
+        />
+        <ChakraImage
+          src={getFormattedImageUrl(src)}
+          alt="Image"
+          position="relative"
+          zIndex="0"
+        />
+      </Box>
+    );
+  };
+
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setUser(user); // Set the user state when signed in
-      setUserName(user ? user.displayName || "Anonymous" : ""); // Set userName based on the user state
-      // setUserPhotoURL(user ? user.photoURL || "/defaultAvatar.png" : "");
-      setUserPhotoURL(user.photoURL);
-      setIsSignedIn(!!user); // Update isSignedIn state
+      setUser(user); // Set user state when signed in
     });
 
-    return () => unsubscribeAuth();
+    return () => unsubscribeAuth(); // Clean up on unmount
   }, []);
 
-  useEffect(() => {
-    const openModal = router.query.burnModal === "open";
-    setIsBurnModalOpen(openModal && isSignedIn);
-  }, [router.query.burnModal, isSignedIn]);
+  const avatarUrl = user ? user.photoURL : "/defaultAvatar.png"; // Define avatarUrl here
 
   const handleOpenBurnModal = () => {
-    if (!isSignedIn) {
-      const provider = new GoogleAuthProvider();
-      signInWithRedirect(auth, provider)
-        .then(() => {
-          if (typeof window !== "undefined") {
-            router.push(`${window.location.origin}/gallery?burnModal=open`);
-          }
-        })
-        .catch((error) => {
-          console.error("Sign-in error:", error);
-        });
-    } else if (!isBurnModalOpen) {
-      setIsBurnModalOpen(true);
+    if (!user) {
+      console.log("Button clicked");
+      setIsAuthModalOpen(true); // Open the AuthModal if not signed in
+    } else {
+      setIsBurnModalOpen(true); // Open the BurnModal if signed in
+      router.push("/gallery?burnModal=open", undefined, { shallow: true });
     }
+  };
+
+  const handleOpenImageSelectionModal = () =>
+    setIsImageSelectionModalOpen(true);
+  const handleCloseImageSelectionModal = () =>
+    setIsImageSelectionModalOpen(false);
+
+  const handleCloseBurnModal = () => {
+    setIsBurnModalOpen(false);
+    router.push("/gallery", undefined, { shallow: true });
   };
 
   useEffect(() => {
@@ -112,13 +140,26 @@ const BurnGallery = () => {
     }
   }, [isBurnModalOpen]);
 
-  const handleCloseBurnModal = () => {
-    setIsBurnModalOpen(false);
-    router.push("/gallery", undefined, { shallow: true }); // Reset the URL
+  const handleSignIn = (userInfo) => {
+    // Update the user state after successful sign-in
+    setUser(userInfo);
+    setIsSignedIn(true);
+    setIsAuthModalOpen(false); // Close the AuthModal
   };
 
   const ImageBox = ({ image }) => {
-    let imageUrl = image.src;
+    const imageUrl = getFormattedImageUrl(image.src);
+    const frameChoice = image.frameChoice || "frame1"; // Default frame choice for avatar images
+
+    const frameSrc = {
+      frame1: "/frame1.png",
+      frame2: "/frame2.png",
+      frame3: "/frame3.png",
+    }[frameChoice];
+
+    const isCompositeImage =
+      image.isFirstImage || image.src.includes("userImages"); // For avatar or uploaded images
+    const isAvatar = image.isFirstImage; // Specifically for the user's avatar image
 
     return (
       <Box
@@ -128,69 +169,68 @@ const BurnGallery = () => {
         width="100%"
         height="auto"
         p={2}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
       >
         {image.type && (
           <Badge
             colorScheme={image.type === "Top Burner" ? "purple" : "green"}
             variant="solid"
             position="absolute"
-            top="1rem"
+            top="0%"
             left="50%"
             transform="translateX(-50%)"
             m="1"
-            zIndex="docked"
+            zIndex="1000"
           >
             {image.type}
           </Badge>
         )}
+
         <Box
-          position="relative"
-          display="inline-block"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
           width="100%"
           height="auto"
-          boxSize="9rem"
-          top="1rem"
+          boxSize={isAvatar ? "9.5rem" : "auto"} // Smaller box size for avatars, original size for others
+          mb={2}
+          position="relative"
         >
-          {image.isComposite ? (
-            <Box
-              position="relative"
-              display="inline-block"
-              width="100%"
-              height="auto"
-              boxSize="9.5rem"
-            >
-              {/* Frame */}
-              <Image
-                src="/frame.png"
-                alt="Frame"
-                layout="fill"
-                objectFit="contain"
-                zIndex="200"
-                unoptimized
-              />
-              {/* User's Image */}
-              <Avatar
-                src={imageUrl} // Fallback to default if imageUrl is null
-                alt={image.alt || "User image"}
-                position="absolute"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                width="calc(100% - 3rem)"
-                height="auto"
-                zIndex="-1"
-              />
-            </Box>
-          ) : (
+          {/* Display the frame for composite images (avatars or uploaded images) */}
+          {isCompositeImage && frameSrc && (
             <Image
-              src={imageUrl || "/defaultAvatar.png"} // Fallback to default if imageUrl is null
-              alt={image.alt || "User image"}
+              src={frameSrc}
+              alt="Frame"
               layout="fill"
-              loading="lazy"
-              unoptimized
+              objectFit="contain"
+              position="absolute"
+              top="0"
+              zIndex="6"
+            />
+          )}
+
+          {/* Display the selected image */}
+          {imageUrl && (
+            <Image
+              src={imageUrl || "/defaultAvatar.png"}
+              alt={image.alt || "User image"}
+              style={{
+                position: isAvatar ? "absolute" : "relative", // Avatar images need absolute positioning
+                top: isAvatar ? "60%" : "0", // Only apply top adjustment for avatar images
+                left: isAvatar ? "50%" : "0", // Only apply left adjustment for avatar images
+                transform: isAvatar ? "translate(-50%, -50%)" : "none", // Only apply transform for avatars
+                width: isAvatar ? "calc(100% - 1.5rem)" : "100%", // Avatar images are smaller, others fill the container
+                height: "auto",
+                zIndex: "5",
+                borderRadius: isAvatar ? "50%" : "0%", // Apply circular border-radius only for avatars
+              }}
             />
           )}
         </Box>
+
         <Text
           fontSize="small"
           fontWeight="bold"
@@ -200,7 +240,7 @@ const BurnGallery = () => {
           flexDirection="column"
           justifyContent="center"
           position="relative"
-          top="1rem"
+          marginTop="1.5rem"
         >
           {image.userName}
           <br />
@@ -215,16 +255,12 @@ const BurnGallery = () => {
       </Box>
     );
   };
-
-  const {
-    data: tokensBurned,
-    isLoading,
-    error,
-  } = useReadContract({
+  const { data: tokensBurned, isLoading } = useReadContract({
     contract: contract,
     method: resolveMethod("getBurnedTokens"),
     params: [],
   });
+
   const totalSupply = 10000000000; // 10 billion
   let burnedPercentage = 0;
 
@@ -232,10 +268,10 @@ const BurnGallery = () => {
     burnedPercentage =
       (Number(utils.formatUnits(tokensBurned, "ether")) / totalSupply) * 100;
   }
+
   const [topBurners, setTopBurners] = useState([]);
   const [recentSubmissions, setRecentSubmissions] = useState([]);
 
-  // Fetch data from Firestore
   useEffect(() => {
     const fetchData = async () => {
       const q = query(collection(db, "results"), orderBy("createdAt", "desc"));
@@ -243,14 +279,16 @@ const BurnGallery = () => {
         const results = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           src: doc.data().image.src,
-          alt: doc.data().image.alt,
+          alt: doc.data().image.alt || "User image",
           message: doc.data().userMessage,
           userName: doc.data().userName,
           burnedAmount: doc.data().burnedAmount,
           createdAt: doc.data().createdAt,
           isComposite: doc.data().image.isFirstImage || false,
+          frameChoice: doc.data().image.frameChoice || "frame1",
           type: "recent",
         }));
+
         const sortedByAmount = [...results].sort((a, b) => {
           if (b.burnedAmount === a.burnedAmount) {
             return a.createdAt - b.createdAt;
@@ -276,6 +314,8 @@ const BurnGallery = () => {
     fetchData().catch(console.error);
   }, []);
 
+  const combinedImages = [...topBurners, ...recentSubmissions].slice(0, 6);
+
   function formatAndWrapNumber(number) {
     // Convert the number to a string and add commas as thousands separators
     let formattedNumber = number.toLocaleString();
@@ -285,13 +325,6 @@ const BurnGallery = () => {
 
     return breakableNumber;
   }
-
-  const combinedImages = [...topBurners, ...recentSubmissions].slice(0, 6);
-
-  useEffect(() => {
-    console.log("Top Burners:", topBurners);
-    console.log("Recent Submissions:", recentSubmissions);
-  }, [topBurners, recentSubmissions]);
 
   const ResponsiveStatGroup = styled(StatGroup)`
     display: flex;
@@ -307,7 +340,7 @@ const BurnGallery = () => {
 
     @media (max-width: 600px) {
       margin: 10px;
-      width: calc(50% - 20px); // Subtract margins
+      width: calc(50% - 20px);
     }
   `;
   return (
@@ -321,9 +354,9 @@ const BurnGallery = () => {
                   <div
                     style={{
                       position: "relative",
-                      display: "flex", // This will make the div a flex container
-                      justifyContent: "center", // This will center the image horizontally
-                      alignItems: "center", // This will center the image vertically
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
                     <Image
@@ -373,7 +406,7 @@ const BurnGallery = () => {
                   </Text>
 
                   <Accordion allowToggle mt={3}>
-                    <AccordionItem>
+                    <AccordionItem border="none">
                       <h2>
                         <AccordionButton>
                           <Box flex="1" textAlign="center" fontSize="1.3rem">
@@ -392,9 +425,30 @@ const BurnGallery = () => {
                           <li>You'll need a wallet with RL80 tokens.</li>
                           <li>
                             {" "}
+                            Enter any amount of tokens to burn, but it is
+                            recommended that you burn only a minimal amount, as
+                            sometimes the transaction can fail. Burning RL80
+                            tokens should primarily be a symbolic gesture rather
+                            than a painful sacrifice.
+                          </li>
+
+                          <li>
+                            {" "}
                             For every 1000 tokens burned, you'll gain one entry
                             to the weekly drawing for 50% of the weekly token
-                            tax treasury.
+                            tax treasury. You can check the amount{" "}
+                            <Link
+                              href="#"
+                              color="blue.500"
+                              _hover={{ color: "blue.700" }}
+                            >
+                              here
+                            </Link>
+                          </li>
+                          <li>
+                            After the transaction is complete, you'll be
+                            presented with the option to be added to the
+                            gallery.
                           </li>
                           <li>
                             The top 3 burners will remain eligible to win for
@@ -407,13 +461,27 @@ const BurnGallery = () => {
                   </Accordion>
                   <Flex justify="center" mt={3}>
                     <div>
-                      {/* Button to open the BurnModal */}
                       <Button
                         className="burnButton"
                         onClick={handleOpenBurnModal}
                       >
                         Burn Tokens
                       </Button>
+
+                      {isAuthModalOpen && (
+                        <AuthModal
+                          isOpen={isAuthModalOpen}
+                          onClose={() => setIsAuthModalOpen(false)}
+                          onSignInSuccess={() => {
+                            setIsAuthModalOpen(false); // Close the AuthModal
+                            setIsBurnModalOpen(true); // Open the BurnModal
+                            router.push("/gallery?burnModal=open", undefined, {
+                              shallow: true,
+                            });
+                          }}
+                          redirectTo={router.asPath} // Optional: fallback in case onSignInSuccess is not triggered
+                        />
+                      )}
                     </div>
                   </Flex>
                 </Box>
@@ -428,7 +496,7 @@ const BurnGallery = () => {
               position: "relative",
               height: "80vh",
               width: "auto",
-              overflow: "hidden", // Prevents overflow of the background
+              overflow: "hidden",
             }}
           >
             <Grid
@@ -440,17 +508,34 @@ const BurnGallery = () => {
               }}
               gap={4}
             >
-              {combinedImages.map((image, index) => (
-                <ImageBox
-                  style={{ position: "relative", top: "1rem" }}
-                  key={index}
-                  image={image}
-                  badgeType={image.type}
-                />
-              ))}
+              {combinedImages.map((image, index) => {
+                // Ensure the frame and composite logic are passed correctly
+                const isFirstImage =
+                  image.isFirstImage || image.src === avatarUrl; // Compare with avatarUrl if needed
+                const frameChoice = image.frameChoice || "frame1";
+
+                return (
+                  <ImageBox
+                    key={index}
+                    image={{
+                      ...image,
+                      isFirstImage, // Add this to ensure logic for profile image is applied
+                      frameChoice: image.frameChoice || "frame1", // Default to frame1
+                    }}
+                    avatarUrl={avatarUrl} // Pass avatarUrl to ImageBox
+                  />
+                );
+              })}
             </Grid>
-            <Flex justifyContent="center" alignItems="center">
-              <div
+            <GridItem>
+              <Flex
+                justifyContent="center"
+                alignItems="center"
+                position="relative"
+                bottom={0}
+                // left={"30%"}
+              >
+                {/* <div
                 style={{
                   position: "relative",
                   bottom: "1rem !important",
@@ -458,21 +543,22 @@ const BurnGallery = () => {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
-              >
+              > */}
                 <h1 className="thelma1">
                   Saints
                   <br />
                   <span style={{ fontSize: "2rem" }}>of </span>RL80
                 </h1>
-              </div>
-            </Flex>
+                {/* </div> */}
+              </Flex>
+            </GridItem>
           </GridItem>
         </Grid>
 
         <Grid>
           <GridItem>
             <Flex
-              wrap="wrap" // Allow wrapping of items
+              wrap="wrap"
               justify="space-around"
               mt={20}
               gap="10px"
@@ -484,7 +570,7 @@ const BurnGallery = () => {
                   borderRadius: "10px",
                   padding: ".5rem",
                   width: "100%",
-                  height: "auto", // Allow height to adjust based on content
+                  height: "auto",
                   display: "flex",
                   flexWrap: "wrap",
                   justifyContent: "space-around",
@@ -500,9 +586,9 @@ const BurnGallery = () => {
                   <StatNumber mb={2}>
                     {isLoading || tokensBurned === undefined
                       ? "Loading..."
-                      : formatAndWrapNumber(
-                          Number(utils.formatUnits(tokensBurned, "ether"))
-                        )}
+                      : Number(
+                          utils.formatUnits(tokensBurned, "ether")
+                        ).toLocaleString()}
                   </StatNumber>
                   <StatHelpText bottom={0}>
                     {isLoading
@@ -557,8 +643,32 @@ const BurnGallery = () => {
         </Grid>
 
         {isBurnModalOpen && (
-          <BurnModal isOpen={isBurnModalOpen} onClose={handleCloseBurnModal} />
+          <BurnModal
+            isOpen={isBurnModalOpen}
+            onClose={() => setIsBurnModalOpen(false)}
+            selectedImage={selectedImage}
+            setSelectedImage={setSelectedImage}
+            burnedAmount={burnedAmount} // Pass the burnedAmount value
+            setBurnedAmount={setBurnedAmount} // Pass the setter function
+            setIsResultSaved={setIsResultSaved}
+            setSaveMessage={setSaveMessage}
+            isResultSaved={isResultSaved}
+            saveMessage={saveMessage}
+          />
         )}
+        {/* <ImageSelectionModal
+          isOpen={isImageSelectionModalOpen}
+          onOpen={handleOpenImageSelectionModal}
+          onClose={handleCloseImageSelectionModal}
+          setSelectedImage={setSelectedImage}
+          burnedAmount={burnedAmount}
+          setBurnedAmount={setBurnedAmount}
+          setIsResultSaved={setIsResultSaved}
+          setSaveMessage={setSaveMessage}
+          onSaveResult={(savedImage) => {
+            setSelectedImage(savedImage); // Update selectedImage here
+          }}
+        /> */}
       </Box>
     </>
   );

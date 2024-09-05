@@ -15,7 +15,7 @@
   transform-style: preserve-3d;
   transition: transform 1s;
 }
-
+.upload,
 .next,
 .prev {
   color: #444;
@@ -30,10 +30,12 @@
   box-shadow: 0 5px 0 #999;
   transition: box-shadow 0.1s, top 0.1s;
 }
+.upload:hover,
 .next:hover,
 .prev:hover {
   color: #000;
 }
+.upload:active,
 .next:active,
 .prev:active {
   top: 110px;

@@ -3719,6 +3719,14 @@ div.css-161tt0w {
   transform: rotate(-8deg) skew(-15deg);
   z-index: 1000;
 }
+.notThelma {
+  color: #8e662b;
+  text-shadow: 3px 3px 5px #000, -1px -1px 5px pink;
+  font-size: 4rem; /* default to 4rem for small screens */
+  font-weight: 900;
+  line-height: 0.8;
+  z-index: 1000;
+}
 
 @media (min-width: 768px) {
   .thelma {

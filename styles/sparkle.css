@@ -101,8 +101,8 @@ body {
   }
 }
 /* sparkle.css */
-@media (max-width: 550px) {
+/* @media (max-width: 550px) {
   .sparkle .star {
     display: none;
   }
-}
+} */

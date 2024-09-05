@@ -1,8 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -13,12 +17,23 @@ import {
   AlertIcon,
   Input,
   Text,
+  Image,
 } from "@chakra-ui/react";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  deleteObject,
+  uploadString,
+  getDownloadURL,
+} from "firebase/storage";
 import { db, auth } from "../utilities/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
 import Carousel8 from "./Carousel8";
 import AuthModal from "./AuthModal";
+import UploadImage from "./UploadImage";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "../utilities/cropImageUtility";
 
 function ImageSelectionModal({
   isOpen,
@@ -34,15 +49,70 @@ function ImageSelectionModal({
   const [showWarning, setShowWarning] = useState(false);
   const [showLoginError, setShowLoginError] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+  const [uploadedImage, setUploadedImage] = useState("");
   const [userMessage, setUserMessage] = useState("");
+  const [customName, setCustomName] = useState("");
   const [selectedImageObject, setSelectedImageObject] = useState(null);
   const [showImageWarning, setShowImageWarning] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // Added for AuthModal
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [frameChoice, setFrameChoice] = useState("frame1");
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState(null);
 
-  // Firebase Auth State Listener
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedArea(croppedAreaPixels);
+  }, []);
+  const handleSave = async () => {
+    try {
+      const croppedImage = await getCroppedImg(uploadedImage, croppedArea);
+
+      // Initialize Firebase storage
+      const storage = getStorage(); // Define storage
+      const storageRef = ref(
+        storage,
+        `userImages/${user.uid}/${Date.now()}.jpg`
+      );
+
+      // Upload the cropped image to Firebase Storage
+      await uploadString(storageRef, croppedImage, "data_url");
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // Save metadata and image URL to Firestore
+      const selectedFrame = frameChoice || "frame1";
+      const userName = customName || user.displayName || "Anonymous";
+      const userId = user.uid;
+
+      await setDoc(doc(db, "results", userId), {
+        userName,
+        image: {
+          src: downloadURL, // Save the cropped image URL
+          isFirstImage: downloadURL === avatarUrl, // Check if it’s the first image
+          frameChoice: selectedFrame,
+        },
+        userMessage,
+        createdAt: serverTimestamp(),
+        burnedAmount: burnedAmount,
+      });
+
+      setIsResultSaved(true);
+      setSaveMessage(
+        "You've been saved and you're entered in the next drawing!"
+      );
+      onClose();
+    } catch (error) {
+      console.error("Error cropping or saving the image", error);
+    }
+  };
+  const framePaths = {
+    frame1: "/frame1.png", // Replace with actual paths
+    frame2: "/frame2.png",
+    frame3: "/frame3.png",
+  };
+
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setUser(user); // Set the user state when signed in
+      setUser(user);
     });
 
     return () => unsubscribeAuth();
@@ -50,15 +120,10 @@ function ImageSelectionModal({
 
   let avatarUrl = user ? user.photoURL : "/defaultAvatar.png";
   const params = new URLSearchParams();
-  params.set("height", "100px");
-  params.set("width", "100px");
-  params.set("quality", "100");
-  params.set("fit", "crop");
 
   const imageUrls = [
     avatarUrl,
-    "/elmo.gif",
-    "/animaSola.png",
+    // "/elmo.gif",
     "/dracarys.gif",
     "/frank.gif",
     "/homer.gif",
@@ -91,7 +156,7 @@ function ImageSelectionModal({
 
   const handleOpen = () => {
     if (!user) {
-      setIsAuthModalOpen(true); // Open AuthModal if not signed in
+      setIsAuthModalOpen(true);
     } else {
       onOpen();
     }
@@ -115,62 +180,96 @@ function ImageSelectionModal({
     }
   };
 
+  const handleImageSelection = (image) => {
+    // Set the selected image's URL directly
+    if (image && image.url) {
+      setSelectedImage(image.url); // Save only the URL, not the entire image object
+      console.log("Selected image from carousel:", image.url);
+    } else {
+      console.error("No valid image selected.");
+    }
+  };
+
   const handleSaveResult = async () => {
-    if (!selectedImage) {
-      console.error("No image selected");
-      setShowImageWarning(true);
-      return;
-    }
-    setShowImageWarning(false);
-    const normalizedSelectedImageUrl = normalizeUrl(selectedImage);
-    const normalizedAvatarUrl = normalizeUrl(avatarUrl);
-
-    setSelectedImageObject({
-      src: normalizedSelectedImageUrl,
-      isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl,
-    });
-
-    if (!user) {
-      console.error("User is not defined");
-      setShowLoginError(true);
-      return;
-    }
-
-    const userName = user.displayName || "Anonymous";
-    const userId = user.uid;
-
     try {
+      // If there's an uploaded image, use it. Otherwise, use the selected image or fallback to avatarUrl.
+      let imageToSave = uploadedImage || selectedImage || avatarUrl; // Just use `selectedImage`, which is now a URL
+
+      if (!imageToSave) {
+        console.error("No valid image selected for saving.");
+        return;
+      }
+
+      let downloadURL = imageToSave;
+
+      // Handle cropping for uploaded images
+      if (uploadedImage && croppedArea) {
+        const croppedImageUrl = await getCroppedImg(uploadedImage, croppedArea);
+
+        if (
+          typeof croppedImageUrl === "string" &&
+          croppedImageUrl.startsWith("data:")
+        ) {
+          const storage = getStorage();
+          const storageRef = ref(
+            storage,
+            `userImages/${user.uid}/${Date.now()}.jpg`
+          );
+          await uploadString(storageRef, croppedImageUrl, "data_url");
+          downloadURL = await getDownloadURL(storageRef); // Get Firebase URL for the cropped image
+        } else {
+          throw new Error("Invalid cropped image format.");
+        }
+      }
+
+      // Check if the saved image is the user's avatar
+      const isFirstImage = imageToSave === avatarUrl;
+
+      // Validate required fields before saving
+      if (!user || !user.uid || !user.displayName) {
+        throw new Error("User information is missing. Cannot save result.");
+      }
+
+      if (!burnedAmount || isNaN(burnedAmount)) {
+        throw new Error("Burned amount is invalid.");
+      }
+
+      const selectedFrame = frameChoice || "frame1";
+      const userName = customName || user.displayName || "Anonymous";
+      const userId = user.uid;
+
+      // Log data before saving to Firestore
+      console.log("Saving result with the following data:", {
+        userName,
+        image: {
+          src: downloadURL,
+          isFirstImage, // Whether it's the avatar or not
+          frameChoice: selectedFrame,
+        },
+        userMessage,
+        burnedAmount,
+      });
+
+      // Save result in Firestore
       await setDoc(doc(db, "results", userId), {
         userName,
         image: {
-          src: normalizedSelectedImageUrl,
-          isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl,
+          src: downloadURL,
+          isFirstImage, // Whether it's the avatar or not
+          frameChoice: selectedFrame,
         },
-        userMessage,
+        userMessage: userMessage || "",
         createdAt: serverTimestamp(),
-        burnedAmount: burnedAmount,
+        burnedAmount: burnedAmount || 0, // Ensure burnedAmount is valid
       });
 
       setIsResultSaved(true);
-      setSaveMessage(
-        "You've been saved!\nAnd you're entered in the next drawing"
-      );
-      setShowWarning(false);
-
-      onSaveResult({
-        userName,
-        image: {
-          src: normalizedSelectedImageUrl,
-          isFirstImage: normalizedSelectedImageUrl === normalizedAvatarUrl, // Ensure this is passed
-        },
-        avatarUrl: normalizedAvatarUrl,
-      });
+      setSaveMessage("Your image was successfully saved.");
       onClose();
     } catch (error) {
       console.error("Error saving result:", error);
     }
   };
-
   return (
     <>
       <Button onClick={handleOpen}>Join the Hall of Flame</Button>
@@ -186,7 +285,11 @@ function ImageSelectionModal({
           bg="#1b1724"
           border="2px"
           borderColor="#8e662b"
-          height={"530px"}
+          width="30rem"
+          maxWidth="50%"
+          height="auto"
+          maxHeight="90vh"
+          overflowY="auto"
         >
           <ModalHeader style={{ textAlign: "center" }} paddingTop={5}>
             <span
@@ -204,10 +307,9 @@ function ImageSelectionModal({
             </span>
             <br />
             <Text fontSize="sm" mt={4} mb={1}>
-              Select an image to feature in the main gallery.
+              Select an image to feature in the main gallery or upload your own.
             </Text>
           </ModalHeader>
-
           <ModalBody>
             {showWarning && (
               <Alert
@@ -234,17 +336,109 @@ function ImageSelectionModal({
                   content: <img src={url} alt="Carousel item" />,
                 }))}
                 avatarUrl={avatarUrl}
-                onImageSelect={(image) => setSelectedImage(image.url)}
+                onImageSelect={handleImageSelection}
               />
             </div>
+            <Text fontSize="sm" mt={4} mb={2}>
+              Or upload your own image:
+            </Text>
+
+            <Box display="flex" justifyContent="center" mt={2} mb={4}>
+              <UploadImage
+                onUpload={(url) => {
+                  setUploadedImage(url);
+                  setSelectedImage(url);
+                }}
+              />
+            </Box>
+
+            {uploadedImage && (
+              <>
+                <Box
+                  style={{
+                    position: "relative",
+                    width: "200px", // Set this to the width of your frame
+                    height: "200px", // Set this to the height of your frame
+                    overflow: "hidden", // Ensure the cropper doesn't exceed this container
+                    margin: "0 auto", // Center the container
+                  }}
+                >
+                  <Cropper
+                    image={uploadedImage}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    onCropChange={setCrop} // Allows panning
+                    onZoomChange={setZoom} // Allows zooming
+                    onCropComplete={onCropComplete}
+                    restrictPosition={false} // Allows free movement
+                    style={{ zIndex: 5 }}
+                  />
+                  <Image
+                    src={framePaths[frameChoice]} // Frame choice logic
+                    alt="Frame"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      zIndex: 10, // Make sure the frame has a higher z-index
+                      pointerEvents: "none", // Prevent the frame from blocking interactions with the cropper
+                    }}
+                  />
+                </Box>
+                <Slider
+                  aria-label="zoom-slider"
+                  value={zoom}
+                  min={0.5}
+                  max={1.5}
+                  step={0.1}
+                  onChange={(val) => setZoom(val)} // This updates the zoom level
+                  mt={4}
+                >
+                  <SliderTrack>
+                    <SliderFilledTrack />
+                  </SliderTrack>
+                  <SliderThumb />
+                </Slider>
+                <Box display="flex" justifyContent="center" mt={4}>
+                  <Button
+                    size="sm"
+                    mr={2}
+                    mb={2}
+                    onClick={() => setFrameChoice("frame1")}
+                  >
+                    Frame 1
+                  </Button>
+                  <Button
+                    size="sm"
+                    mr={2}
+                    onClick={() => setFrameChoice("frame2")}
+                  >
+                    Frame 2
+                  </Button>
+                  <Button size="sm" onClick={() => setFrameChoice("frame3")}>
+                    Frame 3
+                  </Button>
+                </Box>
+              </>
+            )}
 
             <Input
-              mb={-5}
-              mt={5}
+              mb={2}
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="Enter custom name (optional)"
+            />
+            <Input
+              mb={-3}
+              mt={2}
               value={userMessage}
               onChange={(e) => setUserMessage(e.target.value)}
               maxLength={40}
-              placeholder="Add a message (40 characters max)"
+              placeholder="Add a message? (40 char. max)"
             />
           </ModalBody>
           <ModalFooter
@@ -268,7 +462,7 @@ function ImageSelectionModal({
             <Button
               size={"sm"}
               className="shimmer-button"
-              onClick={handleSaveResult}
+              onClick={handleSaveResult} // This will handle the cropped image save
             >
               <span className="text">Save Result</span>
               <span className="shimmer"></span>
@@ -277,7 +471,6 @@ function ImageSelectionModal({
         </ModalContent>
       </Modal>
 
-      {/* Render the AuthModal when needed */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}

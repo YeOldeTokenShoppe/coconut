@@ -3,7 +3,12 @@ import { initializeFirebaseUI } from "../utilities/firebaseClient";
 import { TwitterAuthProvider, EmailAuthProvider } from "firebase/auth";
 import { useRouter } from "next/router";
 
-export default function AuthModal({ isOpen, onClose, onSignIn, redirectTo }) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+  onSignInSuccess, // Optional prop
+  redirectTo,
+}) {
   const [ui, setUi] = useState(null);
   const router = useRouter();
 
@@ -17,32 +22,21 @@ export default function AuthModal({ isOpen, onClose, onSignIn, redirectTo }) {
   useEffect(() => {
     if (ui && isOpen) {
       ui.start("#firebaseui-auth-container", {
-        signInFlow: "popup", // Ensure popup mode is enabled
-        signInSuccessUrl: redirectTo || "/home", // Use redirectTo if provided
+        signInFlow: "popup",
         signInOptions: [
-          {
-            provider: TwitterAuthProvider.PROVIDER_ID,
-            clientId: "SjJGVG1vSllFSnlBVzd1YzZHQXY6MTpjaQ",
-          },
+          TwitterAuthProvider.PROVIDER_ID,
           EmailAuthProvider.PROVIDER_ID,
         ],
         callbacks: {
           signInSuccessWithAuthResult: function (authResult) {
             const user = authResult.user;
 
-            // Extract username and photo URL
-            const username = user.displayName;
-            const photoURL = user.photoURL;
-
-            // Call the onSignIn callback with the user info
-            if (onSignIn) {
-              onSignIn({ username, photoURL });
+            if (onSignInSuccess) {
+              onSignInSuccess();
+            } else {
+              onClose(); // Close the modal
+              router.push(redirectTo || "/home"); // Default redirection
             }
-
-            onClose(); // Close the modal on successful sign-in
-
-            // Use the redirectTo prop or fall back to "/home"
-            router.push(redirectTo || "/home");
 
             return false; // Prevent the default redirect
           },
@@ -55,7 +49,7 @@ export default function AuthModal({ isOpen, onClose, onSignIn, redirectTo }) {
         ui.reset();
       }
     };
-  }, [ui, isOpen, onClose, onSignIn, redirectTo, router]);
+  }, [ui, isOpen, onClose, onSignInSuccess, redirectTo, router]);
 
   return isOpen ? (
     <div className="modal">

@@ -76,26 +76,18 @@ const BurningEffect = dynamic(() => import("../components/BurningEffect"), {
 // const StarComponent2 = dynamic(() => import("./Stars2"), {
 //   ssr: false,
 // });
-const StarComponent = dynamic(() => import("./StarComponent"), {
-  ssr: false,
-});
-const StarComponent2 = dynamic(() => import("./StarComponent2"), {
-  ssr: false,
-});
-const SafariStarComponent = dynamic(() => import("./SafariStarComponent"), {
-  ssr: false,
-});
+
 import SpinningTextRing from "./SpinningTextRing";
 
-const isChrome = () => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isSafari = /^((?!chrome|android).)*safari/.test(userAgent);
-  return (
-    userAgent.indexOf("chrome") > -1 &&
-    userAgent.indexOf("edge") === -1 &&
-    !isSafari
-  );
-};
+// const isChrome = () => {
+//   const userAgent = navigator.userAgent.toLowerCase();
+//   const isSafari = /^((?!chrome|android).)*safari/.test(userAgent);
+//   return (
+//     userAgent.indexOf("chrome") > -1 &&
+//     userAgent.indexOf("edge") === -1 &&
+//     !isSafari
+//   );
+// };
 
 const StyledText = styled(Text)`
   font-family: "Roboto", sans-serif;
@@ -128,10 +120,7 @@ const Hero = () => {
   const coinRef = useRef(null);
 
   useEffect(() => {
-    if (
-      (typeof window !== "undefined" && !coinRef.current) ||
-      window.innerWidth <= 550
-    ) {
+    if (typeof window !== "undefined" && !coinRef.current) {
       return;
     }
 
@@ -247,9 +236,9 @@ const Hero = () => {
   const [isLargerThan768] = useMediaQuery("(min-width: 37rem)");
   const [isChromeBrowser, setIsChromeBrowser] = useState(false);
   const [isSmallScreen] = useMediaQuery("(max-width: 600px)");
-  useEffect(() => {
-    setIsChromeBrowser(isChrome());
-  }, []);
+  // useEffect(() => {
+  //   setIsChromeBrowser(isChrome());
+  // }, []);
   const account = useActiveAccount();
   const flexDirection = useBreakpointValue({ base: "column", sm: "row" });
 
@@ -529,7 +518,7 @@ const Hero = () => {
               }}
             >
               <Image
-                src="/pyromania.gif"
+                src="/pyromania1.gif"
                 alt=""
                 width={180} // Adjust the size for smaller screens
                 height={180} // Adjust the size for smaller screens

@@ -4,7 +4,6 @@ import Hero from "../components/Hero";
 import Header from "../components/Header";
 import NavBar from "../components/NavBar.client";
 import Communion from "../components/Communion";
-// import StarComponent from "../components/Stars";
 
 import Carousel from "../components/Carousel";
 
