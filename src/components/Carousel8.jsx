@@ -3,7 +3,7 @@ import styles from "../../styles/Carousel8.module.css";
 
 const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
   const [currdeg, setCurrdeg] = useState(0);
-  const [selectedUrl, setSelectedUrl] = useState(null);
+  const [selectedUrl, setSelectedUrl] = useState(null); // Track the selected image URL
   const rotationStep = 360 / images.length;
 
   const getBaseUrl = (url) => {
@@ -17,9 +17,9 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
 
   const avatarBaseURL = getBaseUrl(avatarUrl);
 
-  const handleSelectImage = (image) => {
-    setSelectedUrl(image.url);
-    onImageSelect(image);
+  const handleSelectImage = (image, index) => {
+    setSelectedUrl(image.url); // Store the selected image URL
+    onImageSelect(image, index); // Pass both image and index to the parent
   };
 
   const rotate = (direction) => {
@@ -49,7 +49,7 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
       >
         {images.map((image, index) => {
           const isAvatar = getBaseUrl(image.url) === avatarBaseURL;
-          const isSelected = getBaseUrl(image.url) === getBaseUrl(selectedUrl);
+          const isSelected = getBaseUrl(image.url) === getBaseUrl(selectedUrl); // Check if this image is selected
 
           return (
             <div
@@ -64,7 +64,7 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
                 filter: calculateBlur(index),
                 transition: "filter 0.3s ease",
               }}
-              onClick={() => handleSelectImage(image)}
+              onClick={() => handleSelectImage(image, index)} // Ensure index is passed
             >
               {/* Conditionally render video or image */}
               {isVideo(image.url) ? (
@@ -89,7 +89,7 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
 
               {isAvatar && (
                 <img
-                  src="/ovalFrame.png"
+                  src="/frame1.png"
                   alt="Frame"
                   className={styles.frameStyle}
                 />

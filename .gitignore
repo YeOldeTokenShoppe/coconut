@@ -109,6 +109,9 @@ next-env.d.ts
 /functions/
 
 
+
+.mp3
+.mp4
 .gif
 .png
 .jpg

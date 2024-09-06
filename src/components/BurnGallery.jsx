@@ -75,6 +75,10 @@ const BurnGallery = () => {
 
   const getFormattedImageUrl = (url) => {
     if (!url) return "";
+    // Only modify Twitter URLs to get the 'bigger' size
+    if (url.includes("pbs.twimg.com")) {
+      return url.replace("_normal", "_bigger"); // Replace '_normal' with '_bigger' for a larger version
+    }
     // Only add `?alt=media` for Firebase URLs
     if (url.includes("firebasestorage")) {
       return url.includes("alt=media") ? url : `${url}&alt=media`;
@@ -127,10 +131,17 @@ const BurnGallery = () => {
   const handleCloseImageSelectionModal = () =>
     setIsImageSelectionModalOpen(false);
 
-  const handleCloseBurnModal = () => {
-    setIsBurnModalOpen(false);
-    router.push("/gallery", undefined, { shallow: true });
-  };
+  // const handleCloseBurnModal = () => {
+  //   // Reset all necessary states related to the burning process
+  //   setIsBurnModalOpen(false);
+  //   setIsResultSaved(false); // Reset result saved state
+  //   setSaveMessage(""); // Clear save message
+  //   setBurnedAmount(0); // Reset the burned amount
+  //   setSelectedImage(null); // Reset selected image
+  //   setShowImageWarning(false); // Reset any warnings
+  //   setUploadedImage(null); // Clear any uploaded image if needed
+  //   router.push("/gallery", undefined, { shallow: true }); // Return to gallery
+  // };
 
   useEffect(() => {
     if (isBurnModalOpen && router.query.burnModal !== "open") {
@@ -148,18 +159,18 @@ const BurnGallery = () => {
   };
 
   const ImageBox = ({ image }) => {
-    const imageUrl = getFormattedImageUrl(image.src);
-    const frameChoice = image.frameChoice || "frame1"; // Default frame choice for avatar images
+    const imageUrl = getFormattedImageUrl(image.src); // Ensure the larger avatar is fetched
+    const isVideo = image.isVideo;
+    const isFirstImage = image.isFirstImage;
 
-    const frameSrc = {
-      frame1: "/frame1.png",
-      frame2: "/frame2.png",
-      frame3: "/frame3.png",
-    }[frameChoice];
-
-    const isCompositeImage =
-      image.isFirstImage || image.src.includes("userImages"); // For avatar or uploaded images
-    const isAvatar = image.isFirstImage; // Specifically for the user's avatar image
+    const frameSrc =
+      !isVideo && image.frameChoice
+        ? {
+            frame1: "/frame1.png",
+            frame2: "/frame2.png",
+            frame3: "/frame3.png",
+          }[image.frameChoice]
+        : null;
 
     return (
       <Box
@@ -195,12 +206,10 @@ const BurnGallery = () => {
           justifyContent="center"
           width="100%"
           height="auto"
-          boxSize={isAvatar ? "9.5rem" : "auto"} // Smaller box size for avatars, original size for others
           mb={2}
           position="relative"
         >
-          {/* Display the frame for composite images (avatars or uploaded images) */}
-          {isCompositeImage && frameSrc && (
+          {!isVideo && frameSrc && (
             <Image
               src={frameSrc}
               alt="Frame"
@@ -212,20 +221,33 @@ const BurnGallery = () => {
             />
           )}
 
-          {/* Display the selected image */}
-          {imageUrl && (
+          {isVideo ? (
+            <video
+              src={imageUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                width: "100%",
+                height: "auto",
+                zIndex: "5",
+                borderRadius: isFirstImage ? "50%" : "0",
+              }}
+            />
+          ) : (
             <Image
               src={imageUrl || "/defaultAvatar.png"}
               alt={image.alt || "User image"}
               style={{
-                position: isAvatar ? "absolute" : "relative", // Avatar images need absolute positioning
-                top: isAvatar ? "60%" : "0", // Only apply top adjustment for avatar images
-                left: isAvatar ? "50%" : "0", // Only apply left adjustment for avatar images
-                transform: isAvatar ? "translate(-50%, -50%)" : "none", // Only apply transform for avatars
-                width: isAvatar ? "calc(100% - 1.5rem)" : "100%", // Avatar images are smaller, others fill the container
-                height: "auto",
+                position: isFirstImage ? "relative" : "relative", // Avatar images need absolute positioning, uploaded images relative
+                top: isFirstImage ? "50%" : "0", // Adjust top position for avatar images, leave uploaded images at the top
+                left: isFirstImage ? "50%" : "0", // Adjust left position for avatar images, leave uploaded images at the top
+                transform: isFirstImage ? "translate(-50%, -50%)" : "none", // Only apply translate for avatar images
+                width: isFirstImage ? "calc(100% - 2rem)" : "100%", // Avatar images are smaller, uploaded images fill the container
+                height: "auto", // Keep height proportional
                 zIndex: "5",
-                borderRadius: isAvatar ? "50%" : "0%", // Apply circular border-radius only for avatars
+                borderRadius: isFirstImage ? "50%" : "0", // Avatar images are circular, uploaded images aren't
               }}
             />
           )}
@@ -240,7 +262,7 @@ const BurnGallery = () => {
           flexDirection="column"
           justifyContent="center"
           position="relative"
-          marginTop="1.5rem"
+          marginTop="3rem"
         >
           {image.userName}
           <br />
@@ -314,7 +336,11 @@ const BurnGallery = () => {
     fetchData().catch(console.error);
   }, []);
 
-  const combinedImages = [...topBurners, ...recentSubmissions].slice(0, 6);
+  const combinedImages = [...topBurners, ...recentSubmissions].map((image) => ({
+    ...image,
+    isVideo: image.src.endsWith(".mp4"), // Explicitly set if the image is a video
+    frameChoice: image.frameChoice || (image.isFirstImage ? "frame1" : null), // Set frameChoice only if it's the first image
+  }));
 
   function formatAndWrapNumber(number) {
     // Convert the number to a string and add commas as thousands separators
@@ -512,15 +538,19 @@ const BurnGallery = () => {
                 // Ensure the frame and composite logic are passed correctly
                 const isFirstImage =
                   image.isFirstImage || image.src === avatarUrl; // Compare with avatarUrl if needed
-                const frameChoice = image.frameChoice || "frame1";
+                const isVideo = image.isVideo; // Check if it's a video
+                const frameChoice = isVideo
+                  ? null
+                  : image.frameChoice || "frame1"; // Only apply frame if it's not a video
 
                 return (
                   <ImageBox
                     key={index}
                     image={{
                       ...image,
-                      isFirstImage, // Add this to ensure logic for profile image is applied
-                      frameChoice: image.frameChoice || "frame1", // Default to frame1
+                      isFirstImage, // Ensure logic for profile image is applied
+                      frameChoice, // Apply the frame only when appropriate (not for videos)
+                      isVideo, // Pass the video flag
                     }}
                     avatarUrl={avatarUrl} // Pass avatarUrl to ImageBox
                   />

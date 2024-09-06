@@ -3,19 +3,18 @@ $(document).ready(function () {
 
   var songs = [
     {
+      title: "Every 1s A Winner",
+      src: "/Winner.mp3",
+      albumCover: "./virginRecords.jpg",
+    },
+    {
       title: "Ox Out The Cage",
-      src: "Ox.mp3",
+      src: "/Ox.mp3",
       albumCover: "./virginRecords.jpg",
     },
     {
       title: "Sickick",
       src: "https://raw.githubusercontent.com/abxlfazl/music-player-widget/main/src/assets/media/songs/1/song.mp3",
-      albumCover: "./virginRecords.jpg",
-    },
-
-    {
-      title: "Every 1s A Winner",
-      src: "Winner.mp3",
       albumCover: "./virginRecords.jpg",
     },
   ];

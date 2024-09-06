@@ -62,7 +62,11 @@ function BurnModal({
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const shouldShowFrame = (imageUrl) => {
-    return imageUrl.includes("userImages") || imageUrl === user.photoURL;
+    return (
+      imageUrl.includes("userImages") ||
+      imageUrl === avatarUrl ||
+      selectedImage.isFirstImage
+    );
   };
 
   let avatarUrl = user ? user.photoURL : "/defaultAvatar.png"; // Fallback to default if user has no profile image
@@ -108,9 +112,17 @@ function BurnModal({
         const resultSnap = await getDoc(resultRef);
         if (resultSnap.exists()) {
           const resultData = resultSnap.data();
-          // Ensure uploaded image is fetched
-          setSelectedImage(resultData.image);
-          console.log("Image fetched for BurnModal:", resultData.image);
+          let imageUrl = resultData.image.src;
+
+          // If the image URL is a Twitter image, adjust to fetch the "bigger" size
+          if (imageUrl.includes("pbs.twimg.com/profile_images")) {
+            // Replace "_normal" with "_bigger" to get a higher quality profile image
+            imageUrl = imageUrl.replace("_normal", "_bigger");
+          }
+
+          // Set the selected image with the correct frame and profile image URL
+          setSelectedImage({ ...resultData.image, src: imageUrl });
+          console.log("Image fetched for BurnModal:", imageUrl);
         }
       } catch (error) {
         console.error("Error fetching saved image:", error);
@@ -122,7 +134,7 @@ function BurnModal({
     }
   }, [transactionStatus, isResultSaved]);
 
-  // Make sure the fetched image is displayed correctly
+  // Ensure the fetched image is displayed correctly, including the frame
   {
     selectedImage && selectedImage.src && (
       <Box
@@ -140,6 +152,7 @@ function BurnModal({
       />
     );
   }
+
   const handleClose = () => {
     onClose();
   };
@@ -153,9 +166,22 @@ function BurnModal({
   };
 
   const handleCloseImageSelectionModal = () => {
+    // Close the modal
     setIsImageSelectionModalOpen(false);
-  };
 
+    // Reset the relevant states to initial values
+    setSelectedImage(null); // Clear the selected image
+    setUploadedImage(null); // Clear the uploaded image
+    setUserMessage(""); // Reset the user message
+    setCustomName(""); // Reset custom name
+    setFrameChoice("frame1"); // Reset frame to default
+    setIsResultSaved(false); // Reset result saved status
+    setSaveMessage(""); // Clear save message
+    setCrop({ x: 0, y: 0 }); // Reset crop values
+    setZoom(1); // Reset zoom
+    setCroppedArea(null); // Clear cropped area
+    setBurnedAmount(0); // Reset burned amount
+  };
   const handleSaveResult = ({ userName, image, userMessage }) => {
     console.log(`Saving Result - Image URL: ${image.src}`);
     setUserName(userName);
@@ -185,18 +211,7 @@ function BurnModal({
               ? "Transaction Complete!"
               : "Burn an Offering?"}
           </ModalHeader>
-          {/* {transactionStatus === "idle" && (
-            
-            <Text fontSize="small" align={"left"} ml={7} mr={7}>
-              Enter any amount of tokens to burn, but it is recommended that you
-              burn only a minimal amount, as sometimes the transaction can fail.
-              Burning RL80 tokens should primarily be a symbolic gesture rather
-              than a painful sacrifice. Every 1000 tokens burned is an entry for
-              the week's treasury giveaway. The top 3 burners will remain
-              eligible for subsequent drawings as long as they remain in the top
-              3. Have fun!
-            </Text>
-          )} */}
+
           {transactionStatus === "completed" && (
             <Text fontSize="large" align={"center"} ml={7} mr={7}>
               Your transaction has been completed successfully.
@@ -256,8 +271,9 @@ function BurnModal({
                   mb="8"
                   mt="5"
                 >
-                  {/* Display frame based on frameChoice */}
+                  {/* Display frame only if it's an image and not a video */}
                   {selectedImage &&
+                    !selectedImage.isVideo && // Ensure it's not a video
                     selectedImage.frameChoice &&
                     shouldShowFrame(selectedImage.src) && (
                       <ChakraImage
@@ -271,33 +287,49 @@ function BurnModal({
                       />
                     )}
 
-                  {/* Display the selected image */}
+                  {/* Display the selected image or video */}
                   {selectedImage && selectedImage.src && (
-                    <Box
-                      as="img"
-                      src={getFormattedImageUrl(selectedImage.src)} // Use the updated function
-                      alt="Selected Image"
-                      position="absolute"
-                      top="60%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      width="calc(100% - 2rem)"
-                      height="auto"
-                      zIndex="-1"
-                      borderRadius={
-                        selectedImage.isFirstImage ||
-                        selectedImage.src === avatarUrl
-                          ? "50%"
-                          : "0"
-                      } // Conditionally apply border radius for profile image
-                    />
+                    <>
+                      {selectedImage.isVideo ? (
+                        <Box
+                          as="video"
+                          src={getFormattedImageUrl(selectedImage.src)} // Use formatted URL for video
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          position="absolute"
+                          top="50%" // Center video vertically
+                          left="50%" // Center video horizontally
+                          transform="translate(-50%, -50%)" // Ensure it's centered
+                          width="100%" // Full width for the video
+                          height="auto"
+                          zIndex="1"
+                        />
+                      ) : (
+                        <Box
+                          as="img"
+                          src={getFormattedImageUrl(selectedImage.src)} // Use the formatted URL for images
+                          alt="Selected Image"
+                          position="absolute"
+                          top="50%" // Center image vertically
+                          left="50%" // Center image horizontally
+                          transform="translate(-50%, -50%)" // Ensure it's centered
+                          width="calc(100% - 2rem)" // Adjust the width
+                          height="auto"
+                          zIndex="1"
+                          borderRadius={
+                            selectedImage.isFirstImage ? "50%" : "0"
+                          } // Apply border radius for avatar images
+                        />
+                      )}
+                    </>
                   )}
                 </Box>
                 <p>{userMessage}</p>
                 <p>{saveMessage}</p>
               </div>
             )}
-
             {transactionStatus === "idle" && (
               <div
                 style={{
@@ -367,7 +399,7 @@ function BurnModal({
                   ? "Transaction Pending..."
                   : transactionStatus === "failed"
                   ? "Transaction Failed"
-                  : "Burn Tokens"}
+                  : "Burn Offering"}
                 <span className="shimmer"></span>
               </TransactionButton>
             ) : transactionCompleted && !isResultSaved ? (
@@ -393,6 +425,7 @@ function BurnModal({
         </ModalContent>
         <ImageSelectionModal
           isOpen={isImageSelectionModalOpen}
+          setIsImageSelectionModalOpen={setIsImageSelectionModalOpen} // Pass the setter function
           onClose={handleCloseImageSelectionModal}
           setSelectedImage={setSelectedImage}
           burnedAmount={burnedAmount}

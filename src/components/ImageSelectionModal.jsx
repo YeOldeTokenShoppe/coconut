@@ -34,6 +34,7 @@ import AuthModal from "./AuthModal";
 import UploadImage from "../utilities/UploadImage";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utilities/cropImageUtility";
+import { useRouter } from "next/router";
 
 function ImageSelectionModal({
   isOpen,
@@ -55,10 +56,13 @@ function ImageSelectionModal({
   const [selectedImageObject, setSelectedImageObject] = useState(null);
   const [showImageWarning, setShowImageWarning] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [frameChoice, setFrameChoice] = useState("frame1");
+  const [frameChoice, setFrameChoice] = useState("frame0");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedArea, setCroppedArea] = useState(null);
+  const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
+    useState(false);
+  const router = useRouter();
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedArea(croppedAreaPixels);
@@ -105,6 +109,7 @@ function ImageSelectionModal({
     }
   };
   const framePaths = {
+    frame0: "/frame0.png",
     frame1: "/frame1.png", // Replace with actual paths
     frame2: "/frame2.png",
     frame3: "/frame3.png",
@@ -121,47 +126,7 @@ function ImageSelectionModal({
   let avatarUrl = user ? user.photoURL : "/defaultAvatar.png";
   const params = new URLSearchParams();
 
-  const imageUrls = [
-    avatarUrl,
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    "/smoke.mp4",
-    // "/elmo.gif",
-    // "/dracarys.gif",
-    // "/frank.gif",
-    // "/homer.gif",
-    // "/sup.gif",
-    // "/louise.gif",
-    // "/smoke.gif",
-    // "/fever.gif",
-    // "/thing1.gif",
-    // "/corndog.gif",
-    // "/thing2.gif",
-    // "/sponge.gif",
-    // "/mona.gif",
-    // "/pikachu.gif",
-    // "/devito.gif",
-    // "/thing3.gif",
-    // "/thisisfine.gif",
-    // "/candles.gif",
-  ];
+  const imageUrls = [avatarUrl, "/smoke.mp4"];
 
   avatarUrl = `${avatarUrl}?${params.toString()}`;
 
@@ -199,12 +164,26 @@ function ImageSelectionModal({
       return url;
     }
   };
-
-  const handleImageSelection = (image) => {
-    // Set the selected image's URL directly
+  const handleImageSelection = (image, index) => {
     if (image && image.url) {
-      setSelectedImage(image.url); // Save only the URL, not the entire image object
-      console.log("Selected image from carousel:", image.url);
+      const isFirstImage = index === 0; // Flag as first image if it's the avatar
+      const frameForAvatar = isFirstImage ? "frame1" : frameChoice; // Apply frame1 for the avatar
+
+      setSelectedImage({
+        url: image.url,
+        isFirstImage, // Mark whether it's the first image (avatar)
+        isVideo: image.url.endsWith(".mp4"), // Handle if the media is a video
+        frameChoice: frameForAvatar, // Apply the correct frame for the avatar or the user's frame selection
+      });
+
+      console.log(
+        "Selected image from carousel:",
+        image,
+        "Is first image:",
+        isFirstImage,
+        "Frame choice:",
+        frameForAvatar
+      );
     } else {
       console.error("No valid image selected.");
     }
@@ -212,8 +191,12 @@ function ImageSelectionModal({
 
   const handleSaveResult = async () => {
     try {
-      // If there's an uploaded image, use it. Otherwise, use the selected image or fallback to avatarUrl.
-      let imageToSave = uploadedImage || selectedImage || avatarUrl; // Just use `selectedImage`, which is now a URL
+      if (!selectedImage && !uploadedImage) {
+        setShowImageWarning(true); // Show the alert if no image is selected
+        return;
+      }
+
+      let imageToSave = uploadedImage || selectedImage?.url;
 
       if (!imageToSave) {
         console.error("No valid image selected for saving.");
@@ -242,50 +225,35 @@ function ImageSelectionModal({
         }
       }
 
-      // Check if the saved image is the user's avatar
-      const isFirstImage = imageToSave === avatarUrl;
-
-      // Validate required fields before saving
-      if (!user || !user.uid || !user.displayName) {
-        throw new Error("User information is missing. Cannot save result.");
-      }
-
-      if (!burnedAmount || isNaN(burnedAmount)) {
-        throw new Error("Burned amount is invalid.");
-      }
-
-      const selectedFrame = frameChoice || "frame1";
+      const isFirstImage = uploadedImage
+        ? false
+        : selectedImage?.isFirstImage || false; // Fallback to false if no selection
+      const selectedFrame = selectedImage?.isVideo
+        ? null
+        : isFirstImage
+        ? "frame1"
+        : frameChoice || "frame1"; // Use frame1 for the avatar
       const userName = customName || user.displayName || "Anonymous";
       const userId = user.uid;
-
-      // Log data before saving to Firestore
-      console.log("Saving result with the following data:", {
-        userName,
-        image: {
-          src: downloadURL,
-          isFirstImage, // Whether it's the avatar or not
-          frameChoice: selectedFrame,
-        },
-        userMessage,
-        burnedAmount,
-      });
 
       // Save result in Firestore
       await setDoc(doc(db, "results", userId), {
         userName,
         image: {
           src: downloadURL,
-          isFirstImage, // Whether it's the avatar or not
-          frameChoice: selectedFrame,
+          isFirstImage: isFirstImage,
+          isVideo: selectedImage?.isVideo || false, // Ensure the video flag is saved
+          frameChoice: selectedFrame, // Frame only for non-videos
         },
         userMessage: userMessage || "",
         createdAt: serverTimestamp(),
-        burnedAmount: burnedAmount || 0, // Ensure burnedAmount is valid
+        burnedAmount: burnedAmount || 0,
       });
 
       setIsResultSaved(true);
       setSaveMessage("Your image was successfully saved.");
-      onClose();
+      onClose(); // Close the modal after save
+      router.push("/gallery"); // Redirect to the gallery page
     } catch (error) {
       console.error("Error saving result:", error);
     }
@@ -353,7 +321,18 @@ function ImageSelectionModal({
               <Carousel8
                 images={imageUrls.map((url) => ({
                   url: url,
-                  content: <img src={url} alt="Carousel item" />,
+                  content: url.endsWith(".mp4") ? (
+                    <video
+                      src={url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  ) : (
+                    <img src={url} alt="Carousel item" />
+                  ),
                 }))}
                 avatarUrl={avatarUrl}
                 onImageSelect={handleImageSelection}
@@ -428,7 +407,7 @@ function ImageSelectionModal({
                     size="sm"
                     mr={2}
                     mb={2}
-                    onClick={() => setFrameChoice("frame1")}
+                    onClick={() => setFrameChoice("frame0")}
                   >
                     Frame 1
                   </Button>
