@@ -8,6 +8,7 @@ import WalletButton1 from "../components/WalletButton1";
 import RotatingBadge2 from "./RotatingBadge2";
 import AuthModal from "./AuthModal";
 import Image from "next/image";
+import MatrixRain from "./MatrixRain";
 
 function Header2() {
   const [user, setUser] = useState(null);
@@ -19,8 +20,6 @@ function Header2() {
   const currentUrl = router.asPath;
   const [menuWidth, setMenuWidth] = useState("35%");
   const [mounted, setMounted] = useState(false);
-
-  const matrixRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -108,22 +107,22 @@ function Header2() {
     };
   }, []);
 
-  useEffect(() => {
-    let p = matrixRef.current;
+  // useEffect(() => {
+  //   let p = matrixRef.current;
 
-    function addBubbles() {
-      for (var i = 0; i < 50; i++) {
-        // change 25 to 50
-        let b = document.createElement("p");
-        b.className = "bubble";
-        b.innerText = Math.floor(Math.random() * 10);
-        b.style.left = i * 2 + 1 + "%"; // adjust the left position to accommodate more bubbles
-        b.style.animationDelay = 4 * Math.random() + "s";
-        p.appendChild(b);
-      }
-    }
-    addBubbles();
-  }, []);
+  //   function addBubbles() {
+  //     for (var i = 0; i < 50; i++) {
+  //       // change 25 to 50
+  //       let b = document.createElement("p");
+  //       b.className = "bubble";
+  //       b.innerText = Math.floor(Math.random() * 10);
+  //       b.style.left = i * 2 + 1 + "%"; // adjust the left position to accommodate more bubbles
+  //       b.style.animationDelay = 4 * Math.random() + "s";
+  //       p.appendChild(b);
+  //     }
+  //   }
+  //   addBubbles();
+  // }, []);
 
   return (
     <>
@@ -134,22 +133,23 @@ function Header2() {
           mb={{ base: "200px", sm: "100px", md: "125px" }}
           style={{ position: "relative" }}
         >
-          <div className="header matrix-container" ref={matrixRef}>
-            <p
-              className="matrix-container"
-              ref={matrixRef}
-              style={{
-                height: "250px",
-                width: "120%",
-              }}
-            ></p>
-          </div>
+          {/* Background matrix effect */}
+          <MatrixRain />
+
           <div className="section">
             <header id="header">
               <div className="menu-icon" onClick={toggleMenu}></div>
               <div className="menu-wrapper">
                 <div className="logo-menu-container">
                   <div id="logo">
+                    <img
+                      className="logo"
+                      src="./NEWRL80.png"
+                      width="60"
+                      height="60"
+                      alt=""
+                      style={{ zIndex: "-1" }}
+                    />
                     <RotatingBadge2 />
                   </div>
                 </div>

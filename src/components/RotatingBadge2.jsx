@@ -144,14 +144,14 @@ const RotatingBadge2 = () => {
         {" "}
       </span> */}
 
-      <img
+      {/* <img
         className="badge__emoji2"
         src="./NEWRL80.png"
         width="60"
         height="60"
         alt=""
         style={{ zIndex: "-1" }}
-      />
+      /> */}
       {/* <p className="badge__emoji" style={{ fontSize: "2.7rem" }}>
         ❤️‍🔥
       </p> */}

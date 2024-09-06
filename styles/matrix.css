@@ -1,52 +1,21 @@
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
-:root {
-  --color-primary: BLACK;
-  --color-second: darkgreen;
-}
-.matrix-container {
-  font-size: 5rem;
-  height: 20rem !important;
-  position: absolute;
-  /* margin: 0 !important;
-  font-family: system-ui;
-  font-weight: 900;
-  color: var(--color-primary);
-  letter-spacing: -5px;
-  -webkit-text-stroke: 2px var(--color-second);
-  text-stroke: 2px var(--color-second);
-  text-shadow: 0 0 8px var(--color-primary);
-  position: relative;
-  line-height: 80%;
-  left: -6%; */
+.matrix-main {
+  display: flex;
+  justify-content: space-between;
+  height: 250px;
+  width: 100%;
+  overflow: hidden;
 }
 
-.bubble {
-  aspect-ratio: 1/1;
-  line-height: 100%;
+.matrix-stream {
+  line-height: 1;
+}
+
+.matrix-char {
+  display: block;
+  width: 2vmax;
+  height: 2vmax;
+  font-size: 2vmax;
+  color: #9bff9b11;
   text-align: center;
-  font-family: monospace;
-  font-size: 1.1rem;
-  text-shadow: 0 0 5px limegreen, 0 0 transparent;
-  text-stroke: 0;
-  -webkit-text-stroke: 0;
-  color: limegreen;
-  box-sizing: border-box;
-  position: absolute;
-  top: -50px;
-  /* left: -25%; */
-  opacity: 0;
-  animation: matrix 4s ease-in infinite;
-}
-
-@keyframes matrix {
-  25% {
-    opacity: 1;
-  }
-  75% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    top: calc(100% + 15px);
-  }
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
 }

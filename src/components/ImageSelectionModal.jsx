@@ -31,7 +31,7 @@ import { db, auth } from "../utilities/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
 import Carousel8 from "./Carousel8";
 import AuthModal from "./AuthModal";
-import UploadImage from "./UploadImage";
+import UploadImage from "../utilities/UploadImage";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utilities/cropImageUtility";
 
@@ -123,24 +123,44 @@ function ImageSelectionModal({
 
   const imageUrls = [
     avatarUrl,
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
+    "/smoke.mp4",
     // "/elmo.gif",
-    "/dracarys.gif",
-    "/frank.gif",
-    "/homer.gif",
-    "/sup.gif",
-    "/louise.gif",
-    "/smoke.gif",
-    "/fever.gif",
-    "/thing1.gif",
-    "/corndog.gif",
-    "/thing2.gif",
-    "/sponge.gif",
-    "/mona.gif",
-    "/pikachu.gif",
-    "/devito.gif",
-    "/thing3.gif",
-    "/thisisfine.gif",
-    "/candles.gif",
+    // "/dracarys.gif",
+    // "/frank.gif",
+    // "/homer.gif",
+    // "/sup.gif",
+    // "/louise.gif",
+    // "/smoke.gif",
+    // "/fever.gif",
+    // "/thing1.gif",
+    // "/corndog.gif",
+    // "/thing2.gif",
+    // "/sponge.gif",
+    // "/mona.gif",
+    // "/pikachu.gif",
+    // "/devito.gif",
+    // "/thing3.gif",
+    // "/thisisfine.gif",
+    // "/candles.gif",
   ];
 
   avatarUrl = `${avatarUrl}?${params.toString()}`;

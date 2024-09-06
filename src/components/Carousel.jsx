@@ -24,6 +24,7 @@ const Carousel = ({ images }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const router = useRouter();
   const currentUrl = router.asPath;
+  const [isRideConfirmationOpen, setIsRideConfirmationOpen] = useState(false); // New state for ride confirmation
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -31,24 +32,23 @@ const Carousel = ({ images }) => {
     });
   }, []);
 
-  const handleImageClick = async (image, beastId) => {
-    if (!user) {
-      setIsAuthModalOpen(true); // Open the AuthModal if not signed in
-      return;
-    }
-
+  const handleImageClick = (image, beastId) => {
     setSelectedImage({ ...image, beastId });
+    setIsRideConfirmationOpen(true); // Show the ride confirmation prompt
   };
 
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  const handleRideBeast = async (beastId) => {
+  const confirmRide = async () => {
+    setIsRideConfirmationOpen(false); // Close the ride confirmation prompt
     if (!user) {
       setIsAuthModalOpen(true); // Open the AuthModal if not signed in
       return;
     }
 
     try {
+      const beastId = selectedImage.beastId;
+
       // Fetch any existing rides for this user
       const ridesQuery = query(
         collection(db, "carouselBeasts"),
@@ -112,6 +112,7 @@ const Carousel = ({ images }) => {
       alert("Failed to ride beast. Please try again.");
     }
   };
+
   useEffect(() => {
     const intervalId = setInterval(async () => {
       for (let index = 0; index < images.length; index++) {
@@ -202,7 +203,7 @@ const Carousel = ({ images }) => {
           })}
         </div>
 
-        {selectedImage && (
+        {selectedImage && isRideConfirmationOpen && (
           <div
             style={{
               backgroundColor: "pink",
@@ -223,7 +224,7 @@ const Carousel = ({ images }) => {
               style={{ width: "100px", height: "100px" }}
             />
             <Button
-              onClick={() => handleRideBeast(selectedImage.beastId)}
+              onClick={confirmRide} // Trigger the confirmation before the auth check
               style={{
                 marginTop: "10px",
                 padding: "5px 10px",

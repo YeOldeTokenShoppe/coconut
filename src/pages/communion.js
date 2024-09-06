@@ -50,26 +50,26 @@ export default function CommunionPage() {
   return (
     <>
       <div
-        style={{
-          backgroundImage: `url(${"/burstBackground.png"})`,
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover", // ensure the image covers the whole div
-          transform: isMobile ? "scale(1.2)" : "scale(1.6)",
-          opacity: ".3",
-          position: "absolute",
-          top: "0",
-          left: "0",
-          right: "0", // add right and bottom
-          bottom: "0",
-          zIndex: "0",
-          width: "", // set width and height to 100%
-          height: "120%",
+      // style={{
+      //   backgroundImage: `url(${"/burstBackground.png"})`,
+      //   backgroundPosition: "center",
+      //   backgroundRepeat: "no-repeat",
+      //   backgroundSize: "cover",
+      //   transform: isMobile ? "scale(1.2)" : "scale(1.6)",
+      //   opacity: ".3",
+      //   position: "absolute",
+      //   top: "0",
+      //   left: "0",
+      //   right: "0", // add right and bottom
+      //   bottom: "0",
+      //   zIndex: "0",
+      //   width: "", // set width and height to 100%
+      //   height: "120%",
 
-          padding: "0",
-        }}
+      //   padding: "0",
+      // }}
       />
-      <div
+      {/* <div
         style={{
           position: "relative",
           width: "100%",
@@ -78,7 +78,7 @@ export default function CommunionPage() {
         }}
       >
         <Image src="/banner.png" alt="banner" height="auto" width="100%" />
-      </div>
+      </div> */}
 
       <div
         style={{
@@ -110,18 +110,20 @@ export default function CommunionPage() {
       <Box
         style={{
           position: "absolute",
+          justifyContent: "center",
+
           bottom: isMobile ? "-2rem" : "-40%",
-          // bottom: "0rem",
-          right: isMobile ? "0" : "-5%",
+
+          right: isMobile ? "" : "5%",
         }}
       >
         <iframe
           src="/html/musicPlayer.html"
           style={{
-            width: isMobile ? "60vw" : "32vw",
-            height: isMobile ? "48vh" : "45vh",
+            width: isMobile ? "120vw" : "25rem",
+            height: isMobile ? "40vh" : "16rem",
             border: "none",
-            transform: isMobile ? "scale(1)" : "scale(.8)",
+            transform: isMobile ? "scale(.7)" : "scale(.8)",
           }}
           scrolling="no"
           allowFullScreen

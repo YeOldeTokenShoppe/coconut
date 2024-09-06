@@ -30,13 +30,15 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
 
   const calculateBlur = (index) => {
     const angle = (index * rotationStep + currdeg) % 360;
-
-    // Adjusted range to clearly identify the three front images
     return (angle >= -45 && angle <= 45) ||
       (angle >= 315 && angle <= 360) ||
       (angle >= -360 && angle <= -315)
       ? "none"
       : "blur(5px)";
+  };
+
+  const isVideo = (url) => {
+    return url.endsWith(".mp4");
   };
 
   return (
@@ -64,11 +66,27 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
               }}
               onClick={() => handleSelectImage(image)}
             >
-              <img
-                src={image.url}
-                alt={`Slide ${index + 1}`}
-                className={isAvatar ? styles.avatarImage : ""}
-              />
+              {/* Conditionally render video or image */}
+              {isVideo(image.url) ? (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className={styles.video}
+                  style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                >
+                  <source src={image.url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={image.url}
+                  alt={`Slide ${index + 1}`}
+                  className={isAvatar ? styles.avatarImage : ""}
+                />
+              )}
+
               {isAvatar && (
                 <img
                   src="/ovalFrame.png"

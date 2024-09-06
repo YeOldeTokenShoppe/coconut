@@ -967,32 +967,11 @@ ul.icons li .icon:hover:active {
   }
 } */
 /* Styles for logo */
-#logo img {
-  width: 6em;
-  height: 6em;
-  object-fit: contain;
-  display: block;
-  /* animation: pulse 2s infinite; */
-}
 
-#header #logo {
-  background: #8f662c;
-  padding: 1rem;
-  position: absolute;
-  text-align: center;
-  text-decoration: none;
-  z-index: 911; /* Increase as needed */
-  left: 50%;
-  top: 0; /* Add this line */
-  transform: translateX(-50%);
-  overflow: visible;
-  z-index: 1;
-}
-
-#header #logo a img {
+/* #header #logo a img {
   width: 8rem;
   height: 8rem;
-}
+} */
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -1019,6 +998,14 @@ ul.icons li .icon:hover:active {
   width: 100%;
 }
 
+#logo {
+  position: relative;
+  width: 7.5em;
+  height: 7.5em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 #logo1 img {
   width: 150px;
   height: 150px;
@@ -2272,8 +2259,8 @@ ul.icons li .icon:hover:active {
   width: 6rem;
   height: 6rem;
   object-fit: contain;
-  display: block;
-  /* animation: pulse 2s infinite; */
+  position: absolute;
+  z-index: -1;
 }
 
 #header #logo {
@@ -3559,8 +3546,8 @@ div.css-161tt0w {
 }
 .badge {
   --badge-size: min(
-    max(10vw, 100px),
-    200px
+    max(10vw, 7rem),
+    8rem
   ); /* This will make the badge size at least 100px and at most 200px */
   --badge-color: var(--black);
 

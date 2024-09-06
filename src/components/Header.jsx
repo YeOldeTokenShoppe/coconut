@@ -121,6 +121,14 @@ function Header() {
               <div className="menu-wrapper">
                 <div className="logo-menu-container">
                   <div id="logo">
+                    <img
+                      className="logo"
+                      src="./NEWRL80.png"
+                      width="60"
+                      height="60"
+                      alt=""
+                      style={{ zIndex: "-1" }}
+                    />
                     <RotatingBadge2 />
                   </div>
                 </div>
