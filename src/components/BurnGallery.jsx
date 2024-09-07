@@ -77,7 +77,7 @@ const BurnGallery = () => {
     if (!url) return "";
     // Only modify Twitter URLs to get the 'bigger' size
     if (url.includes("pbs.twimg.com")) {
-      return url.replace("_normal", "_bigger"); // Replace '_normal' with '_bigger' for a larger version
+      return url.replace("_normal", ""); // Replace '_normal' with '_bigger' for a larger version
     }
     // Only add `?alt=media` for Firebase URLs
     if (url.includes("firebasestorage")) {
@@ -159,18 +159,17 @@ const BurnGallery = () => {
   };
 
   const ImageBox = ({ image }) => {
-    const imageUrl = getFormattedImageUrl(image.src); // Ensure the larger avatar is fetched
-    const isVideo = image.isVideo;
-    const isFirstImage = image.isFirstImage;
+    const imageUrl = getFormattedImageUrl(image.src);
+    const frameChoice = image.frameChoice; // Use the frameChoice from Firestore
 
-    const frameSrc =
-      !isVideo && image.frameChoice
-        ? {
-            frame1: "/frame1.png",
-            frame2: "/frame2.png",
-            frame3: "/frame3.png",
-          }[image.frameChoice]
-        : null;
+    const frameSrc = {
+      frame0: "/frame0.png",
+      frame1: "/frame1.png",
+      frame2: "/frame2.png",
+      frame3: "/frame3.png",
+    }[frameChoice];
+
+    const isAvatar = image.isFirstImage; // Specifically for the user's avatar image
 
     return (
       <Box
@@ -184,44 +183,32 @@ const BurnGallery = () => {
         flexDirection="column"
         alignItems="center"
       >
-        {image.type && (
-          <Badge
-            colorScheme={image.type === "Top Burner" ? "purple" : "green"}
-            variant="solid"
-            position="absolute"
-            top="0%"
-            left="50%"
-            transform="translateX(-50%)"
-            m="1"
-            zIndex="1000"
-          >
-            {image.type}
-          </Badge>
-        )}
-
+        {/* Frame and Image Container */}
         <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          width="100%"
-          height="auto"
-          mb={2}
           position="relative"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          width={isAvatar ? "9rem" : "auto"} // Adjust size for avatar or other images
+          height={isAvatar ? "9rem" : "auto"} // Keep the frame size consistent
         >
-          {!isVideo && frameSrc && (
+          {/* Conditionally display the frame if it's not a video */}
+          {!image.isVideo && frameChoice && frameSrc && (
             <Image
               src={frameSrc}
               alt="Frame"
-              layout="fill"
-              objectFit="contain"
               position="absolute"
               top="0"
+              left="0"
+              width="100%"
+              height="100%"
+              objectFit="contain"
               zIndex="6"
             />
           )}
 
-          {isVideo ? (
+          {/* Display the image or video */}
+          {image.isVideo ? (
             <video
               src={imageUrl}
               autoPlay
@@ -232,7 +219,6 @@ const BurnGallery = () => {
                 width: "100%",
                 height: "auto",
                 zIndex: "5",
-                borderRadius: isFirstImage ? "50%" : "0",
               }}
             />
           ) : (
@@ -240,40 +226,14 @@ const BurnGallery = () => {
               src={imageUrl || "/defaultAvatar.png"}
               alt={image.alt || "User image"}
               style={{
-                position: isFirstImage ? "relative" : "relative", // Avatar images need absolute positioning, uploaded images relative
-                top: isFirstImage ? "50%" : "0", // Adjust top position for avatar images, leave uploaded images at the top
-                left: isFirstImage ? "50%" : "0", // Adjust left position for avatar images, leave uploaded images at the top
-                transform: isFirstImage ? "translate(-50%, -50%)" : "none", // Only apply translate for avatar images
-                width: isFirstImage ? "calc(100% - 2rem)" : "100%", // Avatar images are smaller, uploaded images fill the container
-                height: "auto", // Keep height proportional
+                width: isAvatar ? "80%" : "100%", // Adjust the image size within the frame
+                height: "auto",
                 zIndex: "5",
-                borderRadius: isFirstImage ? "50%" : "0", // Avatar images are circular, uploaded images aren't
+                borderRadius: isAvatar ? "50%" : "0", // Circular border for avatars
               }}
             />
           )}
         </Box>
-
-        <Text
-          fontSize="small"
-          fontWeight="bold"
-          lineHeight="normal"
-          textAlign="center"
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          position="relative"
-          marginTop="3rem"
-        >
-          {image.userName}
-          <br />
-          Burned: {image.burnedAmount} tokens
-          <br />
-          {image.message && (
-            <Text color="lt grey" fontWeight="normal">
-              "{image.message}"
-            </Text>
-          )}
-        </Text>
       </Box>
     );
   };
@@ -419,16 +379,18 @@ const BurnGallery = () => {
                     }}
                   >
                     Bless us,{" "}
-                    <span style={{ fontFamily: "Oleo Script" }}>RL80</span>
+                    <span style={{ fontFamily: "Oleo Script" }}>RL80</span>!
                   </Heading>
-                  <Text
-                    fontSize="xlarge"
-                    lineHeight={1.1}
-                    mb={"3rem"}
-                    zIndex={1}
-                  >
-                    Burn some tokens and enjoy instant glory and a chance to win
-                    Our Lady's treasury.
+                  <Text fontSize="xlarge" lineHeight={1.1} mb={2} zIndex={1}>
+                    Enter the virtuous cycle by burning some{" "}
+                    <span style={{ fontFamily: "Oleo Script" }}>RL80</span>{" "}
+                    tokens at the alt-coin altar and enjoy instant veneration
+                    and glory while reducing token supply.
+                    {/* and heaping blessings
+                    on your fellow bag-holders. */}
+                  </Text>
+                  <Text fontSize="small" lineHeight={1} mb={"3rem"} zIndex={1}>
+                    Average cost to participate is currently under 0.5 cents USD
                   </Text>
 
                   <Accordion allowToggle mt={3}>

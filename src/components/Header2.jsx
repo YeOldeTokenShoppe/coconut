@@ -20,6 +20,7 @@ function Header2() {
   const currentUrl = router.asPath;
   const [menuWidth, setMenuWidth] = useState("35%");
   const [mounted, setMounted] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -86,12 +87,11 @@ function Header2() {
 
   useEffect(() => {
     const handleResize = () => {
-      if (typeof window !== "undefined") {
-        if (window.innerWidth <= 760) {
-          setMenuWidth("100%");
-        } else {
-          setMenuWidth("35%");
-        }
+      setWindowWidth(window.innerWidth);
+      if (window.innerWidth <= 760) {
+        setMenuWidth("100%");
+      } else {
+        setMenuWidth("35%");
       }
     };
 
@@ -134,7 +134,7 @@ function Header2() {
           style={{ position: "relative" }}
         >
           {/* Background matrix effect */}
-          <MatrixRain />
+          {windowWidth > 550 && <MatrixRain />}
 
           <div className="section">
             <header id="header">

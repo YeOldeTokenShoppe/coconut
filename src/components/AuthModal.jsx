@@ -52,7 +52,7 @@ export default function AuthModal({
   }, [ui, isOpen, onClose, onSignInSuccess, redirectTo, router]);
 
   return isOpen ? (
-    <div className="modal">
+    <div className="modal" style={{ zIndex: "1000" }}>
       <div className="modal-content">
         <button className="close-button" onClick={onClose}>
           &times;

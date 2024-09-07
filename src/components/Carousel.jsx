@@ -172,33 +172,38 @@ const Carousel = ({ images }) => {
             const rider = riders[beastId];
 
             return (
-              <div
-                className="element"
-                style={{ "--item": index + 1 }}
-                data-item={index + 1}
-                key={index}
-              >
+              <>
                 <div
-                  className="rider-beast-group" // New container for grouping rider and beast
+                  className="element"
                   style={{ "--item": index + 1 }}
+
+                  // key={index}
                 >
-                  {rider && (
-                    <div className="rider-container">
-                      <p className="rider-name">{rider.username}</p>
-                      <img
-                        src={rider.avatarUrl}
-                        alt={rider.username}
-                        className="rider-avatar"
-                      />
+                  {" "}
+                  <div className="element2">
+                    <div
+                      className="rider-beast-group" // New container for grouping rider and beast
+                      // style={{ "--item": index + 1 }}
+                    >
+                      {rider && (
+                        <div className="rider-container">
+                          <p className="rider-name">{rider.username}</p>
+                          <img
+                            src={rider.avatarUrl}
+                            alt={rider.username}
+                            className="rider-avatar"
+                          />
+                        </div>
+                      )}
+                      <div
+                        className="beast"
+                        style={{ backgroundImage: `url(${image.src})` }}
+                        onClick={() => handleImageClick(image, beastId)}
+                      ></div>
                     </div>
-                  )}
-                  <div
-                    className="beast"
-                    style={{ backgroundImage: `url(${image.src})` }}
-                    onClick={() => handleImageClick(image, beastId)}
-                  ></div>
+                  </div>
                 </div>
-              </div>
+              </>
             );
           })}
         </div>

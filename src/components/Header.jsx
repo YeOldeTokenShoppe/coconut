@@ -164,8 +164,9 @@ function Header() {
                       className="menu-item"
                       onClick={closeMenu}
                     >
-                      Bless us,{" "}
-                      <span style={{ fontFamily: "Oleo Script" }}>RL80</span>
+                      Alt-Coin Altar
+                      {/* Bless us,{" "}
+                      <span style={{ fontFamily: "Oleo Script" }}>RL80</span> */}
                     </Link>
                     <Link
                       href="/communion"

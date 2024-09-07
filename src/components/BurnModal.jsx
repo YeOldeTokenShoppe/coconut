@@ -154,6 +154,11 @@ function BurnModal({
   }
 
   const handleClose = () => {
+    // Reset the image and any other states here
+    setSelectedImage(null);
+    setIsResultSaved(false);
+
+    // Close the modal
     onClose();
   };
 
@@ -171,7 +176,7 @@ function BurnModal({
 
     // Reset the relevant states to initial values
     setSelectedImage(null); // Clear the selected image
-    setUploadedImage(null); // Clear the uploaded image
+    // setUploadedImage(null);
     setUserMessage(""); // Reset the user message
     setCustomName(""); // Reset custom name
     setFrameChoice("frame1"); // Reset frame to default
@@ -191,7 +196,7 @@ function BurnModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} size="md" motionPreset="2">
+      <Modal isOpen={isOpen} onClose={handleClose} size="md" motionPreset="2">
         <ModalOverlay style={{ backdropFilter: "blur(8px)" }} />
         <ModalContent
           bg="#1b1724"
@@ -266,7 +271,9 @@ function BurnModal({
 
                 <Box
                   position="relative"
-                  display="inline-block"
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
                   boxSize="9rem"
                   mb="8"
                   mt="5"
@@ -281,6 +288,9 @@ function BurnModal({
                         alt="Frame"
                         position="absolute"
                         top="0"
+                        left="0"
+                        width="100%"
+                        height="100%"
                         objectFit="contain"
                         zIndex="200"
                         unoptimized
@@ -292,35 +302,44 @@ function BurnModal({
                     <>
                       {selectedImage.isVideo ? (
                         <Box
-                          as="video"
-                          src={getFormattedImageUrl(selectedImage.src)} // Use formatted URL for video
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          position="absolute"
-                          top="50%" // Center video vertically
-                          left="50%" // Center video horizontally
-                          transform="translate(-50%, -50%)" // Ensure it's centered
-                          width="100%" // Full width for the video
+                          position="relative"
+                          width="100%"
                           height="auto"
-                          zIndex="1"
-                        />
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Box
+                            as="video"
+                            src={getFormattedImageUrl(selectedImage.src)} // Use formatted URL for video
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            style={{
+                              position: "absolute",
+                              // top: "50%",
+                              left: "80%",
+
+                              width: "100%", // Ensure full width
+                              height: "auto", // Maintain aspect ratio
+                              zIndex: "1",
+                            }}
+                          />
+                        </Box>
                       ) : (
                         <Box
                           as="img"
                           src={getFormattedImageUrl(selectedImage.src)} // Use the formatted URL for images
                           alt="Selected Image"
-                          position="absolute"
-                          top="50%" // Center image vertically
-                          left="50%" // Center image horizontally
-                          transform="translate(-50%, -50%)" // Ensure it's centered
-                          width="calc(100% - 2rem)" // Adjust the width
-                          height="auto"
-                          zIndex="1"
-                          borderRadius={
-                            selectedImage.isFirstImage ? "50%" : "0"
-                          } // Apply border radius for avatar images
+                          style={{
+                            width: "calc(100% - 2rem)", // Adjust the width for images
+                            height: "auto",
+                            zIndex: "1",
+                            borderRadius: selectedImage.isFirstImage
+                              ? "50%"
+                              : "0", // Apply border radius for avatar images
+                          }}
                         />
                       )}
                     </>

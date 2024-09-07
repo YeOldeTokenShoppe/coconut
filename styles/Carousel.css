@@ -81,7 +81,6 @@
   border-radius: 50%; /* Keep it circular */
   z-index: -1; /* Send it behind the carousel */
 
-  /* Mirroring the bottom gradient and background */
   background: radial-gradient(
       circle at center,
       transparent 40 350px,
@@ -95,12 +94,6 @@
       #e6282a
     );
 }
-/* #carousel::before {
-  bottom: auto;
-  top: 0;
-  transform: translate(-50%, -50%) rotateX(90deg);
-  background-image: url("/pinwheel.webp");
-} */
 
 .element {
   position: absolute;
@@ -115,7 +108,7 @@
 .element::after,
 .element::before {
   position: absolute;
-  bottom: -52px;
+  top: -52px;
   border: 1px solid #9097a0;
   background: linear-gradient(to bottom, #c0c7d0 0%, #606770 100%);
   height: 50px;
@@ -281,4 +274,47 @@
   animation: beast-move calc(var(--rotation-time) / var(--elements)) ease-in-out
     infinite;
   animation-delay: calc(var(--item) * -0.5s);
+}
+
+.element2 {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #b8860b, #ffd700, #b8860b) 70px / 10px
+    no-repeat;
+
+  transform-style: preserve-3d;
+}
+
+.element2::after,
+.element2::before {
+  position: absolute;
+  bottom: -52px;
+  border: 1px solid #9097a0;
+  background: linear-gradient(to bottom, #c0c7d0 0%, #606770 100%);
+  height: 50px;
+}
+
+.element2::after {
+  content: ""; /* Reset the content property */
+  background-image: url("/circusStars.jpg"); /* Set the background image */
+  background-size: contain; /* Make the image as large as possible within the div, without stretching the image */
+
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 50px;
+  transform: translateZ(35px);
+}
+
+.element2::before {
+  content: ""; /* Reset the content property */
+  background-image: url("/stripes.jpg"); /* Set the background image */
+  background-size: contain; /* Make the image as large as possible within the div, without stretching the image */
+
+  left: 150px;
+  width: 82px;
+  transform-origin: left center;
+  transform: translateZ(35px) rotateY(16deg);
 }

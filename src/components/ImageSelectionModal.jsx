@@ -154,6 +154,9 @@ function ImageSelectionModal({
       onClose();
     }
   };
+  const handleCloseImageSelectionModal = () => {
+    onClose();
+  };
 
   const normalizeUrl = (url) => {
     try {
@@ -257,6 +260,7 @@ function ImageSelectionModal({
     } catch (error) {
       console.error("Error saving result:", error);
     }
+    onClose();
   };
   return (
     <>
@@ -267,7 +271,7 @@ function ImageSelectionModal({
           You must be logged in.
         </Alert>
       )}
-      <Modal isOpen={isOpen} onClose={handleClose}>
+      <Modal isOpen={isOpen} onClose={handleCloseImageSelectionModal}>
         <ModalOverlay style={{ backdropFilter: "blur(10px)" }} />
         <ModalContent
           bg="#1b1724"

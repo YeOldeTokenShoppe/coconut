@@ -50,24 +50,23 @@ export default function CommunionPage() {
   return (
     <>
       <div
-      // style={{
-      //   backgroundImage: `url(${"/burstBackground.png"})`,
-      //   backgroundPosition: "center",
-      //   backgroundRepeat: "no-repeat",
-      //   backgroundSize: "cover",
-      //   transform: isMobile ? "scale(1.2)" : "scale(1.6)",
-      //   opacity: ".3",
-      //   position: "absolute",
-      //   top: "0",
-      //   left: "0",
-      //   right: "0", // add right and bottom
-      //   bottom: "0",
-      //   zIndex: "0",
-      //   width: "", // set width and height to 100%
-      //   height: "120%",
+        style={{
+          // backgroundImage: `url(${"/burstBackground.png"})`,
+          // backgroundPosition: "center",
+          // backgroundRepeat: "no-repeat",
+          // backgroundSize: "cover",
+          // transform: isMobile ? "scale(1.2)" : "scale(1.6)",
+          // opacity: ".3",
+          position: "absolute",
+          top: "0",
+          left: "0",
+          right: "0", // add right and bottom
+          bottom: "0",
+          zIndex: "0",
+          width: "", // set width and height to 100%
 
-      //   padding: "0",
-      // }}
+          padding: "0",
+        }}
       />
       {/* <div
         style={{
@@ -84,9 +83,9 @@ export default function CommunionPage() {
         style={{
           position: "relative",
           width: "100%",
-          height: isMobile ? "105vh" : "30vh",
-          marginTop: isMobile ? "88%" : "18%",
-          marginBottom: "5rem",
+          height: isMobile ? "45vh" : "120vh",
+          marginTop: isMobile ? "50%" : "35%",
+          // marginBottom: "2rem",
           transform: isMobile ? "scale(.9)" : "scale(1)",
         }}
       >
@@ -106,29 +105,27 @@ export default function CommunionPage() {
             { src: "mothmanRide.png", title: "Mothman" },
           ]}
         />
-      </div>
-      <Box
-        style={{
-          position: "absolute",
-          justifyContent: "center",
-
-          bottom: isMobile ? "-2rem" : "-40%",
-
-          right: isMobile ? "" : "5%",
-        }}
-      >
-        <iframe
-          src="/html/musicPlayer.html"
+        <Box
           style={{
-            width: isMobile ? "120vw" : "25rem",
-            height: isMobile ? "40vh" : "16rem",
-            border: "none",
-            transform: isMobile ? "scale(.7)" : "scale(.8)",
+            position: "fixed",
+            justifyContent: "center",
+            bottom: isMobile ? "-40rem" : "3rem",
+            right: isMobile ? "-25%" : "5%",
           }}
-          scrolling="no"
-          allowFullScreen
-        />
-      </Box>
+        >
+          <iframe
+            src="/html/musicPlayer.html"
+            style={{
+              width: isMobile ? "150vw" : "50vw",
+              height: isMobile ? "100vh" : "50vh",
+              border: "none",
+              transform: isMobile ? "scale(.9)" : "scale(1)",
+            }}
+            scrolling="no"
+            allowFullScreen
+          />
+        </Box>
+      </div>
     </>
   );
 }
