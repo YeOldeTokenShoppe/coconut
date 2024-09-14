@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { initializeFirebaseUI } from "../utilities/firebaseClient";
-import { TwitterAuthProvider, EmailAuthProvider } from "firebase/auth";
+import {
+  TwitterAuthProvider,
+  EmailAuthProvider,
+  OAuthProvider,
+} from "firebase/auth";
 import { useRouter } from "next/router";
 
 export default function AuthModal({
@@ -12,6 +16,7 @@ export default function AuthModal({
   const [ui, setUi] = useState(null);
   const router = useRouter();
 
+  // Initialize Firebase UI for Twitter, Email, and Discord
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
       const uiInstance = initializeFirebaseUI();
@@ -19,11 +24,21 @@ export default function AuthModal({
     }
   }, [isOpen]);
 
+  // Handle Firebase UI sign-ins
   useEffect(() => {
     if (ui && isOpen) {
       ui.start("#firebaseui-auth-container", {
         signInFlow: "popup",
         signInOptions: [
+          {
+            provider: "oidc.discord", // Your OIDC provider ID set in Firebase console
+            providerName: "Discord", // Custom label for the button
+            buttonColor: "#7289DA", // Discord's brand color (or any color you prefer)
+            iconUrl: "https://cdn.worldvectorlogo.com/logos/discord-6.svg", // Discord logo or your own icon URL
+            customParameters: {
+              prompt: "consent", // Optional custom parameters if needed
+            },
+          },
           TwitterAuthProvider.PROVIDER_ID,
           EmailAuthProvider.PROVIDER_ID,
         ],
@@ -57,6 +72,7 @@ export default function AuthModal({
         <button className="close-button" onClick={onClose}>
           &times;
         </button>
+        {/* FirebaseUI Auth container */}
         <div id="firebaseui-auth-container"></div>
       </div>
     </div>

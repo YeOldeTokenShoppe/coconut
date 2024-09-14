@@ -1,8 +1,8 @@
 "use client";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { getAuth, OAuthProvider } from "firebase/auth"; // Correct import for OAuthProvider
+import { getStorage } from "firebase/storage"; // Correct import for storage
 
 // Firebase configuration
 const firebaseConfig = {
@@ -22,7 +22,10 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app); // Ensure storage is initialized
 
-export { auth, db, storage };
+// Register custom OIDC provider for Discord
+const discordProvider = new OAuthProvider("oidc.discord");
+
+export { auth, db, storage, discordProvider };
 
 // Initialize FirebaseUI (only when on the client side)
 export function initializeFirebaseUI() {

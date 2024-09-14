@@ -2,8 +2,8 @@
 
 .holder {
   margin: 0.5rem auto 0;
-  width: 150px;
-  height: 350px;
+  width: 5rem;
+  height: 20rem;
   position: relative;
 }
 
@@ -16,41 +16,42 @@
 
 .candle {
   bottom: 0;
-  width: 150px;
-  height: 250px;
+  width: 5rem;
+  height: 20rem;
   border-radius: 150px / 40px;
   box-shadow: inset 20px -30px 50px 0 rgba(0, 0, 0, 0.4),
     inset -20px 0 50px 0 rgba(0, 0, 0, 0.4);
   background: #190f02;
   background: -moz-linear-gradient(
-    #e48825,
-    #e78e0e,
-    #833c03,
-    #4c1a03 50%,
-    #1c0900
+    #4cbb17,
+    /* Kelly green */ #3da311,
+    /* A deeper Kelly green */ #2e8b0a 50%,
+    /* A darker shade of Kelly green */ #1f7303 /* The darkest Kelly green */
   );
   background: -webkit-linear-gradient(
-    #e48825,
-    #e78e0e,
-    #833c03,
-    #4c1a03 50%,
-    #1c0900
+    #4cbb17,
+    /* Kelly green */ #3da311,
+    /* A deeper Kelly green */ #2e8b0a 50%,
+    /* A darker shade of Kelly green */ #1f7303 /* The darkest Kelly green */
   );
   background: -o-linear-gradient(
-    #e48825,
-    #e78e0e,
-    #833c03,
-    #4c1a03 50%,
-    #1c0900
+    #4cbb17,
+    /* Kelly green */ #3da311,
+    /* A deeper Kelly green */ #2e8b0a 50%,
+    /* A darker shade of Kelly green */ #1f7303 /* The darkest Kelly green */
   );
   background: -ms-linear-gradient(
-    #e48825,
-    #e78e0e,
-    #833c03,
-    #4c1a03 50%,
-    #1c0900
+    #4cbb17,
+    /* Kelly green */ #3da311,
+    /* A deeper Kelly green */ #2e8b0a 50%,
+    /* A darker shade of Kelly green */ #1f7303 /* The darkest Kelly green */
   );
-  background: linear-gradient(#e48825, #e78e0e, #833c03, #4c1a03 50%, #1c0900);
+  background: linear-gradient(
+    #4cbb17,
+    /* Kelly green */ #3da311,
+    /* A deeper Kelly green */ #2e8b0a 50%,
+    /* A darker shade of Kelly green */ #1f7303
+  );
 }
 
 .candle:before {
@@ -59,7 +60,14 @@
   border-radius: 50%;
   border: 2px solid #d47401;
   background: #b86409;
-  background: radial-gradient(at 50% 50%, #eaa121, #8e4901 45%, #b86409 80%);
+  background: radial-gradient(
+    at 50% 50%,
+    #4cbb17,
+    /* Analog for #e48825 */ #49b315,
+    /* Analog for #e78e0e */ #35840d,
+    /* Analog for #833c03 */ #2a670a 50%,
+    /* Analog for #4c1a03 at 50% */ #1f4b07
+  );
 }
 
 .candle:after {

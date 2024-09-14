@@ -141,8 +141,8 @@ const Hero = () => {
     const randomLimitedColor = () => {
       const randomHue = (() => {
         const ranges = [
-          { min: 200, max: 250 }, // Blues
-          { min: 250, max: 290 }, // Violets/Purples
+          { min: 120, max: 150 }, // Blues
+          { min: 270, max: 290 }, // Violets/Purples
           { min: 45, max: 60 }, // Yellows and Golds
         ];
         const range = ranges[Math.floor(Math.random() * ranges.length)];

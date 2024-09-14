@@ -11,6 +11,7 @@ import "../../styles/wallpaper.css";
 import "../../styles/sg.css";
 import "../../styles/fireButton.css";
 import "../../styles/sparkle.css";
+import "../../styles/musicPlayer.css";
 import "../../styles/coin.css";
 import "firebaseui/dist/firebaseui.css";
 import type { AppProps } from "next/app";

@@ -1,94 +1,36 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Box, Image } from "@chakra-ui/react";
+import Carousel from "../components/Carousel";
+import MusicPlayer from "../components/MusicPlayer";
 
-const Carousel = dynamic(() => import("../components/Carousel"), {
-  ssr: false,
-});
+// const Carousel = dynamic(() => import("../components/Carousel"), {
+//   ssr: false,
+// });
 
 export default function CommunionPage() {
-  const [isMobile, setIsMobile] = useState(null);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 600 : false
+  );
 
   useEffect(() => {
-    // Save original values
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-
-    // Apply new style
-    document.body.style.margin = "0";
-    document.body.style.padding = "0";
-
-    // Cleanup function
-    return () => {
-      document.body.style.margin = originalStyle.margin;
-      document.body.style.padding = originalStyle.padding;
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (typeof window !== "undefined") {
-        setIsMobile(window.innerWidth <= 760);
-      }
-    };
-
+    // Ensure window is defined
     if (typeof window !== "undefined") {
-      setIsMobile(window.innerWidth <= 760);
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 600);
+      };
+
       window.addEventListener("resize", handleResize);
-    }
 
-    return () => {
-      if (typeof window !== "undefined") {
+      return () => {
         window.removeEventListener("resize", handleResize);
-      }
-    };
+      };
+    }
   }, []);
-
-  if (isMobile === null) {
-    return null; // or a loading spinner, if you prefer
-  }
 
   return (
     <>
-      <div
-        style={{
-          // backgroundImage: `url(${"/burstBackground.png"})`,
-          // backgroundPosition: "center",
-          // backgroundRepeat: "no-repeat",
-          // backgroundSize: "cover",
-          // transform: isMobile ? "scale(1.2)" : "scale(1.6)",
-          // opacity: ".3",
-          position: "absolute",
-          top: "0",
-          left: "0",
-          right: "0", // add right and bottom
-          bottom: "0",
-          zIndex: "0",
-          width: "", // set width and height to 100%
-
-          padding: "0",
-        }}
-      />
-      {/* <div
-        style={{
-          position: "relative",
-          width: "100%",
-          marginTop: isMobile ? "-45%" : "-18%",
-          transform: isMobile ? "scale(3)" : "scale(1)",
-        }}
-      >
-        <Image src="/banner.png" alt="banner" height="auto" width="100%" />
-      </div> */}
-
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: isMobile ? "45vh" : "120vh",
-          marginTop: isMobile ? "50%" : "35%",
-          // marginBottom: "2rem",
-          transform: isMobile ? "scale(.9)" : "scale(1)",
-        }}
-      >
+      <div style={{ marginTop: "5rem", marginBottom: "10rem" }}>
         <Carousel
           images={[
             { src: "seaMonster.png", title: "Sea Monster" },
@@ -104,27 +46,34 @@ export default function CommunionPage() {
             { src: "warthog.png", title: "Warthog" },
             { src: "mothmanRide.png", title: "Mothman" },
           ]}
+          logos={[
+            { logo: "/telegram_.png", title: "Telegram", link: "https://t.me" },
+            { logo: "/x_.png", title: "X", link: "https://x.com" },
+            {
+              logo: "/threads_.png",
+              title: "Threads",
+              link: "https://www.threads.net",
+            },
+            {
+              logo: "/instagram_.png",
+              title: "Instagram",
+              link: "https://www.instagram.com",
+            },
+            {
+              logo: "/facebook_.png",
+              title: "Facebook",
+              link: "https://www.facebook.com",
+            },
+            {
+              logo: "/discord_.png",
+              title: "Discord",
+              link: "https://discord.com",
+            },
+          ]}
         />
-        <Box
-          style={{
-            position: "fixed",
-            justifyContent: "center",
-            bottom: isMobile ? "-40rem" : "3rem",
-            right: isMobile ? "-25%" : "5%",
-          }}
-        >
-          <iframe
-            src="/html/musicPlayer.html"
-            style={{
-              width: isMobile ? "150vw" : "50vw",
-              height: isMobile ? "100vh" : "50vh",
-              border: "none",
-              transform: isMobile ? "scale(.9)" : "scale(1)",
-            }}
-            scrolling="no"
-            allowFullScreen
-          />
-        </Box>
+        {/* <div style={{ marginTop: "5rem" }}>
+          <MusicPlayer />
+        </div> */}
       </div>
     </>
   );

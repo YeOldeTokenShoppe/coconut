@@ -346,15 +346,16 @@ const BurnGallery = () => {
                     }}
                   >
                     <Image
-                      src="/purgatory.png"
+                      src="/devotional.png"
                       alt=""
-                      width={200}
-                      height={200}
+                      width={300}
+                      zIndex={-1}
+                      height={"auto"}
                       style={{
-                        borderRadius: "50%",
-                        border: "3px solid gold",
+                        // borderRadius: "50%",
+                        // border: "3px solid gold",
                         opacity: 0.8,
-                        zindex: "-1",
+
                         position: "relative",
                       }}
                     />
@@ -362,10 +363,10 @@ const BurnGallery = () => {
                   <div
                     style={{
                       marginBottom: "0rem",
-                      height: "10rem",
+                      height: "3rem",
                       zindex: "1",
                       position: "relative",
-                      bottom: "-1px",
+                      bottom: "8rem",
                     }}
                   >
                     <Candle />

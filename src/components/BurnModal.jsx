@@ -61,6 +61,11 @@ function BurnModal({
   const [errorMessage, setErrorMessage] = useState(null);
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
+  const [CustomName, setCustomName] = useState("");
+  const [frameChoice, setFrameChoice] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [croppedArea, setCroppedArea] = useState(null);
   const shouldShowFrame = (imageUrl) => {
     return (
       imageUrl.includes("userImages") ||

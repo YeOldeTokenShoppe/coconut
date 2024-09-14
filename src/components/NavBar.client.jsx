@@ -249,7 +249,7 @@ const NavBar = () => {
     },
     {
       date: "04",
-      title: "Alt-Coin Altar",
+      title: "Candelarium",
       emoji: "🕯️",
       link: "./gallery",
     },

@@ -19,7 +19,7 @@ body {
 
 .player {
   position: absolute;
-  top: 50%;
+  bottom: 0 !important;
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -48,7 +48,7 @@ body {
   width: 112px;
   height: 112px;
   border-radius: 50%; /* Circular album cover */
-  background-image: url("./virginRecords.jpg"); /* Same image for all songs */
+  background-image: url("/virginRecords.jpg"); /* Same image for all songs */
   background-size: cover; /* Ensures the image covers the container */
   background-position: center; /* Centers the image */
   background-repeat: no-repeat; /* Prevent repeating */
@@ -58,17 +58,17 @@ body {
 }
 
 /* .player__album:before {
-  content: "";
-  width: 25px;
-  height: 25px;
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: transparent;
-  border-radius: 50%;
-} */
+    content: "";
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border-radius: 50%;
+  } */
 
 .player__album:after {
   content: "";
@@ -124,7 +124,7 @@ body {
 }
 
 .player__prev {
-  transform: rotate(180deg);
+  transform: rotateY(180deg);
   height: 80px;
   width: 80px;
   display: flex;
@@ -256,6 +256,7 @@ body {
   position: relative;
   top: -50px;
   transition: all 0.4s ease-in-out;
+  perspective: 800px;
 }
 
 .player__album:before {
@@ -281,19 +282,4 @@ body {
   border-radius: 50%;
   box-shadow: none;
   transition: all 0.3s ease-in-out;
-}
-
-/* The rotating class triggers the rotation */
-.player__album.rotating {
-  animation: spin 3s linear infinite;
-}
-
-/* Define the keyframes for the rotation animation */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }

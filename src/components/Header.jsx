@@ -8,6 +8,7 @@ import WalletButton1 from "../components/WalletButton1";
 import RotatingBadge2 from "./RotatingBadge2";
 import AuthModal from "./AuthModal";
 import Image from "next/image";
+import Coin from "../components/Coin";
 
 function Header() {
   const [user, setUser] = useState(null);
@@ -123,13 +124,27 @@ function Header() {
                   <div id="logo">
                     <img
                       className="logo"
-                      src="./NEWRL80.png"
-                      width="60"
-                      height="60"
+                      src="./crest6.png"
+                      width="10rem"
+                      height="10rem"
                       alt=""
                       style={{ zIndex: "-1" }}
+                      objectFit={"contain"}
                     />
                     <RotatingBadge2 />
+                    {/* <div
+                      style={{
+                        position: "relative",
+                        top: ".4rem",
+                        fontFamily: "Oleo Script",
+                        fontSize: "1.2rem",
+                        color: "#e1b67e",
+                      }}
+                    >
+                      RL
+                      <br />
+                      80
+                    </div> */}
                   </div>
                 </div>
                 <div ref={node}>
@@ -164,7 +179,7 @@ function Header() {
                       className="menu-item"
                       onClick={closeMenu}
                     >
-                      Alt-Coin Altar
+                      Candelarium
                       {/* Bless us,{" "}
                       <span style={{ fontFamily: "Oleo Script" }}>RL80</span> */}
                     </Link>

@@ -1,6 +1,6 @@
 /* Settings ------------------- */
 :root {
-  --coin-diam: 10rem;
+  --coin-diam: 9rem;
   --coin-depth: calc(var(--coin-diam) * 0.1);
   --spin-speed: 4s;
   --facets: 32;
@@ -197,11 +197,11 @@
 
 /* The images... */
 .coin .front {
-  background-image: url("/coinFront.jpg");
+  background-image: url("/coinFront.png");
 }
 
 .coin .back {
-  background-image: url("/coinBack.jpg");
+  background-image: url("/coinBack.png");
 }
 
 .coin-container {

@@ -9,12 +9,13 @@ function Candle() {
           height: "150px",
           display: "flex",
           justifyContent: "center",
+          zIndex: "-1",
         }}
       >
         <div
           className="holder"
           style={{
-            transform: "scale(0.45)",
+            transform: "scale(0.65)",
             position: "absolute",
             bottom: "-7rem",
           }}
