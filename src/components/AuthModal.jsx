@@ -1,70 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { initializeFirebaseUI } from "../utilities/firebaseClient";
-import {
-  TwitterAuthProvider,
-  EmailAuthProvider,
-  OAuthProvider,
-} from "firebase/auth";
-import { useRouter } from "next/router";
+import { createThirdwebClient } from "thirdweb";
+import { ConnectButton } from "thirdweb/react";
+import { inAppWallet } from "thirdweb/wallets";
+import { useState } from "react";
 
-export default function AuthModal({
-  isOpen,
-  onClose,
-  onSignInSuccess, // Optional prop
-  redirectTo,
-}) {
-  const [ui, setUi] = useState(null);
-  const router = useRouter();
+const client = createThirdwebClient({
+  clientId: "YOUR_CLIENT_ID", // Use your actual Thirdweb clientId here
+});
 
-  // Initialize Firebase UI for Twitter, Email, and Discord
-  useEffect(() => {
-    if (isOpen && typeof window !== "undefined") {
-      const uiInstance = initializeFirebaseUI();
-      setUi(uiInstance);
-    }
-  }, [isOpen]);
+const wallets = [
+  inAppWallet({
+    auth: {
+      options: ["discord", "telegram", "farcaster", "email", "x", "facebook"],
+    },
+  }),
+];
 
-  // Handle Firebase UI sign-ins
-  useEffect(() => {
-    if (ui && isOpen) {
-      ui.start("#firebaseui-auth-container", {
-        signInFlow: "popup",
-        signInOptions: [
-          {
-            provider: "oidc.discord", // Your OIDC provider ID set in Firebase console
-            providerName: "Discord", // Custom label for the button
-            buttonColor: "#7289DA", // Discord's brand color (or any color you prefer)
-            iconUrl: "https://cdn.worldvectorlogo.com/logos/discord-6.svg", // Discord logo or your own icon URL
-            customParameters: {
-              prompt: "consent", // Optional custom parameters if needed
-            },
-          },
-          TwitterAuthProvider.PROVIDER_ID,
-          EmailAuthProvider.PROVIDER_ID,
-        ],
-        callbacks: {
-          signInSuccessWithAuthResult: function (authResult) {
-            const user = authResult.user;
+function AuthModal({ isOpen, onClose }) {
+  const [userInfo, setUserInfo] = useState(null);
 
-            if (onSignInSuccess) {
-              onSignInSuccess();
-            } else {
-              onClose(); // Close the modal
-              router.push(redirectTo || "/home"); // Default redirection
-            }
+  const handlePostLogin = async (jwt) => {
+    const decodedJWT = jwt.decode(jwt); // Decode JWT to inspect the user data
+    console.log("Decoded JWT claims:", decodedJWT);
 
-            return false; // Prevent the default redirect
-          },
-        },
-      });
-    }
-
-    return () => {
-      if (ui) {
-        ui.reset();
-      }
-    };
-  }, [ui, isOpen, onClose, onSignInSuccess, redirectTo, router]);
+    // You can now access userInfo such as username and avatar
+    const { name, picture } = decodedJWT;
+    setUserInfo({ name, picture }); // Store it in your state or Firebase
+  };
 
   return isOpen ? (
     <div className="modal" style={{ zIndex: "1000" }}>
@@ -72,9 +33,24 @@ export default function AuthModal({
         <button className="close-button" onClick={onClose}>
           &times;
         </button>
-        {/* FirebaseUI Auth container */}
-        <div id="firebaseui-auth-container"></div>
+        <ConnectButton
+          client={client}
+          wallets={wallets}
+          connectModal={{
+            size: "compact",
+            termsOfServiceUrl:
+              "https://app.termly.io/policy-viewer/policy.html?policyUUID=350b7b1c-556c-490e-b0ee-a07f5b52be86",
+          }}
+        />
+        {userInfo && (
+          <div>
+            <p>Username: {userInfo.name}</p>
+            <img src={userInfo.picture} alt="User Avatar" />
+          </div>
+        )}
       </div>
     </div>
   ) : null;
 }
+
+export default AuthModal;

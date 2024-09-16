@@ -3,7 +3,7 @@
 .holder {
   margin: 0.5rem auto 0;
   width: 5rem;
-  height: 20rem;
+  height: 15rem;
   position: relative;
 }
 
@@ -17,7 +17,7 @@
 .candle {
   bottom: 0;
   width: 5rem;
-  height: 20rem;
+  height: 15rem;
   border-radius: 150px / 40px;
   box-shadow: inset 20px -30px 50px 0 rgba(0, 0, 0, 0.4),
     inset -20px 0 50px 0 rgba(0, 0, 0, 0.4);
@@ -120,8 +120,8 @@
 }
 
 .flame {
-  width: 24px;
-  height: 120px;
+  width: 20px;
+  height: 100px;
   left: 50%;
   transform-origin: 50% 100%;
   transform: translateX(-50%);

@@ -333,10 +333,14 @@ const BurnGallery = () => {
     <>
       <Box py="0" mb="5em">
         <Grid templateColumns="repeat(12, 1fr)" gap={6}>
-          <GridItem colSpan={{ base: 12, sm: 12, md: 4 }} mb={"8em"}>
+          {/* First Section */}
+          <GridItem
+            colSpan={{ base: 12, sm: 12, md: 4 }}
+            mb={{ base: "4em", md: "8em" }}
+          >
             <div style={{ position: "relative", zIndex: 0 }}>
               <div style={{ zIndex: 1 }}>
-                <Box maxWidth="50ch" height="80vh">
+                <Box maxWidth="50ch">
                   <div
                     style={{
                       position: "relative",
@@ -345,10 +349,10 @@ const BurnGallery = () => {
                       alignItems: "center",
                     }}
                   >
-                    <Image
-                      src="/devotional.png"
+                    {/* <Image
+                      src="/smallStatue.gif"
                       alt=""
-                      width={300}
+                      width={800}
                       zIndex={-1}
                       height={"auto"}
                       style={{
@@ -358,15 +362,15 @@ const BurnGallery = () => {
 
                         position: "relative",
                       }}
-                    />
+                    /> */}
                   </div>
                   <div
                     style={{
                       marginBottom: "0rem",
-                      height: "3rem",
+                      // height: "8rem",
                       zindex: "1",
                       position: "relative",
-                      bottom: "8rem",
+                      bottom: "3rem",
                     }}
                   >
                     <Candle />
@@ -448,7 +452,7 @@ const BurnGallery = () => {
                       </AccordionPanel>
                     </AccordionItem>
                   </Accordion>
-                  <Flex justify="center" mt={3}>
+                  <Flex justify="center" mt={5} mb={5}>
                     <div>
                       <Button
                         className="burnButton"
@@ -483,7 +487,7 @@ const BurnGallery = () => {
             mb={"5em"}
             style={{
               position: "relative",
-              height: "80vh",
+              // height: "80vh",
               width: "auto",
               overflow: "hidden",
             }}
@@ -528,19 +532,10 @@ const BurnGallery = () => {
                 bottom={0}
                 // left={"30%"}
               >
-                {/* <div
-                style={{
-                  position: "relative",
-                  bottom: "1rem !important",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              > */}
                 <h1 className="thelma1">
-                  Saints
-                  <br />
-                  <span style={{ fontSize: "2rem" }}>of </span>RL80
+                  BurnerBoard
+                  {/* <br /> */}
+                  {/* <span style={{ fontSize: "2rem" }}>of </span>RL80 */}
                 </h1>
                 {/* </div> */}
               </Flex>
@@ -548,92 +543,88 @@ const BurnGallery = () => {
           </GridItem>
         </Grid>
 
-        <Grid>
-          <GridItem>
-            <Flex
-              wrap="wrap"
-              justify="space-around"
-              mt={20}
-              gap="10px"
-              width="100%"
+        <Flex
+          wrap="wrap"
+          justify="space-around"
+          mt={5}
+          gap="10px"
+          width="100%"
+          style={{ clear: "both" }} // Ensure the section clears any floating content
+        >
+          <StatGroup
+            style={{
+              border: "1px solid #8e662b",
+              borderRadius: "10px",
+              padding: ".5rem",
+              width: "100%",
+              height: "auto",
+              display: "flex",
+              flexWrap: "wrap",
+
+              justifyContent: "space-around",
+            }}
+          >
+            <Stat
+              style={{
+                width: "150px",
+                margin: "10px",
+              }}
             >
-              <StatGroup
-                style={{
-                  border: "1px solid #8e662b",
-                  borderRadius: "10px",
-                  padding: ".5rem",
-                  width: "100%",
-                  height: "auto",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "space-around",
-                }}
-              >
-                <Stat
-                  style={{
-                    width: "150px",
-                    margin: "10px",
-                  }}
-                >
-                  <StatLabel mb={2}>Tokens Burned</StatLabel>
-                  <StatNumber mb={2}>
-                    {isLoading || tokensBurned === undefined
-                      ? "Loading..."
-                      : Number(
-                          utils.formatUnits(tokensBurned, "ether")
-                        ).toLocaleString()}
-                  </StatNumber>
-                  <StatHelpText bottom={0}>
-                    {isLoading
-                      ? "Loading..."
-                      : `${burnedPercentage.toFixed(2)}% of total supply`}
-                  </StatHelpText>
-                </Stat>
-                <Stat
-                  style={{
-                    width: "150px",
-                    margin: "10px",
-                  }}
-                >
-                  <StatLabel mb={2}>Number of Entries</StatLabel>
-                  <StatNumber>389</StatNumber>
-                  <StatHelpText mt={2}>RL80 Tokens</StatHelpText>
-                </Stat>
-                <Stat
-                  style={{
-                    width: "150px",
-                    margin: "10px",
-                  }}
-                >
-                  <StatLabel mb={2}>Current Prize Pool</StatLabel>
-                  <StatNumber>
-                    {isLoading ? "Loading..." : "10,000,000"}
-                  </StatNumber>
-                  <StatHelpText>RL80 Tokens</StatHelpText>
-                </Stat>
-                <Stat
-                  style={{
-                    width: "150px",
-                    margin: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  <StatLabel mb={2} textAlign={"center"}>
-                    Next Drawing
-                  </StatLabel>
-                  <StatNumber fontSize={"2.2rem"} textAlign={"center"}>
-                    ⏳
-                  </StatNumber>
-                  <StatHelpText fontSize={"1.5rem"} mb={1} textAlign={"center"}>
-                    5<span style={{ fontSize: "1rem" }}>{" days "}</span>4
-                    <span style={{ fontSize: "1rem" }}>{" hours "}</span>31
-                    <span style={{ fontSize: "1rem" }}>{" min"}</span>
-                  </StatHelpText>
-                </Stat>
-              </StatGroup>
-            </Flex>
-          </GridItem>
-        </Grid>
+              <StatLabel mb={2}>Tokens Burned</StatLabel>
+              <StatNumber mb={2}>
+                {isLoading || tokensBurned === undefined
+                  ? "Loading..."
+                  : Number(
+                      utils.formatUnits(tokensBurned, "ether")
+                    ).toLocaleString()}
+              </StatNumber>
+              <StatHelpText bottom={0}>
+                {isLoading
+                  ? "Loading..."
+                  : `${burnedPercentage.toFixed(2)}% of total supply`}
+              </StatHelpText>
+            </Stat>
+            <Stat
+              style={{
+                width: "150px",
+                margin: "10px",
+              }}
+            >
+              <StatLabel mb={2}>Number of Entries</StatLabel>
+              <StatNumber>389</StatNumber>
+              <StatHelpText mt={2}>RL80 Tokens</StatHelpText>
+            </Stat>
+            <Stat
+              style={{
+                width: "150px",
+                margin: "10px",
+              }}
+            >
+              <StatLabel mb={2}>Current Prize Pool</StatLabel>
+              <StatNumber>{isLoading ? "Loading..." : "10,000,000"}</StatNumber>
+              <StatHelpText>RL80 Tokens</StatHelpText>
+            </Stat>
+            <Stat
+              style={{
+                width: "150px",
+                margin: "10px",
+                textAlign: "center",
+              }}
+            >
+              <StatLabel mb={2} textAlign={"center"}>
+                Next Drawing
+              </StatLabel>
+              <StatNumber fontSize={"2.2rem"} textAlign={"center"}>
+                ⏳
+              </StatNumber>
+              <StatHelpText fontSize={"1.5rem"} mb={1} textAlign={"center"}>
+                5<span style={{ fontSize: "1rem" }}>{" days "}</span>4
+                <span style={{ fontSize: "1rem" }}>{" hours "}</span>31
+                <span style={{ fontSize: "1rem" }}>{" min"}</span>
+              </StatHelpText>
+            </Stat>
+          </StatGroup>
+        </Flex>
 
         {isBurnModalOpen && (
           <BurnModal
@@ -649,19 +640,6 @@ const BurnGallery = () => {
             saveMessage={saveMessage}
           />
         )}
-        {/* <ImageSelectionModal
-          isOpen={isImageSelectionModalOpen}
-          onOpen={handleOpenImageSelectionModal}
-          onClose={handleCloseImageSelectionModal}
-          setSelectedImage={setSelectedImage}
-          burnedAmount={burnedAmount}
-          setBurnedAmount={setBurnedAmount}
-          setIsResultSaved={setIsResultSaved}
-          setSaveMessage={setSaveMessage}
-          onSaveResult={(savedImage) => {
-            setSelectedImage(savedImage); // Update selectedImage here
-          }}
-        /> */}
       </Box>
     </>
   );

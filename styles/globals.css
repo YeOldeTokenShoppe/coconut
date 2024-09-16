@@ -269,7 +269,7 @@ h6 {
   position: absolute;
   width: 3rem;
   height: 3rem;
-  top: 6.5rem;
+  top: 3rem;
   right: 5%;
   z-index: 911;
 }
@@ -994,7 +994,7 @@ ul.icons li .icon:hover:active {
   }
 }
 #header #logo:before {
-  /* background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cpolygon points='0,0 100,0 50,100' fill='%238f662c' /%3E%3Cline x1='1' y1='10' x2='51' y2='99.5' stroke='black' stroke-width='0' /%3E%3Cline x1='100' y1='10' x2='49' y2='99.5' stroke='black' stroke-width='0' /%3E%3C/svg%3E"); */
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cpolygon points='0,0 100,0 50,100' fill='%238f662c' /%3E%3Cline x1='1' y1='10' x2='51' y2='99.5' stroke='black' stroke-width='0' /%3E%3Cline x1='100' y1='10' x2='49' y2='99.5' stroke='black' stroke-width='0' /%3E%3C/svg%3E");
 
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -1780,7 +1780,6 @@ textarea {
   font-family: "Open Sans", Arial, Helvetica, sans-serif;
   font-weight: 400;
   font-size: 1.2rem;
-  line-height: 1.65;
 }
 
 input,
@@ -2266,17 +2265,36 @@ ul.icons li .icon:hover:active {
 } */
 /* Styles for logo */
 #logo img {
-  width: 11rem;
-  height: 11rem;
-  object-fit: cover;
+  width: 7rem;
+  height: 7rem;
+  object-fit: contain;
   position: absolute;
-  top: -0.7rem;
-  z-index: -1;
+  /* top: -0.7rem; */
+  z-index: 1;
+}
+
+#header > div.menu-wrapper > button {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 5%;
+  right: 5%;
+  border: 3px solid goldenrod;
+  background: #444;
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 911;
+
+  cursor: pointer; /* Change cursor to pointer */
 }
 
 #header #logo {
-  /* background: #8f662c; */
-  /* margin: 1rem; */
+  background: #8f662c;
+
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   position: absolute;
@@ -3548,7 +3566,7 @@ div.css-161tt0w {
   padding-top: 25px;
   color: #000;
   white-space: nowrap;
-  text-shadow: -1px -0.5px 1px purple, 1px -1px 1px blue,
+  /* text-shadow: -1px -0.5px 1px purple, 1px -1px 1px blue,
     1px -5px 10px goldenrod, 0 -1px 3px green, 1px -1px 5px white,
     2.5px -5px 7.5px lightyellow, 4px -10px 10px yellow,
     6px -15px 12.5px limegreen, 2.5px -30px 20px limegreen,
@@ -3557,17 +3575,16 @@ div.css-161tt0w {
     10px -60px 30px purple, 10px -75px 40px black, 25px -80px 40px black,
     50px -100px 50px black, 60px -75px 50px black, 50px -50px 50px black,
     60px -110px 50px black, 100px -150px 75px black;
-}
-/* text-shadow: -1px -0.5px 1px purple, 1px -1px 1px blue, 1px -5px 10px white,
-    0 -1px 3px limegreen, 1px -1px 5px white, 2.5px -5px 7.5px lightgreen,
-    4px -10px 10px greenyellow, 6px -15px 12.5px limegreen,
-    2.5px -30px 20px limegreen, 7.5px -17px 15px mediumseagreen,
-    0px -18px 17.5px green, 20px -20px 25px green, -10px -30px 20px green,
-    10px -40px 20px green, 20px -40px 20px green, 10px -60px 30px green,
-    10px -75px 40px black, 25px -80px 40px black, 50px -100px 50px black,
-    60px -75px 50px black, 50px -50px 50px black, 60px -110px 50px black,
-    100px -150px 75px black;
 } */
+  text-shadow: -1px -0.5px 1px purple, 1px -1px 1px blue, 1px -5px 10px white,
+    0 -1px 3px red, 1px -1px 5px white, 2.5px -5px 7.5px lightyellow,
+    4px -10px 10px yellow, 6px -15px 12.5px orange, 2.5px -30px 20px orange,
+    7.5px -17px 15px darkorange, 0px -18px 17.5px red, 20px -20px 25px red,
+    -10px -30px 20px red, 10px -40px 20px red, 20px -40px 20px red,
+    10px -60px 30px red, 10px -75px 40px black, 25px -80px 40px black,
+    50px -100px 50px black, 60px -75px 50px black, 50px -50px 50px black,
+    60px -110px 50px black, 100px -150px 75px black;
+}
 .badge {
   --badge-size: min(
     max(10vw, 7rem),

@@ -1,17 +1,37 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"; // Ensure you're importing these correctly
 import { slide as Menu } from "react-burger-menu";
 import { Button, Container } from "@chakra-ui/react";
 import Link from "next/link";
-import WalletButton1 from "../components/WalletButton1";
-import RotatingBadge2 from "./RotatingBadge2";
-import AuthModal from "./AuthModal";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+import { inAppWallet } from "thirdweb/wallets";
+import WalletButton1 from "./WalletButton1";
 import Image from "next/image";
-import Coin from "../components/Coin";
+import jwt_decode from "jwt-decode";
+import RotatingBadge2 from "./RotatingBadge2";
+
+const CLIENT_ID = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID;
+const client = createThirdwebClient({ clientId: CLIENT_ID });
+
+const wallets = [
+  inAppWallet({
+    auth: {
+      options: ["x", "discord", "telegram", "farcaster", "facebook", "email"],
+    },
+    metadata: {
+      image: {
+        src: "/newheart1.png",
+        width: 250,
+        height: 150,
+        alt: "Aperture Laboratories",
+      },
+    },
+  }),
+];
 
 function Header() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // Store user info like avatar and username
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [emoji, setEmoji] = useState("😇");
@@ -20,48 +40,38 @@ function Header() {
   const currentUrl = router.asPath;
   const [menuWidth, setMenuWidth] = useState("35%");
   const [mounted, setMounted] = useState(false);
+  const wallet = useActiveAccount();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleSignIn = ({ username, photoURL }) => {
-    setUser({ username, photoURL });
-    console.log("User signed in:", username, photoURL);
-  };
+  // Get the connected wallet address
+  const activeAccount = useActiveAccount();
+  const address = activeAccount?.address;
 
   const closeMenu = () => setMenuOpen(false);
-
   const toggleMenu = (event) => {
     event.stopPropagation();
     setMenuOpen(!menuOpen);
   };
+  async function fetchUserMetadata(queryBy, value) {
+    const url = new URL(
+      "https://embedded-wallet.thirdweb.com/api/2023-11-30/embedded-wallet/user-details"
+    );
 
-  useEffect(() => {
-    const auth = getAuth(); // Correctly get the auth instance
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
+    // Set the query params based on the provided queryBy type
+    url.searchParams.set("queryBy", queryBy);
+    url.searchParams.set(queryBy, value);
+
+    const response = await fetch(url.href, {
+      headers: {
+        Authorization: `Bearer ${process.env.THIRDWEB_CLIENT_SECRET}`, // Ensure this is server-side
+      },
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
-  const handleSignOut = async () => {
-    try {
-      const auth = getAuth(); // Correctly get the auth instance
-      await signOut(auth); // Use signOut with the auth instance
-      router.push("/home"); // Redirect to home after sign out
-    } catch (error) {
-      console.error("Error signing out:", error);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch user metadata");
     }
-  };
+    return data;
+  }
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -75,14 +85,6 @@ function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [node]);
-
-  useEffect(() => {
-    const emojiInterval = setInterval(() => {
-      setEmoji((prevEmoji) => (prevEmoji === "😇" ? "😈" : "😇"));
-    }, 3000);
-
-    return () => clearInterval(emojiInterval);
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -107,6 +109,81 @@ function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const emojiInterval = setInterval(() => {
+      setEmoji((prevEmoji) => (prevEmoji === "😇" ? "😈" : "😇"));
+    }, 3000);
+
+    return () => clearInterval(emojiInterval);
+  }, []);
+
+  const connectInApp = async (jwt) => {
+    try {
+      const wallet = inAppWallet();
+      await wallet.connect({
+        clientId: CLIENT_ID,
+        strategy: "jwt",
+        jwt,
+        encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY,
+      });
+
+      // Fetch additional metadata using the wallet address
+      const userMetadata = await fetchUserMetadata(
+        "walletAddress",
+        activeAccount.address
+      );
+      console.log("User metadata:", userMetadata);
+
+      // Assuming the response includes linked social accounts
+      const linkedAccount = userMetadata[0]?.linkedAccounts?.[0]?.details || {};
+      const { name, picture } = linkedAccount;
+
+      // Set user info for UI display
+      setUser({
+        name,
+        photoURL: picture || "/default-avatar.png",
+      });
+    } catch (error) {
+      console.error("Error connecting to wallet or fetching metadata:", error);
+    }
+    try {
+      const decodedJWT = jwt_decode(jwt);
+      console.log("Decoded JWT:", decodedJWT); // Inspect the payload here
+      // Check if 'name' and 'picture' fields are present
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (address) {
+      const fetchMetadata = async () => {
+        try {
+          const userMetadata = await fetchUserMetadata(
+            "walletAddress",
+            address
+          );
+          console.log("User metadata:", userMetadata);
+
+          // Assuming the response includes linked social accounts
+          const linkedAccount =
+            userMetadata[0]?.linkedAccounts?.[0]?.details || {};
+          const { name, picture } = linkedAccount;
+
+          // Set user info for UI display
+          setUser({
+            name,
+            photoURL: picture || "/default-avatar.png",
+          });
+        } catch (error) {
+          console.error("Error fetching user metadata:", error);
+        }
+      };
+
+      fetchMetadata();
+    }
+  }, [address]);
+
   return (
     <>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -121,31 +198,20 @@ function Header() {
               <div className="menu-icon" onClick={toggleMenu}></div>
               <div className="menu-wrapper">
                 <div className="logo-menu-container">
-                  <div id="logo">
-                    <img
-                      className="logo"
-                      src="./crest6.png"
-                      width="10rem"
-                      height="10rem"
-                      alt=""
-                      style={{ zIndex: "-1" }}
-                      objectFit={"contain"}
-                    />
-                    <RotatingBadge2 />
-                    {/* <div
-                      style={{
-                        position: "relative",
-                        top: ".4rem",
-                        fontFamily: "Oleo Script",
-                        fontSize: "1.2rem",
-                        color: "#e1b67e",
-                      }}
-                    >
-                      RL
-                      <br />
-                      80
-                    </div> */}
-                  </div>
+                  <Link href="/home" passHref>
+                    <div id="logo">
+                      <img
+                        className="logo"
+                        src="./newheart1.png"
+                        width="10rem"
+                        height="10rem"
+                        alt=""
+                        style={{ zIndex: "1" }}
+                        // objectFit={"contain"}
+                      />
+                      <RotatingBadge2 />
+                    </div>
+                  </Link>
                 </div>
                 <div ref={node}>
                   <Menu
@@ -180,8 +246,6 @@ function Header() {
                       onClick={closeMenu}
                     >
                       Candelarium
-                      {/* Bless us,{" "}
-                      <span style={{ fontFamily: "Oleo Script" }}>RL80</span> */}
                     </Link>
                     <Link
                       href="/communion"
@@ -193,12 +257,9 @@ function Header() {
                   </Menu>
                 </div>
 
-                <WalletButton1 />
-
                 {user ? (
                   <Button
-                    id="sign-out-button"
-                    onClick={handleSignOut}
+                    onClick={() => setUser(null)} // Sign-out functionality
                     style={{
                       position: "absolute",
                       width: "3rem",
@@ -209,45 +270,58 @@ function Header() {
                       zIndex: "911",
                     }}
                   >
-                    {" "}
                     <Image
                       id="user-avatar"
-                      src={user.photoURL}
-                      // src={user.imageUrl || "🥸"}
+                      src={user.photoURL} // Use the fetched user profile image
                       alt="User Avatar"
                       layout="fill"
                       objectFit="cover"
                     />
                   </Button>
                 ) : (
-                  <Button
-                    id="sign-in-button"
-                    onClick={openAuthModal}
-                    style={{
-                      top: "3rem",
-                      right: "5%",
-                      position: "absolute",
-                      width: "3rem",
-                      minWidth: "3rem",
-                      height: "3rem",
-                      zIndex: "911",
+                  <ConnectButton
+                    client={client}
+                    wallets={wallets}
+                    connectModal={{
+                      size: "compact",
+                      onSignInSuccess: async (jwt) => {
+                        await connectInApp(jwt);
+                      },
+                      termsOfServiceUrl:
+                        "https://app.termly.io/policy-viewer/policy.html?policyUUID=350b7b1c-556c-490e-b0ee-a07f5b52be86",
                     }}
-                  >
-                    <span style={{ fontSize: "2.5rem" }}>{emoji}</span>
-                  </Button>
+                    connectButton={{
+                      label: "💔",
+                      id: "wallet-button",
+                      style: {
+                        fontSize: "2.5rem",
+                        objectFit: "cover",
+                        layout: "fill",
+                        right: "5%",
+                        border: "3px solid goldenrod",
+                        background: "#444",
+                        position: "absolute",
+                        width: "3rem",
+                        height: "3rem",
+                        minWidth: "3rem",
+                        top: "3rem",
+                        right: "5%",
+                        zIndex: "911",
+                      },
+                    }}
+                    detailsButton={{
+                      connectedAccountAvatarUrl: user
+                        ? user.photoURL
+                        : "/default-avatar.png", // Use the user's avatar or fallback
+                      connectedAccountName: user ? user.name : "Anonymous", //
+                    }}
+                  ></ConnectButton>
                 )}
               </div>
             </header>
           </div>
         </Container>
       </div>
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuthModal}
-        onSignIn={handleSignIn}
-        redirectTo={currentUrl} // Pass the current URL to AuthModal for proper redirection
-      />
     </>
   );
 }

@@ -30,7 +30,13 @@ export default function CommunionPage() {
 
   return (
     <>
-      <div style={{ marginTop: "5rem", marginBottom: "10rem" }}>
+      <div
+        style={{
+          marginTop: "5rem",
+          marginBottom: "10rem",
+          transform: "scale(.8)",
+        }}
+      >
         <Carousel
           images={[
             { src: "seaMonster.png", title: "Sea Monster" },

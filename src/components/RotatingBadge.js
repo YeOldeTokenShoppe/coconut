@@ -80,16 +80,16 @@ const RotatingBadge = () => {
         {" "}
       </span>
 
-      {/* <img
+      <img
         className="badge__emoji"
-        src="https://cdn.shopify.com/s/files/1/1061/1924/files/Skull_Emoji_Icon.png?11214052019865124406"
+        src="/nuhart1.svg"
         width="72"
         height="72"
         alt=""
-      /> */}
-      <p className="badge__emoji" style={{ fontSize: "2.7rem" }}>
+      />
+      {/* <p className="badge__emoji" style={{ fontSize: "2.7rem" }}>
         ❤️‍🔥
-      </p>
+      </p> */}
     </div>
   );
 };

@@ -144,13 +144,13 @@ function Header2() {
                   <div id="logo">
                     <img
                       className="logo"
-                      src="./TATTOO99.svg"
+                      src="./newheart1.png"
                       width="60"
                       height="60"
                       alt=""
                       style={{ zIndex: "-1" }}
                     />
-                    {/* <RotatingBadge2 /> */}
+                    <RotatingBadge2 />
                   </div>
                 </div>
                 <div ref={node}>
@@ -186,7 +186,6 @@ function Header2() {
                       onClick={closeMenu}
                     >
                       Candelarium
-                      <span style={{ fontFamily: "Oleo Script" }}>RL80</span>
                     </Link>
                     <Link
                       href="/communion"

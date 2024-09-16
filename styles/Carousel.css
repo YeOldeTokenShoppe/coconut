@@ -115,6 +115,7 @@
 
 .element::after {
   content: attr(data-item); /* Default to showing the number */
+
   background-size: contain;
   background-repeat: no-repeat;
   left: 0;
@@ -434,10 +435,10 @@
 }
 
 .element2::before {
-  content: ""; /* Reset the content property */
-  background-image: url("/mardiGras.png"); /* Set the background image */
-  background-size: cover; /* Make the image as large as possible within the div, without stretching the image */
-  background-repeat: no-repeat;
+  background-image: url("/arrows.png"); /* Set the background image */
+  background-size: cover; /* Ensures the image covers the container */
+  background-position: center; /* Centers the image */
+  background-repeat: repeat; /* Prevent repeating */
   left: 150px;
   width: 82px;
   transform-origin: left center;
