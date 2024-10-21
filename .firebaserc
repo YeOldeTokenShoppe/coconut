@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "rl80-43fed"
+    "default": "d-rl80",
+    "3D-RL80": "d-rl80"
   },
   "targets": {},
   "etags": {

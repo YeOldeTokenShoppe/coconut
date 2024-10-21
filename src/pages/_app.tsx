@@ -13,6 +13,7 @@ import "../../styles/fireButton.css";
 import "../../styles/sparkle.css";
 import "../../styles/musicPlayer.css";
 import "../../styles/coin.css";
+import "../../styles/NeonSign.css";
 import "firebaseui/dist/firebaseui.css";
 import type { AppProps } from "next/app";
 import { ThirdwebProvider } from "@/utilities/thirdweb";
@@ -21,6 +22,14 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Header from "../components/Header";
 import Header2 from "../components/Header2";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
+import { shadesOfPurple } from "@clerk/themes";
 
 const theme = extendTheme({
   breakpoints: {
@@ -47,43 +56,54 @@ function MyApp({ Component, pageProps }: AppProps) {
   const isIndexPage = router.pathname === "/";
   const isNumerologyPage = router.pathname === "/numerology";
   const isCommunionPage = router.pathname === "/communion";
+  const isScenePage = router.pathname === "/scene"; // Add this line
 
   let HeaderComponent = null;
   if (isNumerologyPage) {
     HeaderComponent = Header2;
-  } else if (!isIndexPage) {
+  } else if (!isIndexPage && !isScenePage) {
+    // Modify this line
     HeaderComponent = Header;
   }
 
   return (
     <>
-      <ThirdwebProvider>
-        <ChakraProvider theme={theme}>
-          <Head>
-            <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
-            <meta name="description" content="A token to believe in." />
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1"
-            />
-          </Head>
-          <div
-            className={isIndexPage || isCommunionPage ? "" : "app-container"}
-          >
+      <ClerkProvider
+        appearance={{
+          baseTheme: shadesOfPurple,
+        }}
+      >
+        <ThirdwebProvider>
+          <ChakraProvider theme={theme}>
+            <Head>
+              <title>𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙,</title>
+              <meta name="description" content="A token to believe in." />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+              />
+            </Head>
             <div
-              style={{
-                width: "100%",
-                margin: "0",
-              }}
+              className={
+                isIndexPage || isCommunionPage || isScenePage
+                  ? ""
+                  : "app-container"
+              } // Modify this line
             >
-              {HeaderComponent && <HeaderComponent />}
-              <Component {...pageProps} />
+              <div
+                style={{
+                  width: "100%",
+                  margin: "0",
+                }}
+              >
+                {HeaderComponent && <HeaderComponent />}
+                <Component {...pageProps} />
+              </div>
             </div>
-          </div>
-        </ChakraProvider>
-      </ThirdwebProvider>
+          </ChakraProvider>
+        </ThirdwebProvider>
+      </ClerkProvider>
     </>
   );
 }
-
 export default MyApp;

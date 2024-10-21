@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css?family=Ubuntu:400,400i,700,700i");
 
 .holder {
-  margin: 0.5rem auto 0;
-  width: 5rem;
-  height: 15rem;
+  margin: 12rem auto 0;
+  width: 150px;
+  height: 400px;
   position: relative;
 }
 
@@ -16,8 +16,8 @@
 
 .candle {
   bottom: 0;
-  width: 5rem;
-  height: 15rem;
+  width: 150px;
+  height: 300px;
   border-radius: 150px / 40px;
   box-shadow: inset 20px -30px 50px 0 rgba(0, 0, 0, 0.4),
     inset -20px 0 50px 0 rgba(0, 0, 0, 0.4);
@@ -55,19 +55,13 @@
 }
 
 .candle:before {
-  width: 100%;
-  height: 40px;
+  content: "";
+  width: calc(100% * var(--scale-factor, 1));
+  height: calc(40px * var(--scale-factor, 1));
   border-radius: 50%;
-  border: 2px solid #d47401;
-  background: #b86409;
-  background: radial-gradient(
-    at 50% 50%,
-    #4cbb17,
-    /* Analog for #e48825 */ #49b315,
-    /* Analog for #e78e0e */ #35840d,
-    /* Analog for #833c03 */ #2a670a 50%,
-    /* Analog for #4c1a03 at 50% */ #1f4b07
-  );
+  border: calc(2px * var(--scale-factor, 1)) solid #d47401;
+  background: radial-gradient(#eaa121, #8e4901 45%, #b86409 80%);
+  display: block;
 }
 
 .candle:after {
@@ -78,10 +72,6 @@
   border-radius: 50%;
   top: 14px;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
-  background: -moz-radial-gradient(rgba(0, 0, 0, 0.6), transparent 45%);
-  background: -webkit-radial-gradient(rgba(0, 0, 0, 0.6), transparent 45%);
-  background: -o-radial-gradient(rgba(0, 0, 0, 0.6), transparent 45%);
-  background: -ms-radial-gradient(rgba(0, 0, 0, 0.6), transparent 45%);
   background: radial-gradient(rgba(0, 0, 0, 0.6), transparent 45%);
 }
 
@@ -94,44 +84,18 @@
   border-radius: 40% 40% 0 0;
   transform: translateX(-50%);
   background: #121212;
-  background: -moz-linear-gradient(
-    #d6994a,
-    #4b232c,
-    #121212,
-    black,
-    #e8bb31 90%
-  );
-  background: -webkit-linear-gradient(
-    #d6994a,
-    #4b232c,
-    #121212,
-    black,
-    #e8bb31 90%
-  );
-  background: -o-linear-gradient(#d6994a, #4b232c, #121212, black, #e8bb31 90%);
-  background: -ms-linear-gradient(
-    #d6994a,
-    #4b232c,
-    #121212,
-    black,
-    #e8bb31 90%
-  );
   background: linear-gradient(#d6994a, #4b232c, #121212, black, #e8bb31 90%);
 }
 
 .flame {
-  width: 20px;
-  height: 100px;
+  width: 24px;
+  height: 120px;
   left: 50%;
   transform-origin: 50% 100%;
   transform: translateX(-50%);
   bottom: 100%;
   border-radius: 50% 50% 20% 20%;
   background: rgba(255, 255, 255, 1);
-  background: -moz-linear-gradient(white 80%, transparent);
-  background: -webkit-linear-gradient(white 80%, transparent);
-  background: -o-linear-gradient(white 80%, transparent);
-  background: -ms-linear-gradient(white 80%, transparent);
   background: linear-gradient(white 80%, transparent);
   animation: moveFlame 6s linear infinite, enlargeFlame 5s linear infinite;
 }
@@ -195,10 +159,6 @@
   transform: translateX(-50%);
   border-radius: 50%;
   background: #ff6000;
-  -webkit-filter: blur(50px);
-  -moz-filter: blur(60px);
-  -o-filter: blur(60px);
-  -ms-filter: blur(60px);
   filter: blur(60px);
   animation: blinkIt 0.1s infinite;
 }
@@ -207,21 +167,4 @@
   50% {
     opacity: 0.8;
   }
-}
-.gradient-background {
-  background-image: radial-gradient(
-    circle at 50% 40%,
-    rgb(67, 54, 74) 16.4%,
-    rgb(47, 48, 67) 68.2%,
-    rgb(27, 23, 36) 99.1%
-  );
-}
-.gradient-background1 {
-  background-image: radial-gradient(
-    circle at 50% 40%,
-    rgb(67, 54, 74) 9.4%,
-    rgb(47, 48, 67) 30.2%,
-    rgb(27, 23, 36) 44.1%
-  );
-  z-index: 10;
 }

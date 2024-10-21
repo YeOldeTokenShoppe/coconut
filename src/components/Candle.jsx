@@ -1,43 +1,33 @@
 import React from "react";
 
-function Candle() {
+function Candle({ size = 1, isFlameVisible = false }) {
+  // Use `size` to scale the entire candle uniformly
+  const scaleFactor = size;
+
   return (
     <div>
       <div
         style={{
-          position: "relative",
-          height: "150px",
-          display: "flex",
-          justifyContent: "center",
-          zIndex: "-1",
+          transform: `scale(${scaleFactor})`, // Scale the entire candle
+          transformOrigin: "center bottom", // Ensure scaling happens from the bottom center
         }}
       >
-        <div
-          className="holder"
-          style={{
-            transform: "scale(0.65)",
-            position: "absolute",
-            bottom: "-7rem",
-          }}
-        >
+        <div className="holder">
           <div className="candle">
             <div className="thread"></div>
-            <div className="blinking-glow"></div>
-            <div className="glow"></div>
-            <div className="flame"></div>
+            {/* Show the flame and glow only when isFlameVisible is true */}
+            {isFlameVisible ? (
+              <>
+                <div className="blinking-glow"></div>
+                <div className="glow"></div>
+                <div className="flame"></div>
+              </>
+            ) : (
+              <div className="unlit-candle"></div> // Candle is unlit when isFlameVisible is false
+            )}
           </div>
         </div>
       </div>
-      {/* <div style={{ position: "relative", bottom: "-.1rem", left: "6.5rem" }}>
-        <div className="holder" style={{ transform: "scale(0.42)" }}>
-          <div className="candle">
-            <div className="thread"></div>
-            <div className="blinking-glow"></div>
-            <div className="glow"></div>
-            <div className="flame"></div>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 }

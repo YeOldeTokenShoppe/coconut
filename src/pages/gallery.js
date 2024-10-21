@@ -44,14 +44,12 @@ export default function GalleryPage() {
       />
       <div style={{ position: "relative", zIndex: 1 }}>
         <BurnGallery />
-        <BurnModal />
+        {/* <BurnModal /> */}
 
         <div style={{ marginTop: "2rem" }}>
           <NavBar />
         </div>
-        <div style={{ marginTop: "3rem" }}>
-          <Communion />
-        </div>
+        <div style={{ marginTop: "3rem" }}>{/* <Communion /> */}</div>
       </div>
     </>
   );

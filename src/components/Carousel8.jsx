@@ -74,7 +74,12 @@ const Carousel8 = ({ images, onImageSelect, avatarUrl }) => {
                   muted
                   playsInline
                   className={styles.video}
-                  style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    objectFit: "cover",
+                    border: isSelected ? "3px solid green" : "none", // Highlight video border if selected
+                  }}
                 >
                   <source src={image.url} type="video/mp4" />
                   Your browser does not support the video tag.

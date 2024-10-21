@@ -18,6 +18,7 @@
     ); */
   display: flex;
   justify-content: center;
+  position: relative;
   align-items: center;
   overflow: visible;
   margin-top: 20rem;
@@ -271,10 +272,12 @@
   height: 150px;
   background-size: contain;
   background-repeat: no-repeat;
-  top: 0; /* Align with the top of the rider-beast-group */
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  animation: inherit; /* Inherit the animation from rider-beast-group */
+  animation: beast-move calc(var(--rotation-time) / var(--elements)) ease-in-out
+    infinite;
+  animation-delay: calc(var(--item) * -0.5s);
 }
 @keyframes carousel {
   0% {
@@ -295,15 +298,6 @@
   }
 }
 
-@keyframes beast {
-  0%,
-  100% {
-    transform: translate(-50%, -30%);
-  }
-  50% {
-    transform: translate(-50%, -70%);
-  }
-}
 /* Media Queries for Different Screen Sizes */
 @media (min-width: 1200px) {
   .carousel-container {
@@ -369,28 +363,21 @@
     background-position: 0% 50%;
   }
 }
-.rider-container {
-  position: absolute; /* Change to absolute to match beast's position */
-  top: -60px; /* Adjust this value based on the height of the beast */
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 1;
-  animation: inherit; /* Inherit the animation from rider-beast-group */
-}
 
 .rider-avatar {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 2px solid #fff;
 }
 
 .rider-name {
   margin-bottom: 5px;
-  font-size: 0.8rem;
-  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #8e662b;
 }
+
 .rider-beast-group {
   position: absolute;
   top: 50%;
@@ -399,7 +386,17 @@
   transform-style: preserve-3d;
   animation: beast-move calc(var(--rotation-time) / var(--elements)) ease-in-out
     infinite;
-  animation-delay: calc(var(--item) * -0.5s);
+  animation-delay: calc(var(--item) * -0.5s); /* Ensures the same delay */
+}
+
+.rider-container {
+  position: absolute;
+  top: 30px; /* Adjust as necessary to position avatar above beast */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 1;
+  animation: inherit;
 }
 
 .element2 {
@@ -445,68 +442,118 @@
   transform: translateZ(35px) rotateY(16deg);
 }
 
-.message-container {
-  background-color: #f5f5f5; /* Light gray background */
-  padding: 10px; /* Add some padding */
-  border-radius: 8px; /* Rounded corners */
-  max-height: 200px; /* Limit the height */
-  overflow-y: auto; /* Allow scrolling for overflow */
-  margin-bottom: 10px; /* Space below */
-  border: 1px solid #ddd; /* Add a light border */
-}
-
 .message-bubble {
-  background-color: #e1ffc7; /* Light green for messages */
-  padding: 8px 12px; /* Padding inside the message */
-  margin-bottom: 8px; /* Space between messages */
-  border-radius: 12px; /* Rounded bubble look */
-  position: relative; /* Position for message triangle */
-  max-width: 80%; /* Limit the width */
-  word-wrap: break-word; /* Handle long text */
+  padding: 8px 10px;
+  border-radius: 12px;
+  background-color: #f5f5f5; /* Match color with the arrow */
+  max-width: 200px;
+  word-wrap: break-word;
+  font-size: 8px;
+  line-height: 1.2;
+  position: absolute; /* Position the bubble relative to the rider */
+  top: -90px; /* Adjust this to move the bubble above */
+  left: 40px; /* Adjust this to move the bubble to the right */
+  transform: translateX(-50%);
+  min-width: 50px;
+  max-height: 100px;
+  margin-bottom: 15px;
+  z-index: 1;
+  display: inline-block;
+  /* overflow: hidden; */
+  animation: message-move calc(var(--rotation-time) / var(--elements) * 1.1)
+    ease-in-out infinite; /* Slower movement */
+  animation-delay: calc(var(--item) * -0.5s);
 }
-
-.message-bubble p {
-  margin: 0; /* Remove default margin */
-  font-size: 14px; /* Adjust text size */
-  color: #333; /* Dark text */
-}
-
-.message-bubble:before {
-  content: "";
-  position: absolute;
-  top: 10px; /* Adjust to line up with the message bubble */
-  left: -10px; /* Position triangle to the left */
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-right: 10px solid #e1ffc7; /* Same color as bubble */
+@keyframes message-move {
+  0%,
+  100% {
+    transform: translate(-30%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -120%) scale(1.05); /* Slight zoom effect for more dynamism */
+  }
 }
 
 .message-bubble.right {
-  background-color: #d4e2ff; /* Different color for the user's messages */
-  margin-left: auto; /* Align to the right for user messages */
+  background-color: #d4e2ff; /* Same as the right-aligned bubble */
+  margin-left: auto;
+  text-align: right;
 }
 
-.message-bubble.right:before {
+/* Comic-book style speech bubble arrow for left-aligned bubbles */
+.message-bubble:before {
+  border: solid 5px transparent;
+  border-left: solid 5px #f5f5f5; /* Same color as bubble */
+  border-top: solid 5px #f5f5f5;
+  bottom: -10px;
   content: "";
+  height: 0;
+  /* left: 24px; */
   position: absolute;
-  top: 10px;
-  right: -10px; /* Position triangle on the right */
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-left: 10px solid #d4e2ff; /* Same color as right bubble */
+
+  transform: skew(-15deg);
+  width: 0;
 }
+
+.message-bubble:after {
+  border: solid 5px transparent;
+  border-left: solid 5px white; /* Inner white border to match the bubble */
+  border-top: solid 5px white;
+  bottom: -10px;
+  content: "";
+  height: 0;
+  /* left: 27px; */
+  position: absolute;
+  transform: skew(-15deg);
+  width: 0;
+}
+
+/* Comic-book style speech bubble arrow for right-aligned bubbles */
+.message-bubble.right:before {
+  border-left: none;
+  border-right: solid 12px #d4e2ff; /* Same color as right-aligned bubble */
+  border-top: solid 12px #d4e2ff;
+  right: 24px;
+  left: auto;
+  bottom: -24px;
+  transform: skew(15deg);
+}
+
+.message-bubble.right:after {
+  border-left: none;
+  border-right: solid 10px white; /* Inner white border for the right bubble */
+  border-top: solid 10px white;
+  right: 27px;
+  left: auto;
+  bottom: -19px;
+  transform: skew(15deg);
+}
+
+.message-bubble p {
+  margin: 0;
+  font-size: 8px;
+  word-break: break-word;
+  white-space: normal;
+}
+
 .chat-box-container {
   background-color: white;
+  color: black;
   border: 1px solid black;
   padding: 10px;
   margin-top: 20px;
-  display: block;
-  z-index: 100;
-  position: relative;
-  left: -13rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers content horizontally */
+  justify-content: center; /* Centers content vertically */
+  position: fixed;
   top: 20rem;
+  right: 0;
+  z-index: 9999 !important;
+  transform: translateX(-50%);
+  min-width: 25rem;
+  max-width: 30rem;
+  font-size: 10px;
 }
 .overlay {
   position: fixed;
@@ -534,11 +581,11 @@
 /* Default: invisible and covers the logo area */
 .clickable-overlay {
   position: absolute;
-  top: -50px;
+  top: 0;
   left: 0;
-  width: 100%;
-  height: 50px;
-  background-color: rgba(0, 0, 0, 0);
+  width: 20rem;
+  height: 20rem;
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 10; /* Make sure it's above other content */
   cursor: pointer; /* Show pointer cursor */
   visibility: hidden; /* Hidden initially */
@@ -547,10 +594,11 @@
 /* Show the overlay on hover */
 .element:hover .clickable-overlay {
   position: absolute;
-  top: -50px;
-  height: 50px;
+  top: 0;
+  width: 20rem;
+  height: 20rem;
   visibility: visible;
-  background-color: blue; /* Optional semi-transparent effect */
+
   z-index: 100;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   color: white;

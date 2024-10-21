@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -11,170 +13,314 @@ import {
   runTransaction,
   serverTimestamp,
   getDoc,
+  writeBatch,
+  setDoc,
 } from "firebase/firestore";
-import { db, auth } from "../utilities/firebaseClient";
-import AuthModal from "./AuthModal";
-import { Button, Input } from "@chakra-ui/react";
+import { auth, db } from "../utilities/firebaseClient.js"; // Ensure Firestore and Firebase Auth are initialized correctly
+import {
+  Clerk,
+  useUser,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  useClerk,
+} from "@clerk/nextjs"; // Use Clerk's useUser for user management
+import { Button, Image, Input, Text, Heading, Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { writeBatch } from "firebase/firestore";
+// import { useActiveAccount } from "thirdweb/react";
+import StyledPopup from "./StyledPopup";
+import { signInWithCustomToken } from "firebase/auth";
+import axios from "axios";
+import { useAuth } from "@clerk/nextjs"; // Add this line if it's missing
 
 const Carousel = ({ images, logos }) => {
-  const [user, setUser] = useState(null);
+  const { isSignedIn, user, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
+  const [firebaseUser, setFirebaseUser] = useState(null); // To store Firebase user data
   const [isHovered, setIsHovered] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [riders, setRiders] = useState({});
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const router = useRouter();
-  const currentUrl = router.asPath;
   const [isRideConfirmationOpen, setIsRideConfirmationOpen] = useState(false);
   const [messages, setMessages] = useState({});
   const [newMessage, setNewMessage] = useState("");
   const [activeBeastId, setActiveBeastId] = useState(null);
   const [isRiding, setIsRiding] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(null); // Track the remaining time
+  const [timeRemaining, setTimeRemaining] = useState(null);
+  const [rideActive, setRideActive] = useState(true);
+  const [popupMessage, setPopupMessage] = useState("");
+  const router = useRouter();
+  const [currentPath, setCurrentPath] = useState("/");
+  const MAX_MESSAGE_LENGTH = 100;
 
   useEffect(() => {
-    auth.onAuthStateChanged(async (user) => {
-      setUser(user);
+    // Ensure we capture the current path correctly, fallback to the root if router is not ready
+    const path = router.asPath;
+    if (path) {
+      setCurrentPath(path);
+    }
+  }, [router.asPath]);
+  // Show popup message logic
+  const showPopupMessage = (
+    message,
+    onConfirm = null,
+    onClose = handleClosePopup,
+    showSingleButton = false
+  ) => {
+    setPopupMessage({ message, onConfirm, onClose, showSingleButton });
+  };
 
-      if (user) {
-        // Check if the user is already riding a beast
-        const ridesQuery = query(
-          collection(db, "carouselBeasts"),
-          where("userId", "==", user.uid)
-        );
-        const existingRides = await getDocs(ridesQuery);
+  // Close popup
+  const handleClosePopup = () => setPopupMessage("");
 
-        // If a ride is found, restore the state
-        if (!existingRides.empty) {
-          const existingRideId = existingRides.docs[0].id; // Get the current ride beastId
-          setActiveBeastId(existingRideId); // Restore active beast
-          setIsRiding(true); // Restore riding state
+  useEffect(() => {
+    const signIntoFirebase = async () => {
+      try {
+        const { getToken } = useAuth(); // Clerk's useAuth hook
+        const token = await getToken({ template: "integration_firebase" });
+        console.log("JWT token from Clerk:", token); // Debug: Log JWT token to ensure it’s fetched
 
-          // Restore the rider data in the state (optional)
-          const rideData = existingRides.docs[0].data();
-          setRiders((prevRiders) => ({
-            ...prevRiders,
-            [existingRideId]: rideData,
-          }));
-        }
+        // Attempt to sign in to Firebase with the custom token
+        const userCredentials = await signInWithCustomToken(auth, token);
+        console.log("Signed into Firebase with user:", userCredentials.user);
+
+        // Update firebaseUser state
+        setFirebaseUser(userCredentials.user);
+
+        return userCredentials.user;
+      } catch (error) {
+        console.error("Error signing into Firebase:", error);
+        return null;
       }
+    };
+
+    if (isLoaded && isSignedIn && user && !firebaseUser) {
+      signIntoFirebase().then((firebaseUser) => {
+        if (firebaseUser) {
+          console.log("Firebase user:", firebaseUser);
+          fetchUserProfile(firebaseUser.uid); // Fetch or create user profile in Firestore
+        } else {
+          console.error("Failed to sign into Firebase");
+        }
+      });
+    }
+  }, [isLoaded, isSignedIn, user, firebaseUser]); // Add firebaseUser as a dependency
+  // Fetch or create user profile in Firestore
+  const fetchUserProfile = async (userId) => {
+    try {
+      const userDocRef = doc(db, "users", userId);
+      const userDoc = await getDoc(userDocRef);
+
+      const userData = {
+        userId,
+        imageUrl: user.imageUrl || "./defaultAvatar.png", // Fetch from Clerk's user object
+        username: user.username || "Anonymous",
+        email: user.emailAddresses[0]?.emailAddress || null, // Email address
+        provider: user.provider || null, // Add provider field
+        identifier: user.externalId || user.id, // Add identifier, fallback to userId if missing
+      };
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, userData, { merge: true });
+      } else {
+        await setDoc(userDocRef, userData, { merge: true }); // Update if fields are missing
+      }
+      setFirebaseUser(userData); // Ensure firebaseUser is updated correctly
+    } catch (error) {
+      console.error("Error fetching or creating user profile:", error);
+    }
+  };
+  useEffect(() => {
+    console.log("firebaseUser:", firebaseUser);
+  }, [firebaseUser]);
+  const handleRideBeastClick = (image, beastId) => {
+    if (isSignedIn) {
+      // If signed in, proceed with the ride confirmation
+      handleImageClick(image, beastId);
+    } else {
+      // Show Clerk sign-in modal if not signed in
+      openSignIn({ forceRedirectUrl: currentPath });
+    }
+  };
+
+  const loadMessages = (beastId) => {
+    const messagesQuery = query(
+      collection(db, "carouselChat"),
+      where("beastId", "==", beastId)
+    );
+
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const beastMessages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Update the messages state
+      setMessages((prevMessages) => ({
+        ...prevMessages,
+        [beastId]: beastMessages,
+      }));
     });
-  }, []);
 
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
+    return () => unsubscribe(); // Return the unsubscribe function for cleanup
+  };
   const confirmRide = async () => {
-    setIsRideConfirmationOpen(false); // Close the ride confirmation prompt
+    setIsRideConfirmationOpen(false);
+
     if (!user) {
-      setIsAuthModalOpen(true); // Open the AuthModal if not signed in
+      showPopupMessage("Please sign in to ride the beast.");
       return;
     }
 
     try {
       const beastId = selectedImage.beastId;
-
-      // Fetch any existing rides for this user
-      const ridesQuery = query(
-        collection(db, "carouselBeasts"),
-        where("userId", "==", user.uid)
-      );
-      const existingRides = await getDocs(ridesQuery);
-
-      // If the user is already riding a beast, switch rides
-      if (!existingRides.empty) {
-        const existingRideId = existingRides.docs[0].id; // Get the current ride beastId
-
-        // Delete the existing ride from Firestore (since they chose to switch)
-        await deleteDoc(doc(db, "carouselBeasts", existingRideId));
-
-        // Remove the existing ride from the state
-        setRiders((prevRiders) => ({
-          ...prevRiders,
-          [existingRideId]: null, // Clear the previous rider from the state
-        }));
-
-        // Query and delete all messages related to the old beast
-        const messagesQuery = query(
-          collection(db, "carouselChat"),
-          where("beastId", "==", existingRideId)
-        );
-        const messagesSnapshot = await getDocs(messagesQuery);
-
-        // Use writeBatch to delete all previous messages
-        const batch = writeBatch(db);
-        messagesSnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-
-        // Optionally clear the previous messages from local state
-        setMessages((prevMessages) => ({
-          ...prevMessages,
-          [existingRideId]: [],
-        }));
-      }
-
       const newRiderData = {
-        userId: user.uid,
-        avatarUrl: user.photoURL || "/defaultAvatar.png",
-        username: user.displayName || "Anonymous",
+        userId: user.id,
+        imageUrl: user.imageUrl,
+        username: user.username || "Anonymous",
       };
 
-      // Start the transaction for the new ride
+      console.log("Setting active beast ID:", beastId); // Log the beast ID
+
+      // Update local state immediately to show the avatar and username
+      setRiders((prevRiders) => ({
+        ...prevRiders,
+        [beastId]: newRiderData,
+      }));
+      setActiveBeastId(beastId); // Ensure this is correctly set
+      setIsRiding(true);
+      setSelectedImage(null);
+
+      // Check if the user is already riding any beast
+      const existingRidesQuery = query(
+        collection(db, "carouselBeasts"),
+        where("userId", "==", user.id)
+      );
+      const existingRidesSnapshot = await getDocs(existingRidesQuery);
+
+      // If the user is already riding another beast, remove the existing ride
+      if (!existingRidesSnapshot.empty) {
+        const existingRideRef = existingRidesSnapshot.docs[0].ref;
+        await deleteDoc(existingRideRef);
+      }
+
       await runTransaction(db, async (transaction) => {
         const beastRef = doc(db, "carouselBeasts", beastId);
         const beastDoc = await transaction.get(beastRef);
 
-        if (!beastDoc.exists()) {
+        if (!beastDoc.exists() || !beastDoc.data().userId) {
           transaction.set(beastRef, {
-            userId: newRiderData.userId,
-            avatarUrl: newRiderData.avatarUrl,
-            username: newRiderData.username,
+            ...newRiderData,
             timestamp: serverTimestamp(),
           });
         } else {
-          if (
-            !beastDoc.data().userId ||
-            beastDoc.data().userId === newRiderData.userId
-          ) {
-            transaction.update(beastRef, {
-              userId: newRiderData.userId,
-              avatarUrl: newRiderData.avatarUrl,
-              username: newRiderData.username,
-              timestamp: serverTimestamp(),
-            });
-          } else {
-            throw new Error("Beast is already occupied");
-          }
+          throw new Error("Beast is already occupied by another rider.");
         }
       });
 
-      // After confirming the ride, set the new rider in the state
-      setRiders((prevRiders) => ({
-        ...prevRiders,
-        [beastId]: newRiderData, // Set the new beast as the rider's active ride
-      }));
+      // Load messages for this beast
+      loadMessages(beastId); // Ensure this is called correctly
 
-      setIsRiding(true);
-      setActiveBeastId(beastId); // Set active beast for chat
-      setSelectedImage(null); // Clear the selected image to hide the modal box
+      console.log("Rider set successfully:", newRiderData);
     } catch (error) {
       console.error("Failed to ride beast:", error);
-      alert("Failed to ride beast. Please try again.");
+      showPopupMessage("Failed to ride beast. Please try again.");
+      setRiders((prevRiders) => ({
+        ...prevRiders,
+        [selectedImage.beastId]: null,
+      }));
+      setIsRiding(false);
+      setActiveBeastId(null);
     }
   };
+  useEffect(() => {
+    if (!activeBeastId) {
+      console.log("No active beast ID, skipping chat box");
+      return;
+    }
+
+    console.log("Listening for messages for beast ID:", activeBeastId);
+
+    const messagesQuery = query(
+      collection(db, "carouselChat"),
+      where("beastId", "==", activeBeastId)
+    );
+
+    const unsubscribeMessages = onSnapshot(messagesQuery, (querySnapshot) => {
+      const newMessages = [];
+      querySnapshot.forEach((doc) => {
+        newMessages.push(doc.data());
+      });
+
+      console.log("New messages received:", newMessages);
+
+      setMessages((prevMessages) => ({
+        ...prevMessages,
+        [activeBeastId]: newMessages,
+      }));
+    });
+
+    return () => unsubscribeMessages(); // Cleanup listener on component unmount
+  }, [activeBeastId]);
+  const handleSendMessage = async (beastId) => {
+    if (newMessage.trim() === "" || !user) {
+      showPopupMessage("Please enter a message and ensure you are logged in.");
+      return;
+    }
+
+    if (newMessage.length > MAX_MESSAGE_LENGTH) {
+      showPopupMessage(
+        `Message is too long. Maximum length is ${MAX_MESSAGE_LENGTH} characters.`
+      );
+      return;
+    }
+
+    try {
+      // Query to find the user's previous message for the same beast
+      const previousMessageQuery = query(
+        collection(db, "carouselChat"),
+        where("beastId", "==", beastId),
+        where("riderId", "==", user.id)
+      );
+
+      const previousMessagesSnapshot = await getDocs(previousMessageQuery);
+
+      // Delete the previous message if it exists
+      const batch = writeBatch(db);
+      previousMessagesSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit(); // Commit the batch to delete previous messages
+
+      // Add the new message
+      await addDoc(collection(db, "carouselChat"), {
+        message: newMessage,
+        riderId: user.id,
+        riderName: user.username || "Anonymous",
+        imageUrl: user.imageUrl || "/defaultAvatar.png",
+        timestamp: serverTimestamp(),
+        beastId,
+      });
+
+      console.log("Message sent successfully to Firestore");
+      setNewMessage(""); // Clear the input after sending the message
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      showPopupMessage("Failed to send the message. Please try again.");
+    }
+  };
+
   useEffect(() => {
     const intervalId = setInterval(async () => {
       for (let index = 0; index < images.length; index++) {
         const beastId = `beast${index + 1}`;
         const beastRef = doc(db, "carouselBeasts", beastId);
         const beastDoc = await getDoc(beastRef);
+
         if (beastDoc.exists() && beastDoc.data().timestamp) {
           const currentTime = Date.now();
           const rideTime = beastDoc.data().timestamp.toMillis();
           const timeElapsed = currentTime - rideTime;
-
           const totalTime = 10 * 60 * 1000; // 10 minutes in milliseconds
           const timeLeft = totalTime - timeElapsed;
 
@@ -186,11 +332,13 @@ const Carousel = ({ images, logos }) => {
               setTimeRemaining(`${minutes}m ${seconds}s`);
             } else {
               setTimeRemaining("Ride has ended");
+              setIsRiding(false); // This hides the chat box when time is up
+              setActiveBeastId(null);
             }
           }
 
-          // If the ride time has passed 10 minutes, delete the rider and messages
-          if (timeElapsed > 10 * 60 * 1000) {
+          // Remove rider and messages if ride time exceeds 10 minutes
+          if (timeElapsed > totalTime) {
             // Delete the rider from the beast
             await deleteDoc(beastRef);
             setRiders((prevRiders) => ({
@@ -205,17 +353,14 @@ const Carousel = ({ images, logos }) => {
             );
             const messagesSnapshot = await getDocs(messagesQuery);
 
-            // Use writeBatch instead of db.batch
+            // Use writeBatch for efficient deletions
             const batch = writeBatch(db);
-
             messagesSnapshot.forEach((doc) => {
               batch.delete(doc.ref);
             });
-
-            // Commit the batch delete
             await batch.commit();
 
-            // Optionally clear messages from local state
+            // Clear messages from local state
             setMessages((prevMessages) => ({
               ...prevMessages,
               [beastId]: [],
@@ -227,6 +372,7 @@ const Carousel = ({ images, logos }) => {
 
     return () => clearInterval(intervalId);
   }, [images, activeBeastId]);
+
   // Handle real-time message updates
   useEffect(() => {
     images.forEach((_, index) => {
@@ -245,52 +391,8 @@ const Carousel = ({ images, logos }) => {
     });
   }, [images]);
 
-  const handleImageClick = (image, beastId) => {
-    setSelectedImage({ ...image, beastId });
-    setIsRideConfirmationOpen(true); // Open the ride confirmation prompt
-  };
-
-  const handleSendMessage = async (beastId) => {
-    if (newMessage.trim() === "" || !user) return;
-
-    try {
-      // Query for the user's previous message for the same beast
-      const previousMessageQuery = query(
-        collection(db, "carouselChat"),
-        where("beastId", "==", beastId),
-        where("riderId", "==", user.uid)
-      );
-
-      const previousMessagesSnapshot = await getDocs(previousMessageQuery);
-
-      // Delete the previous message if it exists
-      const batch = writeBatch(db);
-      previousMessagesSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
-
-      await batch.commit(); // Commit the batch to delete previous messages
-
-      // Add the new message
-      await addDoc(collection(db, "carouselChat"), {
-        message: newMessage,
-        riderId: user.uid,
-        riderName: user.displayName || "Anonymous",
-        avatarUrl: user.photoURL || "/defaultAvatar.png",
-        timestamp: serverTimestamp(),
-        beastId,
-      });
-
-      setNewMessage(""); // Clear the input after sending the message
-
-      console.log("Message sent successfully");
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      alert("Error sending message, please try again.");
-    }
-  };
   const quitRide = async () => {
-    if (!activeBeastId || !user) return; // Ensure there is an active ride
+    if (!activeBeastId || !user) return;
 
     try {
       const beastRef = doc(db, "carouselBeasts", activeBeastId);
@@ -298,19 +400,20 @@ const Carousel = ({ images, logos }) => {
       // Remove the rider from the beast
       await deleteDoc(beastRef);
 
-      // Update the state to reflect the rider has quit
       setRiders((prevRiders) => ({
         ...prevRiders,
         [activeBeastId]: null,
       }));
 
-      // Optionally clear the messages for the beast
+      // Query Firestore for all messages for the current beast from this user
       const messagesQuery = query(
         collection(db, "carouselChat"),
-        where("beastId", "==", activeBeastId)
+        where("beastId", "==", activeBeastId),
+        where("riderId", "==", user.id) // Find all messages by the current user
       );
       const messagesSnapshot = await getDocs(messagesQuery);
 
+      // Delete all messages for this user on the current beast
       const batch = writeBatch(db);
       messagesSnapshot.forEach((doc) => {
         batch.delete(doc.ref);
@@ -319,16 +422,86 @@ const Carousel = ({ images, logos }) => {
 
       setMessages((prevMessages) => ({
         ...prevMessages,
-        [activeBeastId]: [],
+        [activeBeastId]: [], // Clear local state as well
       }));
 
-      // Clear the active beast state
       setActiveBeastId(null);
-      alert("You have quit the ride.");
+      setIsRiding(false);
     } catch (error) {
       console.error("Failed to quit the ride:", error);
-      alert("Error quitting the ride. Please try again.");
+      showPopupMessage("Error quitting the ride. Please try again.");
     }
+  };
+  useEffect(() => {
+    if (!activeBeastId) return;
+
+    const messagesQuery = query(
+      collection(db, "carouselChat"),
+      where("beastId", "==", activeBeastId)
+    );
+
+    const unsubscribeMessages = onSnapshot(messagesQuery, (querySnapshot) => {
+      const newMessages = [];
+      querySnapshot.forEach((doc) => {
+        newMessages.push(doc.data());
+      });
+
+      console.log("New messages received:", newMessages); // Log messages here
+
+      // Update the messages state
+      setMessages((prevMessages) => ({
+        ...prevMessages,
+        [activeBeastId]: newMessages,
+      }));
+    });
+
+    return () => unsubscribeMessages(); // Cleanup listener on component unmount
+  }, [activeBeastId]);
+  // Ensure that no other instances of the user's avatar remain:
+  useEffect(() => {
+    const checkExistingRides = async () => {
+      if (user) {
+        const existingRidesQuery = query(
+          collection(db, "carouselBeasts"),
+          where("userId", "==", user.id)
+        );
+        const existingRidesSnapshot = await getDocs(existingRidesQuery);
+
+        // Remove all instances where the user is riding
+        existingRidesSnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+
+        // Update the local state to reflect these changes
+        setRiders((prevRiders) =>
+          Object.fromEntries(
+            Object.entries(prevRiders).map(([key, value]) =>
+              value?.userId === user.id ? [key, null] : [key, value]
+            )
+          )
+        );
+      }
+    };
+
+    checkExistingRides();
+  }, [user, activeBeastId]);
+  const handleCloseChatBox = () => {
+    if (rideActive) {
+      // Show a confirmation popup only if the ride is still active
+      showPopupMessage("Are you sure you want to end the ride?", () => {
+        quitRide(); // Quit the ride if confirmed
+        setIsRiding(false); // Ensure the state is updated correctly
+        setActiveBeastId(null);
+      });
+    } else {
+      // Directly close the chat box if the ride has ended
+      setIsRiding(false);
+      setActiveBeastId(null);
+    }
+  };
+  const handleImageClick = (image, beastId) => {
+    setSelectedImage({ ...image, beastId });
+    setIsRideConfirmationOpen(true); // Open the ride confirmation prompt
   };
 
   useEffect(() => {
@@ -347,7 +520,6 @@ const Carousel = ({ images, logos }) => {
 
     return () => unsubscribeSnapshots.forEach((unsub) => unsub());
   }, [images]);
-
   return (
     <div className="carousel-container">
       <main>
@@ -366,12 +538,7 @@ const Carousel = ({ images, logos }) => {
             const rider = riders[beastId];
             const beastMessages = messages[beastId] || [];
             const isEven = index % 2 === 1;
-            const handleLogoClick = (index) => {
-              const logo = logos[Math.floor(index / 2)];
-              if (logo && logo.link) {
-                window.open(logo.link, "_blank"); // Open the link in a new tab
-              }
-            };
+
             return (
               <div
                 key={beastId}
@@ -379,45 +546,30 @@ const Carousel = ({ images, logos }) => {
                 data-item={isEven ? "logo" : ""}
                 style={{ position: "absolute", "--item": index + 1 }}
               >
-                {" "}
-                {/* Invisible clickable overlay div */}
-                {isEven && (
-                  <div
-                    className="clickable-overlay"
-                    onClick={() => handleLogoClick(index)}
-                  >
-                    TEST
-                  </div>
-                )}
                 <div className="element2">
                   <div className="rider-beast-group">
-                    {rider && (
-                      <div className="rider-container">
-                        <p className="rider-name">{rider.username}</p>
-                        <img
-                          src={rider.avatarUrl}
-                          alt={rider.username}
-                          className="rider-avatar"
-                        />
-                      </div>
-                    )}
-                    {beastMessages.length > 0 && (
-                      <div className="message-container">
-                        {beastMessages.map((msg, i) => (
-                          <div
-                            key={`${beastId}-msg-${i}`}
-                            className="message-bubble"
-                          >
-                            <p>{msg.message}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                     <div
                       className="beast"
                       style={{ backgroundImage: `url(${image.src})` }}
-                      onClick={() => handleImageClick(image, beastId)}
-                    ></div>
+                      onClick={() => handleRideBeastClick(image, beastId)}
+                    >
+                      {rider && (
+                        <div className="rider-container">
+                          <p className="rider-name">{rider.username}</p>
+                          <img
+                            src={rider.imageUrl}
+                            alt={rider.username}
+                            className="rider-avatar"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {beastMessages.length > 0 && (
+                      <div className="message-bubble">
+                        <p>{beastMessages[beastMessages.length - 1].message}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -429,7 +581,7 @@ const Carousel = ({ images, logos }) => {
           <div>
             {/* Overlay div */}
             <div
-              className="overlay"
+              className="clickable-overlay"
               onClick={() => setIsRideConfirmationOpen(false)} // Close pop-up when clicking outside
               style={{
                 position: "fixed",
@@ -437,8 +589,8 @@ const Carousel = ({ images, logos }) => {
                 left: 0,
                 width: "100vw",
                 height: "100vh",
-                backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent overlay
-                zIndex: 999, // Ensure it's behind the modal but above other elements
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                zIndex: 999,
               }}
             ></div>
 
@@ -447,57 +599,55 @@ const Carousel = ({ images, logos }) => {
               style={{
                 backgroundColor: "pink",
                 border: "2px solid goldenrod",
-                padding: "1rem",
                 position: "absolute",
+                padding: "1rem",
+                gap: "10px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
                 top: "50%",
                 left: "50%",
-                transform: "translate(-50%, -50%)", // Center the box
-                zIndex: 1000, // Ensure it's above the overlay
-                textAlign: "center", // Center content
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+                textAlign: "center",
               }}
               onClick={(e) => e.stopPropagation()} // Prevent click from closing pop-up
             >
-              <h5>{selectedImage.title}</h5>
-              <img
+              <h4>{selectedImage.title}</h4>
+              <Image
                 src={selectedImage.src}
                 alt={selectedImage.title}
-                style={{ width: "100px", height: "100px" }}
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  objectFit: "contain",
+                }}
               />
-
-              {/* Conditionally show "Switch Rides?" */}
-              {isRiding ? (
-                <p>Switch Rides?</p>
-              ) : (
-                <p>Would you like to ride this beast?</p>
-              )}
-
+              <p>Would you like to ride this beast?</p>
               <div
                 style={{
                   marginTop: "10px",
                   display: "flex",
                   gap: "10px",
                   justifyContent: "center",
-                  zIndex: "1001",
                 }}
               >
-                {/* Yes Button */}
                 <Button
                   onClick={confirmRide}
                   style={{
                     padding: "5px 10px",
-                    backgroundColor: "goldenrod",
+                    backgroundColor: "#ffffff",
                     border: "none",
                   }}
                 >
                   Yes
                 </Button>
-
-                {/* No Button */}
                 <Button
-                  onClick={() => setIsRideConfirmationOpen(false)} // Close pop-up on "No"
+                  onClick={() => setIsRideConfirmationOpen(false)}
                   style={{
                     padding: "5px 10px",
-                    backgroundColor: "gray",
+                    backgroundColor: "#ffffff",
                     border: "none",
                   }}
                 >
@@ -508,36 +658,111 @@ const Carousel = ({ images, logos }) => {
           </div>
         )}
       </main>
-      {user && isRiding && activeBeastId && (
-        <div className="chat-box-container">
-          <h4>Chat for Beast: {activeBeastId}</h4>
-          <p>Time Remaining: {timeRemaining}</p> {/* Show the time remaining */}
-          <Input
-            color={"black"}
-            placeholder="Type your comment..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-          />
-          <Button onClick={() => handleSendMessage(activeBeastId)}>Send</Button>
-          {/* Quit Ride Button */}
-          <Button
-            onClick={quitRide}
+
+      {/* Chat box and other conditional rendering */}
+      {isRiding && activeBeastId && (
+        <div
+          className="chat-box-container"
+          style={{
+            backgroundColor: "#ffc3ec",
+            border: "1px solid black",
+            padding: "10px",
+            marginTop: "20px",
+            position: "fixed",
+            zIndex: 9999,
+            fontSize: "12px",
+            width: "300px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            top: "20rem",
+            borderRadius: "10px",
+          }}
+        >
+          <button
+            onClick={handleCloseChatBox}
             style={{
-              marginTop: "10px",
-              backgroundColor: "red",
-              color: "white",
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              background: "none",
+              border: "none",
+              fontSize: "16px",
+              cursor: "pointer",
             }}
           >
-            Quit Ride
-          </Button>
+            ×
+          </button>
+
+          <Heading
+            mt={1}
+            mb={1}
+            lineHeight={0.9}
+            style={{
+              fontSize: "2em",
+              overflowWrap: "normal",
+              zIndex: "1",
+            }}
+          >
+            Chat Box
+          </Heading>
+
+          <div
+            style={{
+              marginTop: "10px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newMessage.trim() !== "") {
+                  handleSendMessage(activeBeastId);
+                }
+              }}
+              disabled={!rideActive}
+              style={{
+                backgroundColor: "white",
+                width: "90%",
+                marginRight: "10px",
+                color: "black",
+              }}
+            />
+            <Button
+              onClick={() => handleSendMessage(activeBeastId)}
+              disabled={!rideActive || newMessage.trim() === ""}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: rideActive ? "pointer" : "not-allowed",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                className="bi bi-send"
+                viewBox="0 0 16 16"
+              >
+                <path d="M15.854.146a.5.5 0 0 1 .057.638l-6 9a.5.5 0 0 1-.888-.07L7.06 6.196 1.423 4.602a.5.5 0 0 1 .013-.975l14-4a.5.5 0 0 1 .418.519z" />
+                <path d="M6.832 10.179a.5.5 0 0 1 .683.183L12 16a.5.5 0 0 1-.853.354L6.832 10.18z" />
+              </svg>
+            </Button>
+          </div>
+          <p>Time Remaining: {timeRemaining}</p>
         </div>
       )}
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        redirectTo={currentUrl}
-      />
+      {popupMessage && (
+        <StyledPopup
+          message={popupMessage.message} // Access the message property
+          onClose={handleClosePopup}
+          onConfirm={popupMessage.onConfirm} // Pass the confirm function if applicable
+        />
+      )}
     </div>
   );
 };

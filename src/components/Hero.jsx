@@ -66,28 +66,14 @@ import TokenText from "./TokenText";
 import RotatingText from "./RotatingText";
 
 import RotatingBadge from "./RotatingBadge";
-// import StarComponent2 from "./Stars2";
+import NeonSign from "./NeonSign";
 import SliderRevolutionCarousel from "./SliderRevolutionCarousel";
 import dynamic from "next/dynamic";
 const BurningEffect = dynamic(() => import("../components/BurningEffect"), {
   ssr: false,
 });
 
-// const StarComponent2 = dynamic(() => import("./Stars2"), {
-//   ssr: false,
-// });
-
 import SpinningTextRing from "./SpinningTextRing";
-
-// const isChrome = () => {
-//   const userAgent = navigator.userAgent.toLowerCase();
-//   const isSafari = /^((?!chrome|android).)*safari/.test(userAgent);
-//   return (
-//     userAgent.indexOf("chrome") > -1 &&
-//     userAgent.indexOf("edge") === -1 &&
-//     !isSafari
-//   );
-// };
 
 const StyledText = styled(Text)`
   font-family: "Roboto", sans-serif;
@@ -423,6 +409,7 @@ const Hero = () => {
             justifyContent={{ base: "center", md: "flex-start" }} // Center text on small screens, align left on medium to large screens
             alignItems="center"
           >
+            {" "}
             <div
               style={{
                 width: "100%",
@@ -447,12 +434,10 @@ const Hero = () => {
                 <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> token
                 lets you pay homage to the Patron Saint of Day Traders herself.
                 Hold <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
-                in your wallet as a good luck charm and to ward off evil. Hang
-                out at The{" "}
-                <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>
-                Fair and play guilt-free games of chance to win more tokens.
-                Whatever you do, and wherever you go, Our Lady of Perpetual
-                Profit is your personal guide up and to the right.
+                in your wallet as a good luck charm and to ward off evil.
+                Commune with your fellow token-holders and play guilt-free games
+                of chance to win more tokens. Our Lady of Perpetual Profit is
+                your personal guide up and to the right.
               </StyledText>
             </div>
           </Box>
@@ -470,7 +455,7 @@ const Hero = () => {
         <Flex direction={{ base: "column", md: "row" }} flexWrap="nowrap">
           <Box flex="1" mt={3}>
             <Heading fontSize={"3.9rem"} lineHeight={".9"}>
-              Reflected Glory
+              Good vs Evil
             </Heading>
             <StyledText
               style={{
@@ -482,17 +467,15 @@ const Hero = () => {
                 marginLeft: "1rem",
               }}
             >
-              The
-              <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> token
-              Deadlights jack lad schooner scallywag dance the hempen jig
-              carouser broadside cable strike colors. Bring a spring upon her
-              cable holystone blow the man down Are you ready to make a small
-              sacrifice for big kicks?
+              Stake your RL80 tokens to battle evil and pay homage to 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞
+              𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙, or whomever you deem worthy. Your valorous
+              tribute will be showcased for all to see. Are you ready to prove
+              your mettle and claim your reward?
             </StyledText>
             <Box display="flex" justifyContent="center" alignItems="center">
               <Link href="/gallery">
-                <Button className="shimmer-button burnButton">
-                  I'm ready!<span className="shimmer"></span>
+                <Button width="100%" className="shimmer-button burnButton">
+                  Let's do this<span className="shimmer"></span>
                 </Button>
               </Link>
             </Box>
@@ -512,28 +495,40 @@ const Hero = () => {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                width: "100%", // Ensure the div takes full width
-                maxWidth: "15rem", // Set a max-width for the image container
-                marginBottom: "10rem", // Add margin below the image
+                width: "100%",
+                // maxWidth: "15rem",
+                // marginBottom: "10rem",
               }}
             >
-              <Image
-                src="/pyromania1.gif"
+              <img
+                // className="logo"
+                src="./vanquished.jpg"
+                width="100%"
+                height="auto"
                 alt=""
-                width={180} // Adjust the size for smaller screens
-                height={180} // Adjust the size for smaller screens
+                style={{ zIndex: "1" }}
+                // objectFit={"contain"}
+              />
+              {/* <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
                 style={{
                   borderRadius: "50%",
                   border: "3px solid gold",
-                  opacity: 0.8,
-                  zIndex: "1", // Adjusted zIndex to ensure correct stacking
-                  position: "relative",
-                  top: "1rem",
+                  width: "100%",
+                  height: "auto",
+                  objectFit: "cover",
                 }}
-              />
+              >
+                <source src="/pyromania.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video> */}
             </div>
 
-            <div
+            {/* <div
               style={{
                 position: "absolute", // Absolutely position the TokenText to avoid shifting
                 bottom: "0", // Anchor it to the bottom of its container
@@ -543,7 +538,7 @@ const Hero = () => {
               }}
             >
               <TokenText />
-            </div>
+            </div> */}
           </Box>
         </Flex>
 

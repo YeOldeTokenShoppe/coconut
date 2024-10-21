@@ -16,13 +16,13 @@ function Communion() {
     >
       <section id="footer" style={{ zIndex: "-2" }}>
         {/* <div className="inner"> */}
-        <ul className="icons">
+        {/* <ul className="icons">
           <li>
             <Link href="#" style={{ zIndex: "-2" }}>
               <div className="socials" style={{ zIndex: "-2" }}>
                 <Image
-                  src="/instagram_.png"
-                  alt="Instagram"
+                  src="/tiktok.svg"
+                  alt="Tiktok"
                   width={258}
                   height={257}
                   style={{ width: "3rem", height: "3rem" }}
@@ -34,8 +34,8 @@ function Communion() {
             <Link href="#">
               <div className="socials" style={{ zIndex: "-2" }}>
                 <Image
-                  src="/threads_.png"
-                  alt="Threads"
+                  src="/discord.svg"
+                  alt="Discord"
                   width={258}
                   height={257}
                   style={{ width: "3rem", height: "3rem" }}
@@ -47,7 +47,7 @@ function Communion() {
             <Link href="#">
               <div className="socials" style={{ zIndex: "-2" }}>
                 <Image
-                  src="/x_.png"
+                  src="/x_logo.svg"
                   alt="X"
                   width={258}
                   height={257}
@@ -60,7 +60,7 @@ function Communion() {
             <Link href="#">
               <div className="socials" style={{ zIndex: "-2" }}>
                 <Image
-                  src="/telegram_.png"
+                  src="/telegram.svg"
                   alt="telegram"
                   width={258}
                   height={257}
@@ -69,7 +69,7 @@ function Communion() {
               </div>
             </Link>
           </li>
-        </ul>
+        </ul> */}
         <div
           style={{
             display: "flex",

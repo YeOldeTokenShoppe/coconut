@@ -122,3 +122,7 @@ static/
 .firebase/rl80-43fed/functions/.next/cache/
 .firebase/rl80-43fed/functions/node_modules/**/*.node.firebase/rl80-43fed/functions/.next/cache/
 .next/
+
+
+
+serviceAccountKey.json

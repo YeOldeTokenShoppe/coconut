@@ -1,56 +1,142 @@
-import { createThirdwebClient } from "thirdweb";
-import { ConnectButton } from "thirdweb/react";
-import { inAppWallet } from "thirdweb/wallets";
-import { useState } from "react";
+// import React, { useEffect, useState } from "react";
+// import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+// import { db, storage } from "../utilities/firebaseClient"; // Ensure storage is initialized in firebaseClient
+// import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+// import { useRouter } from "next/router";
+// import { useActiveAccount } from "thirdweb/react";
 
-const client = createThirdwebClient({
-  clientId: "YOUR_CLIENT_ID", // Use your actual Thirdweb clientId here
-});
+// export default function AuthModal({ isOpen, onClose, onSignIn, redirectTo }) {
+//   const [username, setUsername] = useState("");
+//   const [avatarFile, setAvatarFile] = useState(null);
+//   const [avatarUrl, setAvatarUrl] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState("");
+//   const router = useRouter();
+//   const activeAccount = useActiveAccount();
 
-const wallets = [
-  inAppWallet({
-    auth: {
-      options: ["discord", "telegram", "farcaster", "email", "x", "facebook"],
-    },
-  }),
-];
+//   useEffect(() => {
+//     if (!isOpen) {
+//       setUsername("");
+//       setAvatarFile(null);
+//       setAvatarUrl("");
+//       setLoading(false);
+//       setError("");
+//     }
+//   }, [isOpen]);
 
-function AuthModal({ isOpen, onClose }) {
-  const [userInfo, setUserInfo] = useState(null);
+//   // Handle file input change
+//   const handleFileChange = (e) => {
+//     const file = e.target.files[0];
+//     setAvatarFile(file);
+//   };
 
-  const handlePostLogin = async (jwt) => {
-    const decodedJWT = jwt.decode(jwt); // Decode JWT to inspect the user data
-    console.log("Decoded JWT claims:", decodedJWT);
+//   // Save or update user profile in Firestore
+//   const saveUserProfile = async (user) => {
+//     setLoading(true);
+//     setError("");
 
-    // You can now access userInfo such as username and avatar
-    const { name, picture } = decodedJWT;
-    setUserInfo({ name, picture }); // Store it in your state or Firebase
-  };
+//     try {
+//       let uploadedAvatarUrl = avatarUrl;
 
-  return isOpen ? (
-    <div className="modal" style={{ zIndex: "1000" }}>
-      <div className="modal-content">
-        <button className="close-button" onClick={onClose}>
-          &times;
-        </button>
-        <ConnectButton
-          client={client}
-          wallets={wallets}
-          connectModal={{
-            size: "compact",
-            termsOfServiceUrl:
-              "https://app.termly.io/policy-viewer/policy.html?policyUUID=350b7b1c-556c-490e-b0ee-a07f5b52be86",
-          }}
-        />
-        {userInfo && (
-          <div>
-            <p>Username: {userInfo.name}</p>
-            <img src={userInfo.picture} alt="User Avatar" />
-          </div>
-        )}
-      </div>
-    </div>
-  ) : null;
-}
+//       // If a file was uploaded, handle the upload to Firebase Storage
+//       if (avatarFile) {
+//         const avatarRef = ref(storage, `avatars/${user.walletAddress}`);
+//         await uploadBytes(avatarRef, avatarFile);
+//         uploadedAvatarUrl = await getDownloadURL(avatarRef);
+//       }
 
-export default AuthModal;
+//       const userDocRef = doc(db, "users", user.walletAddress);
+//       const userDoc = await getDoc(userDocRef);
+
+//       if (!userDoc.exists()) {
+//         // Save new user profile if it doesn't exist
+//         await setDoc(userDocRef, {
+//           username: username || "Anonymous",
+//           avatarUrl: uploadedAvatarUrl || "/defaultAvatar.png",
+//         });
+//       } else {
+//         // Update existing user profile if they are changing avatar or username
+//         await updateDoc(userDocRef, {
+//           username: username || userDoc.data().username || "Anonymous",
+//           avatarUrl: uploadedAvatarUrl || userDoc.data().avatarUrl,
+//         });
+//       }
+
+//       onSignIn(user); // Pass user back to the parent component
+//       onClose();
+//       router.push(redirectTo || "/home");
+//     } catch (error) {
+//       console.error("Error saving user profile:", error);
+//       setError("Failed to save profile. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSave = () => {
+//     if (activeAccount && activeAccount.address) {
+//       const user = { walletAddress: activeAccount.address }; // Use actual connected user wallet address
+//       saveUserProfile(user);
+//     } else {
+//       alert("No connected account detected. Please connect your wallet.");
+//     }
+//   };
+
+//   return isOpen ? (
+//     <div className="modal">
+//       <div
+//         className="modal-content"
+//         style={{
+//           backgroundColor: "#f0f0f0",
+//           padding: "20px",
+//           borderRadius: "8px",
+//           color: "black",
+//         }}
+//       >
+//         <button
+//           className="close-button"
+//           onClick={onClose}
+//           style={{ color: "black", fontSize: "1.5rem" }}
+//         >
+//           &times;
+//         </button>
+//         {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
+//         <input
+//           type="text"
+//           placeholder="Enter your username"
+//           value={username}
+//           onChange={(e) => setUsername(e.target.value)}
+//           style={{
+//             color: "black",
+//             padding: "10px",
+//             marginBottom: "10px",
+//             width: "100%",
+//           }}
+//         />
+//         <input
+//           type="file"
+//           accept="image/*"
+//           onChange={handleFileChange}
+//           style={{
+//             color: "black",
+//             padding: "10px",
+//             marginBottom: "10px",
+//             width: "100%",
+//           }}
+//         />
+//         <button
+//           onClick={handleSave}
+//           style={{
+//             padding: "10px",
+//             backgroundColor: "goldenrod",
+//             border: "none",
+//             color: "black",
+//           }}
+//           disabled={loading}
+//         >
+//           {loading ? "Saving..." : "Save Profile"}
+//         </button>
+//       </div>
+//     </div>
+//   ) : null;
+// }

@@ -32,9 +32,8 @@ import { useReadContract } from "thirdweb/react";
 import { defineChain } from "thirdweb/chains";
 import { utils, ethers } from "ethers";
 import styled from "styled-components";
-import { onAuthStateChanged } from "firebase/auth";
-import AuthModal from "./AuthModal";
 import Candle from "../components/Candle";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 const BurnModal = dynamic(() => import("./BurnModal"), {
   ssr: false,
@@ -60,7 +59,8 @@ const contract = getContract({
 
 const BurnGallery = () => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
   const [isBurnModalOpen, setIsBurnModalOpen] = useState(false);
   const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
     useState(false);
@@ -72,6 +72,17 @@ const BurnGallery = () => {
   const currentUrl = router.asPath;
   const [burnedAmount, setBurnedAmount] = useState(0); // Already defined in BurnGallery
   const [images, setImages] = useState([]);
+  const [isFlameVisible, setIsFlameVisible] = useState(true);
+
+  const [currentPath, setCurrentPath] = useState("/");
+
+  useEffect(() => {
+    // Ensure we capture the current path correctly, fallback to the root if router is not ready
+    const path = router.asPath;
+    if (path) {
+      setCurrentPath(path);
+    }
+  }, [router.asPath]);
 
   const getFormattedImageUrl = (url) => {
     if (!url) return "";
@@ -106,20 +117,11 @@ const BurnGallery = () => {
     );
   };
 
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setUser(user); // Set user state when signed in
-    });
-
-    return () => unsubscribeAuth(); // Clean up on unmount
-  }, []);
-
-  const avatarUrl = user ? user.photoURL : "/defaultAvatar.png"; // Define avatarUrl here
+  const avatarUrl = user ? user.imageUrl : "/defaultAvatar.png"; // Define avatarUrl here
 
   const handleOpenBurnModal = () => {
     if (!user) {
-      console.log("Button clicked");
-      setIsAuthModalOpen(true); // Open the AuthModal if not signed in
+      openSignIn({ forceRedirectUrl: currentPath });
     } else {
       setIsBurnModalOpen(true); // Open the BurnModal if signed in
       router.push("/gallery?burnModal=open", undefined, { shallow: true });
@@ -130,18 +132,6 @@ const BurnGallery = () => {
     setIsImageSelectionModalOpen(true);
   const handleCloseImageSelectionModal = () =>
     setIsImageSelectionModalOpen(false);
-
-  // const handleCloseBurnModal = () => {
-  //   // Reset all necessary states related to the burning process
-  //   setIsBurnModalOpen(false);
-  //   setIsResultSaved(false); // Reset result saved state
-  //   setSaveMessage(""); // Clear save message
-  //   setBurnedAmount(0); // Reset the burned amount
-  //   setSelectedImage(null); // Reset selected image
-  //   setShowImageWarning(false); // Reset any warnings
-  //   setUploadedImage(null); // Clear any uploaded image if needed
-  //   router.push("/gallery", undefined, { shallow: true }); // Return to gallery
-  // };
 
   useEffect(() => {
     if (isBurnModalOpen && router.query.burnModal !== "open") {
@@ -183,31 +173,45 @@ const BurnGallery = () => {
         flexDirection="column"
         alignItems="center"
       >
-        {/* Frame and Image Container */}
+        {image.type && (
+          <Badge
+            colorScheme={image.type === "Top Burner" ? "purple" : "cyan"}
+            variant="solid"
+            position="absolute"
+            top="1rem"
+            left="50%"
+            transform="translateX(-50%)"
+            m="1"
+            zIndex="docked"
+          >
+            {image.type}
+          </Badge>
+        )}
         <Box
           position="relative"
           display="flex"
+          flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          width={isAvatar ? "9rem" : "auto"} // Adjust size for avatar or other images
-          height={isAvatar ? "9rem" : "auto"} // Keep the frame size consistent
+          width={"10rem"} // Adjust size for avatar or other images
+          height="auto"
         >
-          {/* Conditionally display the frame if it's not a video */}
-          {!image.isVideo && frameChoice && frameSrc && (
+          {/* Conditionally display the frame if it's not a video or PNG image */}
+          {!image.isVideo && !image.isPng && frameChoice && frameSrc && (
             <Image
               src={frameSrc}
               alt="Frame"
               position="absolute"
-              top="0"
+              top="1rem"
               left="0"
-              width="100%"
-              height="100%"
+              width="10rem"
+              height="10rem"
               objectFit="contain"
               zIndex="6"
             />
           )}
 
-          {/* Display the image or video */}
+          {/* Display the image, video, or PNG */}
           {image.isVideo ? (
             <video
               src={imageUrl}
@@ -221,18 +225,51 @@ const BurnGallery = () => {
                 zIndex: "5",
               }}
             />
+          ) : image.isPng ? (
+            <Image
+              src={imageUrl}
+              alt={image.alt || "PNG image"}
+              style={{
+                width: "100%",
+                height: "auto",
+                zIndex: "5",
+              }}
+            />
           ) : (
             <Image
               src={imageUrl || "/defaultAvatar.png"}
               alt={image.alt || "User image"}
               style={{
-                width: isAvatar ? "80%" : "100%", // Adjust the image size within the frame
+                width: isAvatar ? "calc(50% - 6.7rem)" : "70%", // Adjust the image size within the frame
                 height: "auto",
                 zIndex: "5",
-                borderRadius: isAvatar ? "50%" : "0", // Circular border for avatars
+                borderRadius: isAvatar ? "50%" : "50%", // Circular border for avatars
+                position: "relative",
+                top: isAvatar ? "2.5rem" : "2.5rem", // Adjust the position for avatars
               }}
             />
           )}
+        </Box>
+        <Box
+          mt={image.isVideo || image.isPng ? 2 : "4.5rem"} // Adjust margin-top based on whether it's a video or PNG
+          zIndex={image.isVideo || image.isPng ? "5" : "7"} // Ensure text is above the frame/image composite
+        >
+          <Text
+            fontSize="small"
+            fontWeight="bold"
+            lineHeight="normal"
+            textAlign="center"
+          >
+            {image.userName}
+            <br />
+            Burned: {image.burnedAmount} tokens
+            <br />
+            {image.message && (
+              <Text color="lt grey" fontWeight="normal">
+                "{image.message}"
+              </Text>
+            )}
+          </Text>
         </Box>
       </Box>
     );
@@ -270,7 +307,7 @@ const BurnGallery = () => {
           frameChoice: doc.data().image.frameChoice || "frame1",
           type: "recent",
         }));
-
+        console.log("Results:", results);
         const sortedByAmount = [...results].sort((a, b) => {
           if (b.burnedAmount === a.burnedAmount) {
             return a.createdAt - b.createdAt;
@@ -340,7 +377,7 @@ const BurnGallery = () => {
           >
             <div style={{ position: "relative", zIndex: 0 }}>
               <div style={{ zIndex: 1 }}>
-                <Box maxWidth="50ch">
+                <Box>
                   <div
                     style={{
                       position: "relative",
@@ -349,31 +386,99 @@ const BurnGallery = () => {
                       alignItems: "center",
                     }}
                   >
-                    {/* <Image
-                      src="/smallStatue.gif"
-                      alt=""
-                      width={800}
-                      zIndex={-1}
-                      height={"auto"}
+                    <a
+                      href="https://rl80.xyz"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{
-                        // borderRadius: "50%",
-                        // border: "3px solid gold",
-                        opacity: 0.8,
-
-                        position: "relative",
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
                       }}
-                    /> */}
+                    >
+                      <video
+                        src="/space4.mp4"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          zIndex: "1",
+                          cursor: "pointer",
+                        }}
+                      />
+                    </a>
+                    <Badge
+                      colorScheme="green"
+                      variant={"solid"}
+                      size={"3xl"}
+                      style={{
+                        position: "absolute",
+                        top: "-10px", // Adjust as needed
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        // backgroundColor: "green",
+                        // color: "white",
+                        // padding: "2px 2px",
+                        // borderRadius: "5px",
+                        // fontSize: "1rem", // Adjust as needed
+                        zIndex: "2",
+                      }}
+                    >
+                      Scenic Route
+                    </Badge>
                   </div>
+                  <Text
+                    fontSize="large"
+                    lineHeight={1}
+                    mb={-3}
+                    mt={3}
+                    zIndex={1}
+                    bgColor={"black"}
+                  >
+                    Fortune Favors the Brave! Click on the moon to earn a 20%
+                    staking premium by taking the scenic route.
+                  </Text>
                   <div
                     style={{
-                      marginBottom: "0rem",
-                      // height: "8rem",
-                      zindex: "1",
-                      position: "relative",
-                      bottom: "3rem",
+                      display: "flex",
+                      justifyContent: "center", // Center the candles horizontally
+                      alignItems: "flex-end", // Align candles to the bottom
+                      marginBottom: "2rem",
+                      marginTop: "-12rem",
                     }}
                   >
-                    <Candle />
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: "2",
+                        left: "3rem",
+                      }}
+                    >
+                      <Candle size={0.6} isFlameVisible={isFlameVisible} />
+                    </div>
+                    <div
+                      style={{
+                        position: "relative",
+                        // height: "7.5rem",
+                        zIndex: "2",
+                        left: "-1.2rem",
+                      }}
+                    >
+                      <Candle size={0.4} isFlameVisible={isFlameVisible} />
+                    </div>
+                    <div
+                      style={{
+                        position: "relative",
+                        // height: "8.5rem",
+                        zIndex: "2",
+                        left: "-2.5rem",
+                      }}
+                    >
+                      <Candle size={0.5} isFlameVisible={isFlameVisible} />
+                    </div>
                   </div>
                   <Heading
                     lineHeight={0.9}
@@ -383,20 +488,19 @@ const BurnGallery = () => {
                       zindex: "1",
                     }}
                   >
-                    Bless us,{" "}
-                    <span style={{ fontFamily: "Oleo Script" }}>RL80</span>!
+                    Bless us, RL80!
                   </Heading>
                   <Text fontSize="xlarge" lineHeight={1.1} mb={2} zIndex={1}>
-                    Enter the virtuous cycle by burning some{" "}
+                    Enter the virtuous cycle by staking{" "}
                     <span style={{ fontFamily: "Oleo Script" }}>RL80</span>{" "}
-                    tokens at the alt-coin altar and enjoy instant veneration
-                    and glory while reducing token supply.
+                    tokens to earn reward tokens that you can use to buy green
+                    candles or redeem for more RL80 tokens!
                     {/* and heaping blessings
                     on your fellow bag-holders. */}
                   </Text>
-                  <Text fontSize="small" lineHeight={1} mb={"3rem"} zIndex={1}>
+                  {/* <Text fontSize="small" lineHeight={1} mb={"3rem"} zIndex={1}>
                     Average cost to participate is currently under 0.5 cents USD
-                  </Text>
+                  </Text> */}
 
                   <Accordion allowToggle mt={3}>
                     <AccordionItem border="none">
@@ -455,26 +559,12 @@ const BurnGallery = () => {
                   <Flex justify="center" mt={5} mb={5}>
                     <div>
                       <Button
+                        width="100%"
                         className="burnButton"
                         onClick={handleOpenBurnModal}
                       >
                         Burn Tokens
                       </Button>
-
-                      {isAuthModalOpen && (
-                        <AuthModal
-                          isOpen={isAuthModalOpen}
-                          onClose={() => setIsAuthModalOpen(false)}
-                          onSignInSuccess={() => {
-                            setIsAuthModalOpen(false); // Close the AuthModal
-                            setIsBurnModalOpen(true); // Open the BurnModal
-                            router.push("/gallery?burnModal=open", undefined, {
-                              shallow: true,
-                            });
-                          }}
-                          redirectTo={router.asPath} // Optional: fallback in case onSignInSuccess is not triggered
-                        />
-                      )}
                     </div>
                   </Flex>
                 </Box>
@@ -529,8 +619,9 @@ const BurnGallery = () => {
                 justifyContent="center"
                 alignItems="center"
                 position="relative"
-                bottom={0}
+                // bottom={0}
                 // left={"30%"}
+                marginTop="-1rem"
               >
                 <h1 className="thelma1">
                   BurnerBoard
@@ -542,89 +633,6 @@ const BurnGallery = () => {
             </GridItem>
           </GridItem>
         </Grid>
-
-        <Flex
-          wrap="wrap"
-          justify="space-around"
-          mt={5}
-          gap="10px"
-          width="100%"
-          style={{ clear: "both" }} // Ensure the section clears any floating content
-        >
-          <StatGroup
-            style={{
-              border: "1px solid #8e662b",
-              borderRadius: "10px",
-              padding: ".5rem",
-              width: "100%",
-              height: "auto",
-              display: "flex",
-              flexWrap: "wrap",
-
-              justifyContent: "space-around",
-            }}
-          >
-            <Stat
-              style={{
-                width: "150px",
-                margin: "10px",
-              }}
-            >
-              <StatLabel mb={2}>Tokens Burned</StatLabel>
-              <StatNumber mb={2}>
-                {isLoading || tokensBurned === undefined
-                  ? "Loading..."
-                  : Number(
-                      utils.formatUnits(tokensBurned, "ether")
-                    ).toLocaleString()}
-              </StatNumber>
-              <StatHelpText bottom={0}>
-                {isLoading
-                  ? "Loading..."
-                  : `${burnedPercentage.toFixed(2)}% of total supply`}
-              </StatHelpText>
-            </Stat>
-            <Stat
-              style={{
-                width: "150px",
-                margin: "10px",
-              }}
-            >
-              <StatLabel mb={2}>Number of Entries</StatLabel>
-              <StatNumber>389</StatNumber>
-              <StatHelpText mt={2}>RL80 Tokens</StatHelpText>
-            </Stat>
-            <Stat
-              style={{
-                width: "150px",
-                margin: "10px",
-              }}
-            >
-              <StatLabel mb={2}>Current Prize Pool</StatLabel>
-              <StatNumber>{isLoading ? "Loading..." : "10,000,000"}</StatNumber>
-              <StatHelpText>RL80 Tokens</StatHelpText>
-            </Stat>
-            <Stat
-              style={{
-                width: "150px",
-                margin: "10px",
-                textAlign: "center",
-              }}
-            >
-              <StatLabel mb={2} textAlign={"center"}>
-                Next Drawing
-              </StatLabel>
-              <StatNumber fontSize={"2.2rem"} textAlign={"center"}>
-                ⏳
-              </StatNumber>
-              <StatHelpText fontSize={"1.5rem"} mb={1} textAlign={"center"}>
-                5<span style={{ fontSize: "1rem" }}>{" days "}</span>4
-                <span style={{ fontSize: "1rem" }}>{" hours "}</span>31
-                <span style={{ fontSize: "1rem" }}>{" min"}</span>
-              </StatHelpText>
-            </Stat>
-          </StatGroup>
-        </Flex>
 
         {isBurnModalOpen && (
           <BurnModal

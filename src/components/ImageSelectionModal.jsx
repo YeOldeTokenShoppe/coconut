@@ -28,13 +28,13 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { db, auth } from "../utilities/firebaseClient";
-import { onAuthStateChanged } from "firebase/auth";
 import Carousel8 from "./Carousel8";
-import AuthModal from "./AuthModal";
+import { useUser } from "@clerk/nextjs";
 import UploadImage from "../utilities/UploadImage";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utilities/cropImageUtility";
 import { useRouter } from "next/router";
+import BurnModal from "./BurnModal";
 
 function ImageSelectionModal({
   isOpen,
@@ -46,7 +46,7 @@ function ImageSelectionModal({
   setSaveMessage,
   onSaveResult,
 }) {
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
   const [showWarning, setShowWarning] = useState(false);
   const [showLoginError, setShowLoginError] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
@@ -63,6 +63,7 @@ function ImageSelectionModal({
   const [isImageSelectionModalOpen, setIsImageSelectionModalOpen] =
     useState(false);
   const router = useRouter();
+  const [isCandleLowered, setIsCandleLowered] = useState(false);
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedArea(croppedAreaPixels);
@@ -75,7 +76,7 @@ function ImageSelectionModal({
       const storage = getStorage(); // Define storage
       const storageRef = ref(
         storage,
-        `userImages/${user.uid}/${Date.now()}.jpg`
+        `userImages/${user.id}/${Date.now()}.jpg`
       );
 
       // Upload the cropped image to Firebase Storage
@@ -84,8 +85,8 @@ function ImageSelectionModal({
 
       // Save metadata and image URL to Firestore
       const selectedFrame = frameChoice || "frame1";
-      const userName = customName || user.displayName || "Anonymous";
-      const userId = user.uid;
+      const userName = customName || user.username || "Anonymous";
+      const userId = user?.id;
 
       await setDoc(doc(db, "results", userId), {
         userName,
@@ -115,18 +116,16 @@ function ImageSelectionModal({
     frame3: "/frame3.png",
   };
 
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-
-    return () => unsubscribeAuth();
-  }, []);
-
-  let avatarUrl = user ? user.photoURL : "/defaultAvatar.png";
+  let avatarUrl = user ? user.imageUrl : "/defaultAvatar.png";
   const params = new URLSearchParams();
 
-  const imageUrls = [avatarUrl, "/smoke.mp4"];
+  const imageUrls = [
+    avatarUrl,
+    "/smoke.mp4",
+    "/oscar.mp4",
+    "/wildRide.mp4",
+    "/feelsGood.mp4",
+  ];
 
   avatarUrl = `${avatarUrl}?${params.toString()}`;
 
@@ -141,7 +140,7 @@ function ImageSelectionModal({
 
   const handleOpen = () => {
     if (!user) {
-      setIsAuthModalOpen(true);
+      openSignIn();
     } else {
       onOpen();
     }
@@ -219,7 +218,7 @@ function ImageSelectionModal({
           const storage = getStorage();
           const storageRef = ref(
             storage,
-            `userImages/${user.uid}/${Date.now()}.jpg`
+            `userImages/${user.id}/${Date.now()}.jpg`
           );
           await uploadString(storageRef, croppedImageUrl, "data_url");
           downloadURL = await getDownloadURL(storageRef); // Get Firebase URL for the cropped image
@@ -236,8 +235,8 @@ function ImageSelectionModal({
         : isFirstImage
         ? "frame1"
         : frameChoice || "frame1"; // Use frame1 for the avatar
-      const userName = customName || user.displayName || "Anonymous";
-      const userId = user.uid;
+      const userName = customName || user.username || "Anonymous";
+      const userId = user.id;
 
       // Save result in Firestore
       await setDoc(doc(db, "results", userId), {
@@ -253,18 +252,31 @@ function ImageSelectionModal({
         burnedAmount: burnedAmount || 0,
       });
 
+      // Invoke onSaveResult to pass the saved image data back to BurnModal
+      onSaveResult({
+        src: downloadURL, // The image URL
+        isFirstImage: isFirstImage, // Avatar image flag
+        isVideo: selectedImage?.isVideo || false, // Video flag
+        frameChoice: selectedFrame, // Frame choice
+      });
+
       setIsResultSaved(true);
-      setSaveMessage("Your image was successfully saved.");
+      setSaveMessage(
+        "You've been saved and you're entered in the next drawing!"
+      );
       onClose(); // Close the modal after save
       router.push("/gallery"); // Redirect to the gallery page
+      setIsCandleLowered(true);
     } catch (error) {
       console.error("Error saving result:", error);
     }
-    onClose();
   };
+
   return (
     <>
-      <Button onClick={handleOpen}>Join the Hall of Flame</Button>
+      <Button width="100%" onClick={handleOpen}>
+        Join the Hall of Flame
+      </Button>
       {showLoginError && (
         <Alert status="error">
           <AlertIcon />
@@ -293,7 +305,7 @@ function ImageSelectionModal({
             >
               Than<span style={{ fontFamily: "New Rocker" }}>{"k"}</span>s,{" "}
               <span style={{ fontFamily: "New Rocker" }}>
-                {user ? user.displayName : "Guest"}!
+                {user ? user.username : "Guest"}!
               </span>{" "}
               You&apos;re a Saint!
             </span>
@@ -473,11 +485,7 @@ function ImageSelectionModal({
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      <BurnModal isCandleLowered={isCandleLowered} />
     </>
   );
 }

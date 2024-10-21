@@ -237,7 +237,7 @@ const NavBar = () => {
     },
     {
       date: "02",
-      title: "Thesis",
+      title: "Unorthodoxy",
       emoji: "📜",
       link: "/thesis",
     },
@@ -249,14 +249,14 @@ const NavBar = () => {
     },
     {
       date: "04",
-      title: "Candelarium",
+      title: "Peril and Piety",
       emoji: "🕯️",
       link: "./gallery",
     },
     {
       date: "05",
       title: "Communion",
-      emoji: "👋",
+      emoji: "🎠",
       link: "./communion",
     },
   ];

@@ -1,77 +1,65 @@
-import { useState, useEffect, useRef } from "react";
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { slide as Menu } from "react-burger-menu";
+import {
+  useUser,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignOutButton,
+  UserButton,
+  useAuth,
+} from "@clerk/nextjs"; // Import Clerk components
 import { Button, Container } from "@chakra-ui/react";
 import Link from "next/link";
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import { createThirdwebClient } from "thirdweb";
-import { inAppWallet } from "thirdweb/wallets";
-import WalletButton1 from "./WalletButton1";
-import Image from "next/image";
-import jwt_decode from "jwt-decode";
+import { slide as Menu } from "react-burger-menu";
+import { doc, setDoc, getDoc } from "firebase/firestore"; // Import Firestore methods
+import { signInWithCustomToken } from "firebase/auth"; // Import Firebase auth methods
+import { db, auth } from "../utilities/firebaseClient"; // Import Firestore and Auth setup
 import RotatingBadge2 from "./RotatingBadge2";
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID;
-const client = createThirdwebClient({ clientId: CLIENT_ID });
-
-const wallets = [
-  inAppWallet({
-    auth: {
-      options: ["x", "discord", "telegram", "farcaster", "facebook", "email"],
-    },
-    metadata: {
-      image: {
-        src: "/newheart1.png",
-        width: 250,
-        height: 150,
-        alt: "Aperture Laboratories",
-      },
-    },
-  }),
-];
-
 function Header() {
-  const [user, setUser] = useState(null); // Store user info like avatar and username
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuWidth, setMenuWidth] = useState("35%");
   const [emoji, setEmoji] = useState("😇");
   const node = useRef();
   const router = useRouter();
-  const currentUrl = router.asPath;
-  const [menuWidth, setMenuWidth] = useState("35%");
-  const [mounted, setMounted] = useState(false);
-  const wallet = useActiveAccount();
+  const [currentPath, setCurrentPath] = useState(router.asPath); // Use router.asPath to track the current URL path
+  const { isLoaded, isSignedIn, user } = useUser(); // Access the user object from Clerk
+  const { getToken } = useAuth(); // Get Clerk auth token
 
-  // Get the connected wallet address
-  const activeAccount = useActiveAccount();
-  const address = activeAccount?.address;
+  // Capture the current path before page has loaded
+  useEffect(() => {
+    // Ensure we capture the current path correctly, fallback to the root if router is not ready
+    const path = router.asPath;
+    if (path) {
+      setCurrentPath(path);
+    }
+  }, [router.asPath]);
 
   const closeMenu = () => setMenuOpen(false);
   const toggleMenu = (event) => {
     event.stopPropagation();
     setMenuOpen(!menuOpen);
   };
-  async function fetchUserMetadata(queryBy, value) {
-    const url = new URL(
-      "https://embedded-wallet.thirdweb.com/api/2023-11-30/embedded-wallet/user-details"
-    );
 
-    // Set the query params based on the provided queryBy type
-    url.searchParams.set("queryBy", queryBy);
-    url.searchParams.set(queryBy, value);
+  // Firebase sign-in logic using Clerk's custom token
+  const signIntoFirebaseWithClerk = async () => {
+    try {
+      const token = await getToken({ template: "integration_firebase" });
+      if (!token) throw new Error("No Firebase token from Clerk.");
 
-    const response = await fetch(url.href, {
-      headers: {
-        Authorization: `Bearer ${process.env.THIRDWEB_CLIENT_SECRET}`, // Ensure this is server-side
-      },
-    });
+      console.log("JWT token from Clerk:", token);
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch user metadata");
+      const userCredentials = await signInWithCustomToken(auth, token || "");
+      console.log("User:", userCredentials.user);
+
+      return userCredentials.user; // Return the authenticated User
+    } catch (error) {
+      console.error("Error signing into Firebase:", error);
     }
-    return data;
-  }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -86,6 +74,56 @@ function Header() {
     };
   }, [node]);
 
+  useEffect(() => {
+    const emojiInterval = setInterval(() => {
+      setEmoji((prevEmoji) => (prevEmoji === "😇" ? "😈" : "😇"));
+    }, 3000);
+
+    return () => clearInterval(emojiInterval);
+  }, []);
+
+  // Save user data to Firestore and sign into Firebase
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user) {
+      const userData = {
+        username:
+          user.username ||
+          user.firstName ||
+          user.emailAddresses[0]?.emailAddress ||
+          "Anonymous",
+        profileImage: user.imageUrl || null,
+        userId: user.id,
+      };
+
+      const saveUserDataToFirestore = async () => {
+        try {
+          // Sign into Firebase first
+          const firebaseUser = await signIntoFirebaseWithClerk();
+          if (!firebaseUser) {
+            console.error("Firebase sign-in failed");
+            return;
+          }
+
+          // Proceed to save user data to Firestore
+          const docRef = doc(db, "users", user.id); // Reference to user document
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            console.log("User already exists in Firestore:", docSnap.data());
+          } else {
+            await setDoc(docRef, userData, { merge: true });
+            console.log("User data saved to Firestore");
+          }
+        } catch (error) {
+          console.error("Error saving user data to Firestore:", error);
+        }
+      };
+
+      saveUserDataToFirestore();
+    }
+  }, [isLoaded, isSignedIn, user]);
+
+  // Update menu width based on screen size
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== "undefined") {
@@ -109,217 +147,111 @@ function Header() {
     };
   }, []);
 
-  useEffect(() => {
-    const emojiInterval = setInterval(() => {
-      setEmoji((prevEmoji) => (prevEmoji === "😇" ? "😈" : "😇"));
-    }, 3000);
-
-    return () => clearInterval(emojiInterval);
-  }, []);
-
-  const connectInApp = async (jwt) => {
-    try {
-      const wallet = inAppWallet();
-      await wallet.connect({
-        clientId: CLIENT_ID,
-        strategy: "jwt",
-        jwt,
-        encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY,
-      });
-
-      // Fetch additional metadata using the wallet address
-      const userMetadata = await fetchUserMetadata(
-        "walletAddress",
-        activeAccount.address
-      );
-      console.log("User metadata:", userMetadata);
-
-      // Assuming the response includes linked social accounts
-      const linkedAccount = userMetadata[0]?.linkedAccounts?.[0]?.details || {};
-      const { name, picture } = linkedAccount;
-
-      // Set user info for UI display
-      setUser({
-        name,
-        photoURL: picture || "/default-avatar.png",
-      });
-    } catch (error) {
-      console.error("Error connecting to wallet or fetching metadata:", error);
-    }
-    try {
-      const decodedJWT = jwt_decode(jwt);
-      console.log("Decoded JWT:", decodedJWT); // Inspect the payload here
-      // Check if 'name' and 'picture' fields are present
-    } catch (error) {
-      console.error("Error decoding JWT:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (address) {
-      const fetchMetadata = async () => {
-        try {
-          const userMetadata = await fetchUserMetadata(
-            "walletAddress",
-            address
-          );
-          console.log("User metadata:", userMetadata);
-
-          // Assuming the response includes linked social accounts
-          const linkedAccount =
-            userMetadata[0]?.linkedAccounts?.[0]?.details || {};
-          const { name, picture } = linkedAccount;
-
-          // Set user info for UI display
-          setUser({
-            name,
-            photoURL: picture || "/default-avatar.png",
-          });
-        } catch (error) {
-          console.error("Error fetching user metadata:", error);
-        }
-      };
-
-      fetchMetadata();
-    }
-  }, [address]);
-
   return (
     <>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <Container
           className="header"
-          maxW={"1200px"}
-          mb={{ base: "200px", sm: "100px", md: "125px" }}
+          maxW="1200px"
+          mb="125px"
           style={{ position: "relative" }}
         >
-          <div className="section">
-            <header id="header">
-              <div className="menu-icon" onClick={toggleMenu}></div>
-              <div className="menu-wrapper">
-                <div className="logo-menu-container">
-                  <Link href="/home" passHref>
-                    <div id="logo">
-                      <img
-                        className="logo"
-                        src="./newheart1.png"
-                        width="10rem"
-                        height="10rem"
-                        alt=""
-                        style={{ zIndex: "1" }}
-                        // objectFit={"contain"}
-                      />
-                      <RotatingBadge2 />
-                    </div>
-                  </Link>
+          <header id="header">
+            <div className="menu-icon" onClick={toggleMenu}></div>
+            <div className="menu-wrapper">
+              <div className="logo-menu-container">
+                <div id="logo">
+                  <img
+                    className="logo"
+                    src="./newheart1.png"
+                    width="10rem"
+                    height="10rem"
+                    alt="Logo"
+                    style={{ zIndex: "1" }}
+                  />
+                  <RotatingBadge2 />
                 </div>
-                <div ref={node}>
-                  <Menu
-                    isOpen={menuOpen}
-                    onStateChange={({ isOpen }) => setMenuOpen(isOpen)}
-                    width={menuWidth}
-                  >
-                    <Link
-                      href="/home"
-                      className="menu-item"
-                      onClick={closeMenu}
-                    >
-                      Home
-                    </Link>
-                    <Link
-                      href="/thesis"
-                      className="menu-item"
-                      onClick={closeMenu}
-                    >
-                      Thesis
-                    </Link>
-                    <Link
-                      href="/numerology"
-                      className="menu-item"
-                      onClick={closeMenu}
-                    >
-                      Numerology
-                    </Link>
-                    <Link
-                      href="/gallery"
-                      className="menu-item"
-                      onClick={closeMenu}
-                    >
-                      Candelarium
-                    </Link>
-                    <Link
-                      href="/communion"
-                      className="menu-item"
-                      onClick={closeMenu}
-                    >
-                      Communion
-                    </Link>
-                  </Menu>
-                </div>
-
-                {user ? (
-                  <Button
-                    onClick={() => setUser(null)} // Sign-out functionality
-                    style={{
-                      position: "absolute",
-                      width: "3rem",
-                      height: "3rem",
-                      top: "3rem",
-                      right: "5%",
-                      minWidth: "3rem",
-                      zIndex: "911",
-                    }}
-                  >
-                    <Image
-                      id="user-avatar"
-                      src={user.photoURL} // Use the fetched user profile image
-                      alt="User Avatar"
-                      layout="fill"
-                      objectFit="cover"
-                    />
-                  </Button>
-                ) : (
-                  <ConnectButton
-                    client={client}
-                    wallets={wallets}
-                    connectModal={{
-                      size: "compact",
-                      onSignInSuccess: async (jwt) => {
-                        await connectInApp(jwt);
-                      },
-                      termsOfServiceUrl:
-                        "https://app.termly.io/policy-viewer/policy.html?policyUUID=350b7b1c-556c-490e-b0ee-a07f5b52be86",
-                    }}
-                    connectButton={{
-                      label: "💔",
-                      id: "wallet-button",
-                      style: {
-                        fontSize: "2.5rem",
-                        objectFit: "cover",
-                        layout: "fill",
-                        right: "5%",
-                        border: "3px solid goldenrod",
-                        background: "#444",
-                        position: "absolute",
-                        width: "3rem",
-                        height: "3rem",
-                        minWidth: "3rem",
-                        top: "3rem",
-                        right: "5%",
-                        zIndex: "911",
-                      },
-                    }}
-                    detailsButton={{
-                      connectedAccountAvatarUrl: user
-                        ? user.photoURL
-                        : "/default-avatar.png", // Use the user's avatar or fallback
-                      connectedAccountName: user ? user.name : "Anonymous", //
-                    }}
-                  ></ConnectButton>
-                )}
               </div>
-            </header>
-          </div>
+
+              <div ref={node}>
+                <Menu
+                  isOpen={menuOpen}
+                  onStateChange={({ isOpen }) => setMenuOpen(isOpen)}
+                  width={menuWidth}
+                >
+                  <Link
+                    href="/home"
+                    className="menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    href="/thesis"
+                    className="menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Unorthodoxy
+                  </Link>
+                  <Link
+                    href="/numerology"
+                    className="menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Numerology
+                  </Link>
+                  <Link
+                    href="/gallery"
+                    className="menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Peril and Piety
+                  </Link>
+                  <Link
+                    href="/communion"
+                    className="menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Communion
+                  </Link>
+                </Menu>
+              </div>
+
+              <div
+                id="sign-in-button"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontSize: "2.5rem",
+                  objectFit: "cover",
+                  layout: "fill",
+                  right: "5%",
+                  border: "3px solid goldenrod",
+                  background: "#444",
+                  position: "absolute",
+                  width: "3rem",
+                  height: "3rem",
+                  minWidth: "3rem",
+                  top: "3rem",
+                  zIndex: "1",
+                  overflow: "hidden",
+                }}
+              >
+                <SignedIn>
+                  <SignOutButton redirectUrl={currentPath}>
+                    <UserButton afterSignOutUrl={currentPath} />
+                  </SignOutButton>
+                </SignedIn>
+
+                <SignedOut>
+                  <SignInButton mode="modal" forceRedirectUrl={currentPath}>
+                    <Button style={{ fontSize: "2rem" }}>{emoji}</Button>
+                  </SignInButton>
+                </SignedOut>
+              </div>
+            </div>
+          </header>
         </Container>
       </div>
     </>

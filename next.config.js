@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   images: {
-    domains: ["pbs.twimg.com"],
+    domains: ["firebasestorage.googleapis.com"], // Add this line
   },
   webpack: (config, { isServer, dev }) => {
     // Enable source maps in production
