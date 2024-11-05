@@ -74,7 +74,7 @@ function Model({ url, scale, userData, setTooltipData }) {
       object={gltf.scene}
       position={[1, 0, 12]}
       scale={3 * scale}
-      rotation={[-0.01, Math.PI / -2.9, 0]}
+      rotation={[-0.01, Math.PI / -3.9, 0]}
     />
   );
 }

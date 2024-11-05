@@ -26,7 +26,7 @@ const MusicPlayer = () => {
   const [indexSong, setIndexSong] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const audioRef = useRef(null);
+  const audioRef = useRef(new Audio());
 
   // Handles viewport resize adjustments
   useEffect(() => {

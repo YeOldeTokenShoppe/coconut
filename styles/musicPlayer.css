@@ -418,5 +418,4 @@
 }
 .music-player-container {
   transform: scale(0.5); /* Adjust the scale to your preference */
-  transform-origin: top left; /* Makes the scaling start from the top-left corner */
 }

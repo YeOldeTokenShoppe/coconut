@@ -3,7 +3,7 @@ import { Box, Image, Text } from "@chakra-ui/react";
 import Carousel from "../components/Carousel";
 import NavBar from "../components/NavBar.client";
 import Communion from "../components/Communion";
-import MusicPlayer from "../components/MusicPlayer";
+import MusicPlayer from "../components/MusicPlayer2";
 import { Heading } from "@chakra-ui/react";
 
 export default function CommunionPage() {
@@ -116,21 +116,21 @@ export default function CommunionPage() {
         position="relative"
         zIndex={1} // Adjust z-index if needed
       >
-        <div className="music-player-container">
-          <div
-            style={{
-              position: "absolute",
-              bottom: "-1rem",
-              left: "50%",
-              transform: "translateX(-50%)",
-            }}
-          >
-            <MusicPlayer />
-          </div>
+        <div
+          className="music-player-container"
+          style={{ marginBottom: "2rem" }}
+        >
+          <MusicPlayer />
         </div>
       </Box>
 
-      <div style={{ position: "relative", marginBottom: "5rem" }}>
+      <div
+        style={{
+          position: "relative",
+          marginBottom: "5rem",
+          marginTop: "3rem",
+        }}
+      >
         <NavBar />
       </div>
 
