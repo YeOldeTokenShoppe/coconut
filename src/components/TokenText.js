@@ -27,7 +27,7 @@ const TokenText = () => {
 
   return (
     <p ref={fireRef} className="unique-fire-effect">
-      PY80
+      PI80
     </p>
   );
 };

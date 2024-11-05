@@ -2198,6 +2198,11 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+"@pmndrs/cannon-worker-api@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@pmndrs/cannon-worker-api/-/cannon-worker-api-2.4.0.tgz#b71522fb246ea305fcc32e158ef29d7740df8381"
+  integrity sha512-oJA1Bboc+WObksRaGDKJG0Wna9Q75xi1MdXVAZ9qXzBOyPsadmAnrmiKOEF0R8v/4zsuJElvscNZmyo3msbZjA==
+
 "@pnpm/config.env-replace@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@pnpm/config.env-replace/-/config.env-replace-1.1.0.tgz#ab29da53df41e8948a00f2433f085f54de8b3a4c"
@@ -2814,6 +2819,15 @@
   version "9.6.1"
   resolved "https://registry.yarnpkg.com/@react-spring/types/-/types-9.6.1.tgz#913d3a68c5cbc1124fdb18eff919432f7b6abdde"
   integrity sha512-POu8Mk0hIU3lRXB3bGIGe4VHIwwDsQyoD1F394OK7STTiX9w4dG3cTLljjYswkQN+hDSHRrj4O36kuVa7KPU8Q==
+
+"@react-three/cannon@^6.6.0":
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/@react-three/cannon/-/cannon-6.6.0.tgz#bef2b2224f6ea0c59e704045dc289760522dae29"
+  integrity sha512-lP9rJoVHQi0w+dYF8FJAm2xr5eLfNEckb04j72kjqndUkuOPr26N4rSBhQbHl5b5N3tEnhQaIMungAvHkcY8/A==
+  dependencies:
+    "@pmndrs/cannon-worker-api" "^2.4.0"
+    cannon-es "^0.20.0"
+    cannon-es-debugger "^1.0.0"
 
 "@react-three/drei@^9.114.3":
   version "9.114.5"
@@ -5234,6 +5248,16 @@ caniuse-lite@^1.0.30001579, caniuse-lite@^1.0.30001646, caniuse-lite@^1.0.300016
   version "1.0.30001669"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001669.tgz#fda8f1d29a8bfdc42de0c170d7f34a9cf19ed7a3"
   integrity sha512-DlWzFDJqstqtIVx1zeSpIMLjunf5SmwOw0N2Ck/QSQdS8PLS4+9HrLaYei4w8BIAL7IB/UEDu889d8vhCTPA0w==
+
+cannon-es-debugger@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/cannon-es-debugger/-/cannon-es-debugger-1.0.0.tgz#28c6679b30dcf608e978225239f447a8fe55ccb4"
+  integrity sha512-sE9lDOBAYFKlh+0w+cvWKwUhJef8HYnUSVPWPL0jD15MAuVRQKno4QYZSGxgOoJkMR3mQqxL4bxys2b3RSWH8g==
+
+cannon-es@^0.20.0:
+  version "0.20.0"
+  resolved "https://registry.yarnpkg.com/cannon-es/-/cannon-es-0.20.0.tgz#bf2f62a674701f37e3d861c90668a32d4d32f082"
+  integrity sha512-eZhWTZIkFOnMAJOgfXJa9+b3kVlvG+FX4mdkpePev/w/rP5V8NRquGyEozcjPfEoXUlb+p7d9SUcmDSn14prOA==
 
 chai@^4.3.10, chai@^4.3.4:
   version "4.5.0"
@@ -12478,15 +12502,15 @@ three-stdlib@^2.23.4, three-stdlib@^2.29.9, three-stdlib@^2.33.0:
     fflate "^0.6.9"
     potpack "^1.0.1"
 
-three@0.150.0:
-  version "0.150.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.150.0.tgz#38a324c3976e07799671d06d99f01b02a2fe65c6"
-  integrity sha512-12oqqBZom9fb5HtX3rD8qPVnamojuiN5Os7r0x8s3HQ+WHRwnEyzl2XU3aEKocsDkG++rkE9+HWzx77O59NXtw==
-
 three@^0.146.0:
   version "0.146.0"
   resolved "https://registry.yarnpkg.com/three/-/three-0.146.0.tgz#fd80f0d128ab4bb821a02191ae241e4e6326f17a"
   integrity sha512-1lvNfLezN6OJ9NaFAhfX4sm5e9YCzHtaRgZ1+B4C+Hv6TibRMsuBAM5/wVKzxjpYIlMymvgsHEFrrigEfXnb2A==
+
+three@^0.169.0:
+  version "0.169.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.169.0.tgz#4a62114988ad9728d73526d1f1de6760c56b4adc"
+  integrity sha512-Ed906MA3dR4TS5riErd4QBsRGPcx+HBDX2O5yYE5GqJeFQTPU+M56Va/f/Oph9X7uZo3W3o4l2ZhBZ6f6qUv0w==
 
 through2@^2.0.1:
   version "2.0.5"

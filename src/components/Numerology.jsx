@@ -306,7 +306,7 @@ const Numerology = () => {
               <div className="first">
                 <Card className="numbers-card" style={cardStyle1}>
                   <Card.Title style={titleStyle}>Initial Allocation</Card.Title>
-                  <Card.Text
+                  {/* <Card.Text
                     style={{
                       position: "absolute",
                       bottom: "10px",
@@ -315,7 +315,7 @@ const Numerology = () => {
                     }}
                   >
                     RL80 tokens
-                  </Card.Text>
+                  </Card.Text> */}
                   <ResponsiveContainer width="100%" height="70%">
                     <PieChart>
                       <Pie
@@ -386,7 +386,7 @@ const Numerology = () => {
                 <Card className="numbers-card" style={cardStyle2}>
                   <Card.Title style={titleStyle}>Current Prize Pool</Card.Title>
                   <Card.Text style={numberStyle}>100,775</Card.Text>
-                  <Card.Text
+                  {/* <Card.Text
                     style={{
                       position: "absolute",
                       bottom: "10px",
@@ -395,7 +395,7 @@ const Numerology = () => {
                     }}
                   >
                     RL80 Tokens
-                  </Card.Text>
+                  </Card.Text> */}
                 </Card>
               </div>
               <div className="fourth">
@@ -452,7 +452,7 @@ const Numerology = () => {
                       <Text>Loading...</Text>
                     )}
                   </Card.Text>
-                  <Card.Text
+                  {/* <Card.Text
                     style={{
                       position: "absolute",
                       bottom: "10px",
@@ -461,7 +461,7 @@ const Numerology = () => {
                     }}
                   >
                     Source: DexScreener.com
-                  </Card.Text>
+                  </Card.Text> */}
                 </Card>
               </div>
               <div className="seventh">
@@ -520,7 +520,7 @@ const Numerology = () => {
               <div className="ninth">
                 <Card className="numbers-card" style={cardStyle1}>
                   <Card.Title style={titleStyle}>Initial Allocation</Card.Title>
-                  <Card.Text
+                  {/* <Card.Text
                     style={{
                       position: "absolute",
                       bottom: "10px",
@@ -529,7 +529,7 @@ const Numerology = () => {
                     }}
                   >
                     RL80 tokens
-                  </Card.Text>
+                  </Card.Text> */}
                   <ResponsiveContainer width="100%" height="70%">
                     <PieChart>
                       <Pie
@@ -558,7 +558,7 @@ const Numerology = () => {
                       alignItems: "flex-start",
                     }}
                   >
-                    <Card.Text style={{ color: "#0088fe", fontWeight: "bold" }}>
+                    {/* <Card.Text style={{ color: "#0088fe", fontWeight: "bold" }}>
                       85%: Liquidity Pool
                     </Card.Text>
                     <Card.Text style={{ color: "#00c49F", fontWeight: "bold" }}>
@@ -566,7 +566,7 @@ const Numerology = () => {
                     </Card.Text>
                     <Card.Text style={{ color: "#ffbb27", fontWeight: "bold" }}>
                       5%: Centralized Exchange Reserve
-                    </Card.Text>
+                    </Card.Text> */}
                   </div>
                 </Card>
               </div>

@@ -1,4 +1,7 @@
-export const getCroppedImg = (imageSrc, crop) => {
+export const getCroppedImg = (
+  imageSrc,
+  crop = { x: 0, y: 0, width: 100, height: 100 }
+) => {
   const image = new Image();
 
   // Set crossOrigin to allow Firebase Storage to serve images with CORS headers
@@ -13,25 +16,32 @@ export const getCroppedImg = (imageSrc, crop) => {
       const scaleX = image.naturalWidth / image.width;
       const scaleY = image.naturalHeight / image.height;
 
-      canvas.width = crop.width;
-      canvas.height = crop.height;
+      // Ensure crop dimensions are valid
+      const cropWidth = crop.width ? crop.width : image.naturalWidth;
+      const cropHeight = crop.height ? crop.height : image.naturalHeight;
+
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
 
       ctx.drawImage(
         image,
         crop.x * scaleX,
         crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
+        cropWidth * scaleX,
+        cropHeight * scaleY,
         0,
         0,
-        crop.width,
-        crop.height
+        cropWidth,
+        cropHeight
       );
 
-      // Convert the canvas to a data URL
-      const dataUrl = canvas.toDataURL("image/jpeg"); // Change format as needed
+      // Convert the canvas to a data URL (JPEG format for compression)
+      const dataUrl = canvas.toDataURL("image/jpeg"); // You can adjust the format if needed
       resolve(dataUrl);
     };
-    image.onerror = (error) => reject(error);
+
+    // Enhanced error handling with more descriptive messages
+    image.onerror = (error) =>
+      reject(new Error(`Failed to load the image: ${error.message}`));
   });
 };

@@ -106,45 +106,6 @@ export default function CommunionPage() {
             ]}
           />
         </div>
-
-        <Box
-          width="80%"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          textAlign="center"
-          padding="1rem"
-          zIndex={-1}
-          marginTop="20rem"
-          gap=".9rem"
-        >
-          <Heading
-            as="h1"
-            fontSize="2rem"
-            fontWeight="bold"
-            fontFamily="Oleo Script"
-            lineHeight="1"
-            marginBottom="-.5rem"
-          >
-            Ready for a Wild Ride?
-          </Heading>
-          <Text
-            as="h2"
-            fontSize="2.5rem"
-            fontWeight="bold"
-            fontFamily="Oleo Script"
-            lineHeight="1"
-            marginBottom="-.5rem"
-          ></Text>
-          <Text>
-            Join your friends and fellow token-holders with RL80's cryptid
-            menagerie for a wild ride through the ups and downs of the markets.
-            Must be at least 36" tall and hold RL80 tokens. 10 minutes per ride.
-            Your username and avatar will be displayed live! Click on any
-            available beast to ride.
-          </Text>
-        </Box>
       </div>
 
       <Box
@@ -173,7 +134,7 @@ export default function CommunionPage() {
         <NavBar />
       </div>
 
-      {/* <Communion /> */}
+      <Communion />
 
       <style jsx>{`
         @media (max-width: 600px) {

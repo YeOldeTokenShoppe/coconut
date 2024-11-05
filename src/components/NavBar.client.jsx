@@ -251,6 +251,7 @@ const NavBar = () => {
       date: "04",
       title: "Peril and Piety",
       emoji: "🕯️",
+
       link: "./gallery",
     },
     {

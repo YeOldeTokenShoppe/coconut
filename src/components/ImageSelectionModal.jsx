@@ -35,6 +35,7 @@ import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utilities/cropImageUtility";
 import { useRouter } from "next/router";
 import BurnModal from "./BurnModal";
+import BurnGallery from "./BurnGallery";
 
 function ImageSelectionModal({
   isOpen,
@@ -64,10 +65,13 @@ function ImageSelectionModal({
     useState(false);
   const router = useRouter();
   const [isCandleLowered, setIsCandleLowered] = useState(false);
-
+  const [isFirstImage, setIsFirstImage] = useState(false);
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedArea(croppedAreaPixels);
   }, []);
+
+  let avatarUrl = user ? user.imageUrl : "/defaultAvatar.png";
+  const params = new URLSearchParams();
   const handleSave = async () => {
     try {
       const croppedImage = await getCroppedImg(uploadedImage, croppedArea);
@@ -115,9 +119,6 @@ function ImageSelectionModal({
     frame2: "/frame2.png",
     frame3: "/frame3.png",
   };
-
-  let avatarUrl = user ? user.imageUrl : "/defaultAvatar.png";
-  const params = new URLSearchParams();
 
   const imageUrls = [
     avatarUrl,
@@ -259,7 +260,7 @@ function ImageSelectionModal({
         isVideo: selectedImage?.isVideo || false, // Video flag
         frameChoice: selectedFrame, // Frame choice
       });
-
+      console.log("Saving image:", downloadURL, "isFirstImage:", isFirstImage);
       setIsResultSaved(true);
       setSaveMessage(
         "You've been saved and you're entered in the next drawing!"

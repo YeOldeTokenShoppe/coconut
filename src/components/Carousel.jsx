@@ -521,248 +521,304 @@ const Carousel = ({ images, logos }) => {
     return () => unsubscribeSnapshots.forEach((unsub) => unsub());
   }, [images]);
   return (
-    <div className="carousel-container">
-      <main>
-        <div
-          id="carousel"
-          style={{
-            "--rotation-time": "30s",
-            "--elements": images.length,
-            animationPlayState: isHovered ? "paused" : "running",
-          }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {images.map((image, index) => {
-            const beastId = `beast${index + 1}`;
-            const rider = riders[beastId];
-            const beastMessages = messages[beastId] || [];
-            const isEven = index % 2 === 1;
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+      }}
+    >
+      <div className="carousel-container">
+        <main>
+          <div
+            id="carousel"
+            style={{
+              "--rotation-time": "30s",
+              "--elements": images.length,
+              animationPlayState: isHovered ? "paused" : "running",
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {images.map((image, index) => {
+              const beastId = `beast${index + 1}`;
+              const rider = riders[beastId];
+              const beastMessages = messages[beastId] || [];
+              const isEven = index % 2 === 1;
 
-            return (
-              <div
-                key={beastId}
-                className="element"
-                data-item={isEven ? "logo" : ""}
-                style={{ position: "absolute", "--item": index + 1 }}
-              >
-                <div className="element2">
-                  <div className="rider-beast-group">
-                    <div
-                      className="beast"
-                      style={{ backgroundImage: `url(${image.src})` }}
-                      onClick={() => handleRideBeastClick(image, beastId)}
-                    >
-                      {rider && (
-                        <div className="rider-container">
-                          <p className="rider-name">{rider.username}</p>
-                          <img
-                            src={rider.imageUrl}
-                            alt={rider.username}
-                            className="rider-avatar"
-                          />
+              return (
+                <div
+                  key={beastId}
+                  className="element"
+                  data-item={isEven ? "logo" : ""}
+                  style={{ position: "absolute", "--item": index + 1 }}
+                >
+                  <div className="element2">
+                    <div className="rider-beast-group">
+                      <div
+                        className="beast"
+                        style={{ backgroundImage: `url(${image.src})` }}
+                        onClick={() => handleRideBeastClick(image, beastId)}
+                      >
+                        {rider && (
+                          <div className="rider-container">
+                            <p className="rider-name">{rider.username}</p>
+                            <img
+                              src={rider.imageUrl}
+                              alt={rider.username}
+                              className="rider-avatar"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {beastMessages.length > 0 && (
+                        <div className="message-bubble">
+                          <p>
+                            {beastMessages[beastMessages.length - 1].message}
+                          </p>
                         </div>
                       )}
                     </div>
-
-                    {beastMessages.length > 0 && (
-                      <div className="message-bubble">
-                        <p>{beastMessages[beastMessages.length - 1].message}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {selectedImage && isRideConfirmationOpen && (
-          <div>
-            {/* Overlay div */}
-            <div
-              className="clickable-overlay"
-              onClick={() => setIsRideConfirmationOpen(false)} // Close pop-up when clicking outside
-              style={{
-                position: "fixed",
-                top: "-25rem",
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                zIndex: 999,
-              }}
-            ></div>
-
-            {/* Pop-up box */}
-            <div
-              style={{
-                backgroundColor: "pink",
-                border: "2px solid goldenrod",
-                position: "absolute",
-                padding: "1rem",
-                gap: "10px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-                textAlign: "center",
-              }}
-              onClick={(e) => e.stopPropagation()} // Prevent click from closing pop-up
-            >
-              <h4>{selectedImage.title}</h4>
-              <Image
-                src={selectedImage.src}
-                alt={selectedImage.title}
+          {selectedImage && isRideConfirmationOpen && (
+            <div>
+              {/* Overlay div */}
+              <div
+                className="clickable-overlay"
+                onClick={() => setIsRideConfirmationOpen(false)} // Close pop-up when clicking outside
                 style={{
-                  width: "100px",
-                  height: "100px",
-                  objectFit: "contain",
+                  position: "fixed",
+                  top: "-25rem",
+                  left: 0,
+                  width: "100vw",
+                  height: "100vh",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  zIndex: 999,
                 }}
-              />
-              <p>Would you like to ride this beast?</p>
+              ></div>
+
+              {/* Pop-up box */}
               <div
                 style={{
-                  marginTop: "10px",
-                  display: "flex",
+                  backgroundColor: "pink",
+                  border: "2px solid goldenrod",
+                  position: "absolute",
+                  padding: "1rem",
                   gap: "10px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                   justifyContent: "center",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1000,
+                  textAlign: "center",
                 }}
+                onClick={(e) => e.stopPropagation()} // Prevent click from closing pop-up
               >
-                <Button
-                  onClick={confirmRide}
+                <h4>{selectedImage.title}</h4>
+                <Image
+                  src={selectedImage.src}
+                  alt={selectedImage.title}
                   style={{
-                    padding: "5px 10px",
-                    backgroundColor: "#ffffff",
-                    border: "none",
+                    width: "100px",
+                    height: "100px",
+                    objectFit: "contain",
+                  }}
+                />
+                <p>Would you like to ride this beast?</p>
+                <div
+                  style={{
+                    marginTop: "10px",
+                    display: "flex",
+                    gap: "10px",
+                    justifyContent: "center",
                   }}
                 >
-                  Yes
-                </Button>
-                <Button
-                  onClick={() => setIsRideConfirmationOpen(false)}
-                  style={{
-                    padding: "5px 10px",
-                    backgroundColor: "#ffffff",
-                    border: "none",
-                  }}
-                >
-                  No
-                </Button>
+                  <Button
+                    onClick={confirmRide}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "#ffffff",
+                      border: "none",
+                    }}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    onClick={() => setIsRideConfirmationOpen(false)}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "#ffffff",
+                      border: "none",
+                    }}
+                  >
+                    No
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
 
-      {/* Chat box and other conditional rendering */}
-      {isRiding && activeBeastId && (
-        <div
-          className="chat-box-container"
-          style={{
-            backgroundColor: "#ffc3ec",
-            border: "1px solid black",
-            padding: "10px",
-            marginTop: "20px",
-            position: "fixed",
-            zIndex: 9999,
-            fontSize: "12px",
-            width: "300px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            top: "20rem",
-            borderRadius: "10px",
-          }}
-        >
-          <button
-            onClick={handleCloseChatBox}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              background: "none",
-              border: "none",
-              fontSize: "16px",
-              cursor: "pointer",
-            }}
-          >
-            ×
-          </button>
-
-          <Heading
-            mt={1}
-            mb={1}
-            lineHeight={0.9}
-            style={{
-              fontSize: "2em",
-              overflowWrap: "normal",
-              zIndex: "1",
-            }}
-          >
-            Chat Box
-          </Heading>
-
+        {/* Chat box and other conditional rendering */}
+        {isRiding && activeBeastId && (
           <div
+            className="chat-box-container"
             style={{
-              marginTop: "10px",
-              display: "flex",
-              alignItems: "center",
+              backgroundColor: "#ffc3ec",
+              border: "1px solid black",
+              padding: "10px",
+              marginTop: "20px",
+              position: "fixed",
+              zIndex: 9999,
+              fontSize: "12px",
+              width: "300px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              top: "20rem",
+              borderRadius: "10px",
             }}
           >
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && newMessage.trim() !== "") {
-                  handleSendMessage(activeBeastId);
-                }
-              }}
-              disabled={!rideActive}
+            <button
+              onClick={handleCloseChatBox}
               style={{
-                backgroundColor: "white",
-                width: "90%",
-                marginRight: "10px",
-                color: "black",
-              }}
-            />
-            <Button
-              onClick={() => handleSendMessage(activeBeastId)}
-              disabled={!rideActive || newMessage.trim() === ""}
-              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
                 background: "none",
                 border: "none",
-                cursor: rideActive ? "pointer" : "not-allowed",
+                fontSize: "16px",
+                cursor: "pointer",
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="currentColor"
-                className="bi bi-send"
-                viewBox="0 0 16 16"
-              >
-                <path d="M15.854.146a.5.5 0 0 1 .057.638l-6 9a.5.5 0 0 1-.888-.07L7.06 6.196 1.423 4.602a.5.5 0 0 1 .013-.975l14-4a.5.5 0 0 1 .418.519z" />
-                <path d="M6.832 10.179a.5.5 0 0 1 .683.183L12 16a.5.5 0 0 1-.853.354L6.832 10.18z" />
-              </svg>
-            </Button>
-          </div>
-          <p>Time Remaining: {timeRemaining}</p>
-        </div>
-      )}
+              ×
+            </button>
 
-      {popupMessage && (
-        <StyledPopup
-          message={popupMessage.message} // Access the message property
-          onClose={handleClosePopup}
-          onConfirm={popupMessage.onConfirm} // Pass the confirm function if applicable
-        />
-      )}
+            <Heading
+              mt={1}
+              mb={1}
+              lineHeight={0.9}
+              style={{
+                fontSize: "2em",
+                overflowWrap: "normal",
+                zIndex: "1",
+              }}
+            >
+              Chat Box
+            </Heading>
+
+            <div
+              style={{
+                marginTop: "10px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newMessage.trim() !== "") {
+                    handleSendMessage(activeBeastId);
+                  }
+                }}
+                disabled={!rideActive}
+                style={{
+                  backgroundColor: "white",
+                  width: "90%",
+                  marginRight: "10px",
+                  color: "black",
+                }}
+              />
+              <Button
+                onClick={() => handleSendMessage(activeBeastId)}
+                disabled={!rideActive || newMessage.trim() === ""}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: rideActive ? "pointer" : "not-allowed",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  className="bi bi-send"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M15.854.146a.5.5 0 0 1 .057.638l-6 9a.5.5 0 0 1-.888-.07L7.06 6.196 1.423 4.602a.5.5 0 0 1 .013-.975l14-4a.5.5 0 0 1 .418.519z" />
+                  <path d="M6.832 10.179a.5.5 0 0 1 .683.183L12 16a.5.5 0 0 1-.853.354L6.832 10.18z" />
+                </svg>
+              </Button>
+            </div>
+            <p>Time Remaining: {timeRemaining}</p>
+          </div>
+        )}
+
+        {popupMessage && (
+          <StyledPopup
+            message={popupMessage.message} // Access the message property
+            onClose={handleClosePopup}
+            onConfirm={popupMessage.onConfirm} // Pass the confirm function if applicable
+          />
+        )}
+      </div>
+      <Box
+        width="80%"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        textAlign="center"
+        padding="1rem"
+        zIndex={-1}
+        marginTop="20rem"
+        gap=".9rem"
+        style={{
+          visibility: isRiding ? "hidden" : "visible", // Toggle visibility
+          height: isRiding ? "0" : "auto", // Maintain layout space when hidden
+          overflow: "hidden", // Prevent any content from showing if hidden
+          transition: "visibility 0s, height 0.3s ease-in-out", // Smooth transition
+        }}
+      >
+        <Text
+          fontSize="2rem"
+          fontWeight="bold"
+          fontFamily="UnifrakturCook"
+          lineHeight="1"
+          color="#c48901"
+          marginBottom="-.5rem"
+        >
+          RL80 Tokens Are Your Ticket to Ride!
+        </Text>
+        <Text
+          as="h2"
+          fontSize="2.5rem"
+          fontWeight="bold"
+          fontFamily="Oleo Script"
+          lineHeight="1"
+          marginBottom="-.5rem"
+        ></Text>
+        <Text>
+          Join your friends and fellow token-holders for a wild ride with RL80's
+          collection of creatures through the ups and downs of the markets. Must
+          be at least 36" tall and hold RL80 or PY80 tokens. 10 minutes per
+          ride. Your username and avatar will be displayed live! Click on any
+          available beast to ride.
+        </Text>
+      </Box>
     </div>
   );
 };

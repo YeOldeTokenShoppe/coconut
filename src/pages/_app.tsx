@@ -22,6 +22,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Header from "../components/Header";
 import Header2 from "../components/Header2";
+
 import {
   ClerkProvider,
   SignInButton,
@@ -57,11 +58,12 @@ function MyApp({ Component, pageProps }: AppProps) {
   const isNumerologyPage = router.pathname === "/numerology";
   const isCommunionPage = router.pathname === "/communion";
   const isScenePage = router.pathname === "/scene"; // Add this line
+  const isRocketPage = router.pathname === "/rocket";
 
   let HeaderComponent = null;
   if (isNumerologyPage) {
     HeaderComponent = Header2;
-  } else if (!isIndexPage && !isScenePage) {
+  } else if (!isIndexPage && !isScenePage && !isRocketPage && !isScenePage) {
     // Modify this line
     HeaderComponent = Header;
   }
@@ -85,9 +87,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             </Head>
             <div
               className={
-                isIndexPage || isCommunionPage || isScenePage
-                  ? ""
-                  : "app-container"
+                isIndexPage || isCommunionPage || isScenePage ? "" : ""
               } // Modify this line
             >
               <div

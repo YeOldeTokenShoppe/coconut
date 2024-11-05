@@ -11,8 +11,12 @@ export default function Document() {
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />{" "}
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js"
+          async
+        />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Caesar+Dressing&family=Miltonian+Tattoo&family=New+Rocker&family=Oleo+Script:wght@400;700&family=UnifrakturCook:wght@700&family=UnifrakturMaguntia&display=swap"
+          href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js"
           rel="stylesheet"
         />
       </Head>

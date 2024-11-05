@@ -34,6 +34,10 @@ import { utils, ethers } from "ethers";
 import styled from "styled-components";
 import Candle from "../components/Candle";
 import { useUser, useClerk } from "@clerk/nextjs";
+import DoorComponent from "./Door";
+import GLBViewer from "./3dObject";
+import Chandelier from "./3dChandelier";
+import ThreeDVotiveStand from "./3dVotiveStand";
 
 const BurnModal = dynamic(() => import("./BurnModal"), {
   ssr: false,
@@ -159,8 +163,7 @@ const BurnGallery = () => {
       frame3: "/frame3.png",
     }[frameChoice];
 
-    const isAvatar = image.isFirstImage; // Specifically for the user's avatar image
-
+    const isAvatar = image.isFirstImage;
     return (
       <Box
         textAlign="center"
@@ -223,6 +226,8 @@ const BurnGallery = () => {
                 width: "100%",
                 height: "auto",
                 zIndex: "5",
+                position: "relative",
+                top: "1rem",
               }}
             />
           ) : image.isPng ? (
@@ -234,16 +239,17 @@ const BurnGallery = () => {
                 height: "auto",
                 zIndex: "5",
               }}
+              s
             />
           ) : (
             <Image
               src={imageUrl || "/defaultAvatar.png"}
               alt={image.alt || "User image"}
               style={{
-                width: isAvatar ? "calc(50% - 6.7rem)" : "70%", // Adjust the image size within the frame
+                width: isAvatar ? "7rem" : "70%", // Adjust the image size within the frame
                 height: "auto",
                 zIndex: "5",
-                borderRadius: isAvatar ? "50%" : "50%", // Circular border for avatars
+                borderRadius: isAvatar ? "50%" : "0%", // Circular border for avatars
                 position: "relative",
                 top: isAvatar ? "2.5rem" : "2.5rem", // Adjust the position for avatars
               }}
@@ -259,6 +265,8 @@ const BurnGallery = () => {
             fontWeight="bold"
             lineHeight="normal"
             textAlign="center"
+            position={"relative"}
+            top="=1rem"
           >
             {image.userName}
             <br />
@@ -303,11 +311,14 @@ const BurnGallery = () => {
           userName: doc.data().userName,
           burnedAmount: doc.data().burnedAmount,
           createdAt: doc.data().createdAt,
-          isComposite: doc.data().image.isFirstImage || false,
+          isFirstImage: doc.data().image.isFirstImage,
           frameChoice: doc.data().image.frameChoice || "frame1",
           type: "recent",
         }));
+
         console.log("Results:", results);
+
+        // Sort by amount, and for equal amounts, prioritize earlier burns
         const sortedByAmount = [...results].sort((a, b) => {
           if (b.burnedAmount === a.burnedAmount) {
             return a.createdAt - b.createdAt;
@@ -315,12 +326,15 @@ const BurnGallery = () => {
           return b.burnedAmount - a.burnedAmount;
         });
 
+        // Select top burners
         const topBurners = sortedByAmount
           .slice(0, 3)
           .map((image) => ({ ...image, type: "Top Burner" }));
 
+        // Filter out top burners from recent submissions
         const recentSubmissions = results
           .filter((r) => !topBurners.some((tb) => tb.id === r.id))
+          .sort((a, b) => b.createdAt - a.createdAt) // Sort recent submissions by time
           .slice(0, 3)
           .map((image) => ({ ...image, type: "New Burner" }));
 
@@ -369,7 +383,7 @@ const BurnGallery = () => {
   return (
     <>
       <Box py="0" mb="5em">
-        <Grid templateColumns="repeat(12, 1fr)" gap={6}>
+        <Grid templateColumns="repeat(12, 1fr)" gap={2}>
           {/* First Section */}
           <GridItem
             colSpan={{ base: 12, sm: 12, md: 4 }}
@@ -384,189 +398,64 @@ const BurnGallery = () => {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
+                      height: "auto",
                     }}
                   >
-                    <a
-                      href="https://rl80.xyz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <video
-                        src="/space4.mp4"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        style={{
-                          width: "100%",
-                          height: "auto",
-                          zIndex: "1",
-                          cursor: "pointer",
-                        }}
-                      />
-                    </a>
-                    <Badge
-                      colorScheme="green"
-                      variant={"solid"}
-                      size={"3xl"}
+                    <Box position={"absolute"} top={"-24rem"}>
+                      <Chandelier />
+                    </Box>
+                    <Image
+                      src="heartwindow.svg"
+                      alt="Image description"
+                      layout="responsive"
+                      width={250}
+                      height="auto"
+                      position="relative"
+                      top={"5rem"}
+                    />
+                    <div
                       style={{
                         position: "absolute",
-                        top: "-10px", // Adjust as needed
+                        bottom: "2.3rem",
                         left: "50%",
                         transform: "translateX(-50%)",
-                        // backgroundColor: "green",
-                        // color: "white",
-                        // padding: "2px 2px",
-                        // borderRadius: "5px",
-                        // fontSize: "1rem", // Adjust as needed
-                        zIndex: "2",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "flex-end",
                       }}
                     >
-                      Scenic Route
-                    </Badge>
-                  </div>
-                  <Text
-                    fontSize="large"
-                    lineHeight={1}
-                    mb={-3}
-                    mt={3}
-                    zIndex={1}
-                    bgColor={"black"}
-                  >
-                    Fortune Favors the Brave! Click on the moon to earn a 20%
-                    staking premium by taking the scenic route.
-                  </Text>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center", // Center the candles horizontally
-                      alignItems: "flex-end", // Align candles to the bottom
-                      marginBottom: "2rem",
-                      marginTop: "-12rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "relative",
-                        zIndex: "2",
-                        left: "3rem",
-                      }}
-                    >
-                      <Candle size={0.6} isFlameVisible={isFlameVisible} />
-                    </div>
-                    <div
-                      style={{
-                        position: "relative",
-                        // height: "7.5rem",
-                        zIndex: "2",
-                        left: "-1.2rem",
-                      }}
-                    >
-                      <Candle size={0.4} isFlameVisible={isFlameVisible} />
-                    </div>
-                    <div
-                      style={{
-                        position: "relative",
-                        // height: "8.5rem",
-                        zIndex: "2",
-                        left: "-2.5rem",
-                      }}
-                    >
-                      <Candle size={0.5} isFlameVisible={isFlameVisible} />
-                    </div>
-                  </div>
-                  <Heading
-                    lineHeight={0.9}
-                    style={{
-                      fontSize: "2.5em",
-                      overflowWrap: "normal",
-                      zindex: "1",
-                    }}
-                  >
-                    Bless us, RL80!
-                  </Heading>
-                  <Text fontSize="xlarge" lineHeight={1.1} mb={2} zIndex={1}>
-                    Enter the virtuous cycle by staking{" "}
-                    <span style={{ fontFamily: "Oleo Script" }}>RL80</span>{" "}
-                    tokens to earn reward tokens that you can use to buy green
-                    candles or redeem for more RL80 tokens!
-                    {/* and heaping blessings
-                    on your fellow bag-holders. */}
-                  </Text>
-                  {/* <Text fontSize="small" lineHeight={1} mb={"3rem"} zIndex={1}>
-                    Average cost to participate is currently under 0.5 cents USD
-                  </Text> */}
-
-                  <Accordion allowToggle mt={3}>
-                    <AccordionItem border="none">
-                      <h2>
-                        <AccordionButton>
-                          <Box flex="1" textAlign="center" fontSize="1.3rem">
-                            Read the Deets
-                          </Box>
-                          <AccordionIcon />
-                        </AccordionButton>
-                      </h2>
-                      <AccordionPanel pb={4}>
-                        <ul style={{ fontSize: "0.8rem", lineHeight: "1.2" }}>
-                          <li>
-                            You'll be prompted to log in to your social media
-                            account or email, so your name can be announced if
-                            you win.
-                          </li>
-                          <li>You'll need a wallet with RL80 tokens.</li>
-                          <li>
-                            {" "}
-                            Enter any amount of tokens to burn, but it is
-                            recommended that you burn only a minimal amount, as
-                            sometimes the transaction can fail. Burning RL80
-                            tokens should primarily be a symbolic gesture rather
-                            than a painful sacrifice.
-                          </li>
-
-                          <li>
-                            {" "}
-                            For every 1000 tokens burned, you'll gain one entry
-                            to the weekly drawing for 50% of the weekly token
-                            tax treasury. You can check the amount{" "}
-                            <Link
-                              href="#"
-                              color="blue.500"
-                              _hover={{ color: "blue.700" }}
-                            >
-                              here
-                            </Link>
-                          </li>
-                          <li>
-                            After the transaction is complete, you'll be
-                            presented with the option to be added to the
-                            gallery.
-                          </li>
-                          <li>
-                            The top 3 burners will remain eligible to win for
-                            subsequent drawings, as long as they remain in the
-                            top 3.
-                          </li>
-                        </ul>
-                      </AccordionPanel>
-                    </AccordionItem>
-                  </Accordion>
-                  <Flex justify="center" mt={5} mb={5}>
-                    <div>
-                      <Button
-                        width="100%"
-                        className="burnButton"
-                        onClick={handleOpenBurnModal}
+                      <div
+                        style={{
+                          position: "relative",
+                          zIndex: "2",
+                          left: "3.8rem",
+                          bottom: "0",
+                        }}
                       >
-                        Burn Tokens
-                      </Button>
+                        {/* <Candle size={0.4} isFlameVisible={isFlameVisible} /> */}
+                      </div>
+                      <div
+                        style={{
+                          position: "relative",
+                          zIndex: "3",
+                          left: "1.2rem",
+                          bottom: "0",
+                        }}
+                      >
+                        {/* <Candle size={0.35} isFlameVisible={isFlameVisible} /> */}
+                      </div>
+                      <div
+                        style={{
+                          position: "relative",
+                          zIndex: "2",
+                          left: "-5.2rem",
+                          bottom: "0",
+                        }}
+                      >
+                        {/* <Candle size={0.38} isFlameVisible={isFlameVisible} /> */}
+                      </div>
                     </div>
-                  </Flex>
+                  </div>
                 </Box>
               </div>
             </div>
@@ -577,60 +466,104 @@ const BurnGallery = () => {
             mb={"5em"}
             style={{
               position: "relative",
-              // height: "80vh",
               width: "auto",
               overflow: "hidden",
             }}
           >
             <Grid
-              height={"75%"}
               templateColumns={{
                 base: "repeat(1, 1fr)",
                 sm: "repeat(2, 1fr)",
                 md: "repeat(3, 1fr)",
               }}
-              gap={4}
+              // gap={4}
             >
               {combinedImages.map((image, index) => {
-                // Ensure the frame and composite logic are passed correctly
                 const isFirstImage =
-                  image.isFirstImage || image.src === avatarUrl; // Compare with avatarUrl if needed
-                const isVideo = image.isVideo; // Check if it's a video
+                  image.isFirstImage || image.src === avatarUrl;
+                const isVideo = image.isVideo;
                 const frameChoice = isVideo
                   ? null
-                  : image.frameChoice || "frame1"; // Only apply frame if it's not a video
+                  : image.frameChoice || "frame1";
 
                 return (
                   <ImageBox
                     key={index}
                     image={{
                       ...image,
-                      isFirstImage, // Ensure logic for profile image is applied
-                      frameChoice, // Apply the frame only when appropriate (not for videos)
-                      isVideo, // Pass the video flag
+                      isFirstImage,
+                      frameChoice,
+                      isVideo,
                     }}
-                    avatarUrl={avatarUrl} // Pass avatarUrl to ImageBox
+                    avatarUrl={avatarUrl}
                   />
                 );
               })}
             </Grid>
-            <GridItem>
-              <Flex
-                justifyContent="center"
-                alignItems="center"
-                position="relative"
-                // bottom={0}
-                // left={"30%"}
-                marginTop="-1rem"
-              >
-                <h1 className="thelma1">
-                  BurnerBoard
-                  {/* <br /> */}
-                  {/* <span style={{ fontSize: "2rem" }}>of </span>RL80 */}
+            <Flex justifyContent="center" alignItems="center" mt={4}>
+              {/* <h1 className="thelma1">BurnerBoard</h1> */}
+            </Flex>
+          </GridItem>
+        </Grid>
+
+        {/* New Section */}
+        <Grid
+          templateColumns="repeat(12, 1fr)"
+          gap={0}
+          margin="0 2rem 1rem 2rem"
+        >
+          <GridItem
+            colSpan={{ base: 12, sm: 12, md: 6 }}
+            mt="2rem"
+            ml="1rem"
+            mb="-2rem"
+          >
+            <Flex justify="center" mt={2} mb={0}>
+              <Box zIndex={"-1"}>
+                <h1
+                  style={{
+                    position: "relative",
+                    marginBottom: "3rem",
+                    zIndex: 1,
+                  }}
+                  className="thelma1"
+                >
+                  Peril & Piety
                 </h1>
-                {/* </div> */}
-              </Flex>
-            </GridItem>
+                <Text mb="2rem">
+                  Prow scuttle parrel provost Sail ho shrouds spirits boom
+                  mizzenmast yardarm. Pinnace holystone mizzenmast quarter
+                  crow's nest nipperkin grog yardarm hempen halter furl. Swab
+                  barque interloper chantey doubloon starboard grog black jack
+                  gangway rutters.
+                </Text>
+
+                <Flex flexDirection="column" alignItems="center">
+                  <Button
+                    zIndex={2}
+                    width="7rem"
+                    className="burnButton"
+                    onClick={handleOpenBurnModal}
+                  >
+                    Burn Tokens
+                  </Button>
+                </Flex>
+              </Box>
+            </Flex>
+            <Box zIndex={3} position="relative" top="2rem">
+              <GLBViewer />
+              <ThreeDVotiveStand />
+            </Box>
+          </GridItem>
+          <GridItem colSpan={{ base: 12, sm: 12, md: 6 }} mb="" mt="20rem">
+            <Box mb="">
+              <DoorComponent />
+              {/* <h2>Choose Your Adventure</h2> */}
+              {/* <p>Some text content for the new section.</p>
+              <p>Additional text content for the new section.</p>
+              <p>Some text content for the new section.</p>
+              <p>Additional text content for the new section.</p> */}
+            </Box>
           </GridItem>
         </Grid>
 

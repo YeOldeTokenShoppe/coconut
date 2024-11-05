@@ -6,11 +6,15 @@ import Communion from "../components/Communion";
 export default function NumerologyPage() {
   return (
     <>
-      <Numerology />
-      <div style={{ marginTop: "3rem" }}>
+      <div style={{ margin: "0rem 2rem 0rem 2rem" }}>
+        <Numerology />
+      </div>
+      <div style={{ marginTop: "5rem" }}>
         <NavBar />
       </div>
-      <Communion />
+      <div style={{ marginTop: "3rem" }}>
+        <Communion />
+      </div>
     </>
   );
 }

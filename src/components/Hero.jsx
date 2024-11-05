@@ -32,6 +32,7 @@ import {
   useBreakpointValue,
   IconButton,
   useMediaQuery,
+  Card,
 } from "@chakra-ui/react";
 import { WarningIcon, CopyIcon, CheckIcon } from "@chakra-ui/icons";
 import Image from "next/image";
@@ -64,7 +65,7 @@ import Coin from "./Coin";
 // import { TwitterTweetEmbed } from "react-twitter-embed";
 import TokenText from "./TokenText";
 import RotatingText from "./RotatingText";
-
+import CardComponent from "./CardComponent";
 import RotatingBadge from "./RotatingBadge";
 import NeonSign from "./NeonSign";
 import SliderRevolutionCarousel from "./SliderRevolutionCarousel";
@@ -74,6 +75,7 @@ const BurningEffect = dynamic(() => import("../components/BurningEffect"), {
 });
 
 import SpinningTextRing from "./SpinningTextRing";
+import ParticleTextEffect from "./ParticleTextEffect";
 
 const StyledText = styled(Text)`
   font-family: "Roboto", sans-serif;
@@ -334,6 +336,8 @@ const Hero = () => {
             flex="1.1"
             mt={0}
             mb={0}
+            ml="2rem"
+            mr="2rem"
             // minH={{ base: "600px", md: "auto" }}
             position="relative" // Establish positioning context
           >
@@ -409,7 +413,7 @@ const Hero = () => {
             justifyContent={{ base: "center", md: "flex-start" }} // Center text on small screens, align left on medium to large screens
             alignItems="center"
           >
-            {" "}
+            {/* <CardComponent /> */}{" "}
             <div
               style={{
                 width: "100%",
@@ -447,6 +451,8 @@ const Hero = () => {
       <Box
         mb={9}
         mt={6}
+        ml="2rem"
+        mr="2rem"
         py={{ base: 4, md: 7 }} // Adjust padding for smaller screens
         px={{ base: 2, md: 3 }} // Adjust padding for smaller screens
         borderRadius={"10px"}
@@ -455,7 +461,7 @@ const Hero = () => {
         <Flex direction={{ base: "column", md: "row" }} flexWrap="nowrap">
           <Box flex="1" mt={3}>
             <Heading fontSize={"3.9rem"} lineHeight={".9"}>
-              Good vs Evil
+              Vanquish Evil for Fun and Profit
             </Heading>
             <StyledText
               style={{
@@ -467,15 +473,15 @@ const Hero = () => {
                 marginLeft: "1rem",
               }}
             >
-              Stake your RL80 tokens to battle evil and pay homage to 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞
-              𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙, or whomever you deem worthy. Your valorous
-              tribute will be showcased for all to see. Are you ready to prove
-              your mettle and claim your reward?
+              Stake your RL80 tokens to battle evil and earn reward tokens. Pay
+              homage to RL80 or your highly R8ed. Your tribute will be showcased
+              for all to see. Are you ready to prove your hodl mettle and become
+              an RL80 HeavyW8?
             </StyledText>
             <Box display="flex" justifyContent="center" alignItems="center">
               <Link href="/gallery">
                 <Button width="100%" className="shimmer-button burnButton">
-                  Let's do this<span className="shimmer"></span>
+                  LFG!<span className="shimmer"></span>
                 </Button>
               </Link>
             </Box>
@@ -502,7 +508,7 @@ const Hero = () => {
             >
               <img
                 // className="logo"
-                src="./vanquished.jpg"
+                src="./vvv.jpg"
                 width="100%"
                 height="auto"
                 alt=""

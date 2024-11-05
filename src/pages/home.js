@@ -4,34 +4,21 @@ import Hero from "../components/Hero";
 import Header from "../components/Header";
 import NavBar from "../components/NavBar.client";
 import Communion from "../components/Communion";
-
 import Carousel from "../components/Carousel";
+import dynamic from "next/dynamic";
 
-// const BurningEffect = dynamic(() => import("../components/BurningEffect"), {
-//   ssr: false,
-// });
+const BurningEffect = dynamic(() => import("../components/BurningEffect"), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
     <>
-      {/* <BurningEffect />
-      <div className="content"></div> */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <Hero />
 
-      <Hero />
-
-      {/* <CandleWrapper3D
-          userImageSrc={userImageSrc}
-          flameImageSrc={flameImageSrc}
-        /> */}
-
-      {/* <style jsx>{`
-        .content {
-          position: relative;
-          z-index: 1;
-        }
-      `}</style> */}
-
-      <NavBar />
+        <NavBar />
+      </div>
       <Communion />
     </>
   );

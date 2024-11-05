@@ -2,7 +2,13 @@
 module.exports = {
   reactStrictMode: true,
   images: {
-    domains: ["firebasestorage.googleapis.com"], // Add this line
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        pathname: "/**",
+      },
+    ],
   },
   webpack: (config, { isServer, dev }) => {
     // Enable source maps in production

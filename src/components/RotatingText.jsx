@@ -13,7 +13,7 @@ const RotatingText = () => {
       ["💰 Buy", "❤️‍🔥 Burn", "🚀 Believe"],
       // ["Thou hast", "to give eth", "to get eth"],
       // ["LUCRUM GAUDIUM", "is latin for", "'profit is joy'"],
-      ["FAITH in a", "TRUSTLESS", "ECONOMY"],
+      ["F8TH in the", "TRUSTLESS"],
       // ["It may be", "stupid, but", "it's also dumb"],
       // ["lack of money", "is the root", "of evil"],
       ["A token ", "of our", "appreciation"],

@@ -68,6 +68,41 @@
   font-weight: 400;
   font-style: normal;
 }
+@font-face {
+  font-family: "Pirata One";
+  src: url("../styles/PirataOne-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.pirata-one-regular {
+  font-family: "Pirata One", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "UnifrakturCook";
+  src: url("../styles/UnifrakturCook-Bold.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.unifrakturcook-bold {
+  font-family: "UnifrakturCook", cursive;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Bowlby One SC";
+  src: url("../styles/BowlbyOneSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.bowlby-one-sc-regular {
+  font-family: "Bowlby One SC", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
 
 .honk {
   font-family: "Honk", sans-serif;
@@ -627,7 +662,12 @@ s.box .shimmer {
 
 #footer {
   text-align: center;
-  background-color: transparent;
+  background: linear-gradient(to bottom, #1b1724, #593a41);
+  margin-top: 2rem !important;
+}
+#footer2 {
+  text-align: center;
+  background: transparent;
   margin-top: 2rem !important;
 }
 
@@ -635,7 +675,7 @@ s.box .shimmer {
   /* border-top: 1px solid rgba(255, 255, 255, 0.25); */
   padding: 7rem 0 6rem 0;
   background-color: transparent;
-  bottom: -31rem;
+  /* bottom: -31rem; */
   position: relative;
 }
 
@@ -4030,8 +4070,8 @@ body {
   transform: translate(-50%, -50%);
   z-index: 3;
   display: block;
-  width: 4rem; /* Adjust button width */
-  height: 1.5rem; /* Adjust button height */
+  width: 5rem; /* Adjust button width */
+  height: 2rem; /* Adjust button height */
   line-height: 1.5rem; /* Adjust line height */
   transition: background 0.2s;
 }
@@ -4263,5 +4303,77 @@ body {
 @media (min-width: 761px) {
   .menu-wrapper {
     width: 35%;
+  }
+}
+.wrapper1 {
+  position: relative;
+  perspective: 40em;
+  /* display: grid; */
+  transform-style: preserve-3d;
+}
+
+.card1 {
+  /* grid-area: 1 / 1; */
+  height: 15rem;
+  width: 25rem;
+  transform: translateX(10px) rotateY(25deg) rotateX(10deg);
+  background: rgba(196, 137, 1, 1);
+  /* display: flex;
+  justify-content: flex-start;
+  align-items: center; */
+  padding: 30px;
+  color: #000;
+  /* text-transform: uppercase; */
+  /* font-family: "Oleo Script", cursive; */
+  font-size: 20px;
+  /* font-weight: 900; */
+  backface-visibility: hidden;
+  box-shadow: 0 10px 30px -3px rgba(0, 0, 0, 0.1);
+  will-change: transform;
+  transition: 0.3s transform cubic-bezier(0.25, 0.46, 0.45, 1);
+}
+
+.enclosed {
+  background: #000;
+  line-height: 1;
+  color: rgba(249, 198, 26, 1);
+  padding: 0 5px;
+  display: inline-block;
+  transform: translate(-1px, 1px) scale(0.75);
+  transform-origin: right center;
+}
+
+.wrapper1:before {
+  --bw: 9px;
+  grid-area: 1 / 1;
+  content: "";
+  backface-visibility: hidden;
+  height: 100%;
+  width: 100%;
+  margin-top: calc(-1 * var(--bw));
+  margin-left: calc(-1 * var(--bw));
+  background: transparent;
+  transform: translateX(-60px) rotateY(-30deg) rotateX(15deg) scale(1.03);
+  pointer-events: none;
+  /* border: var(--bw) solid #000; */
+  border: var(--bw) solid rgba(249, 198, 26, 1);
+  box-sizing: content-box;
+  will-change: transform;
+  transition: 0.3s transform cubic-bezier(0.25, 0.46, 0.45, 1);
+}
+
+.wrapper1:hover > div,
+.wrapper1:hover:before {
+  transform: none;
+}
+.canvas2 {
+  width: 50vw;
+  height: 100vh;
+  z-index: 10;
+}
+
+@media (max-width: 600px) {
+  .canvas2 {
+    width: 100vw;
   }
 }

@@ -140,7 +140,7 @@
 //                       width="180"
 //                       alt="Logo"
 //                       priority
-//                       fetchpriority="high"
+//
 //                     />
 //                     <div
 //                       style={{
