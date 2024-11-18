@@ -111,8 +111,8 @@ function Communion() {
           >
             Contact: hello@ourlady.io
             <br />
-            &copy; Made with C8H11NO2 + C10H12N2O + C43H66N12O12S2 by
-            COCONUT🌴TOKENS
+            &copy; Made with C8H11NO2 + C10H12N2O + C43H66N12O12S2 by Ye Olde
+            Token Shoppe
           </div>
         </div>
       </section>

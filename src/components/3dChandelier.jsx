@@ -56,7 +56,7 @@ function Model({ url, scale, swingRef }) {
     <primitive
       ref={swingRef}
       object={gltf.scene}
-      scale={3 * scale}
+      scale={scale}
       position={[1, 0, 12]}
       rotation={[0.0, Math.PI / -2.9, 0]}
     />
@@ -104,73 +104,115 @@ function PhysicsChandelier({ url, scale }) {
 function Chandelier() {
   const [isClient, setIsClient] = useState(false);
   const [scale, setScale] = useState(1);
+  const [cameraSettings, setCameraSettings] = useState({
+    position: [10, -10, -20],
+    fov: 30,
+  });
 
   useEffect(() => {
     setIsClient(true);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        // Phone-sized screens
+        setCameraSettings({
+          position: [5, -5, -10],
+          fov: 45,
+        });
+        setScale(1.5); // Adjust scale for phone-sized screens
+      } else if (width >= 768 && width < 1024) {
+        // Tablet-sized screens in portrait mode
+        setCameraSettings({
+          position: [7, -7, -15],
+          fov: 35,
+        });
+        setScale(2); // Adjust scale for tablet-sized screens in portrait mode
+      } else if (width >= 1024 && width < 1366) {
+        // Tablet-sized screens in portrait mode
+        setCameraSettings({
+          position: [7, -7, -15],
+          fov: 35,
+        });
+        setScale(1.5);
+      } else {
+        // Larger screens
+        setCameraSettings({
+          position: [10, -10, -20],
+          fov: 30,
+        });
+        setScale(2.5); // Default scale for larger screens
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   if (!isClient) return null;
 
   return (
-    <Canvas
-      style={{ width: "50vw", height: "100vh", zIndex: 10 }}
-      camera={{ position: [10, -10, -20], fov: 30 }}
-      gl={{
-        antialias: true,
-        pixelRatio: Math.min(window.devicePixelRatio, 2),
-      }}
-    >
-      <ambientLight intensity={1} color="#ffffff" />
-      <pointLight position={[10, 10, 10]} intensity={2.5} color="#ffffff" />
-      <spotLight
-        position={[5, 10, 15]}
-        angle={0.3}
-        penumbra={0.5}
-        intensity={2}
-        castShadow
-      />
-      <spotLight
-        position={[-5, 10, 1]}
-        angle={0.3}
-        penumbra={0.5}
-        intensity={2}
-        castShadow
-      />
-      <directionalLight position={[3, 5, 5]} castShadow intensity={1.5} />
-      <spotLight
-        position={[0, 20, 10]}
-        angle={0.5}
-        penumbra={0.5}
-        intensity={1.5}
-        castShadow
-      />
-      {/* Apply physics to the chandelier */}
-      <Physics gravity={[0, -9.8, 0]}>
-        <PhysicsChandelier url="/chandelier.glb" scale={scale} />
-      </Physics>
-
-      {/* Postprocessing effects */}
-      <EffectComposer>
-        <Bloom
-          intensity={0.0005}
-          luminanceThreshold={0.9}
-          luminanceSmoothing={0.9}
+    <div className="canvas-container">
+      <Canvas
+        camera={{ position: cameraSettings.position, fov: cameraSettings.fov }}
+        gl={{
+          antialias: true,
+          pixelRatio: Math.min(window.devicePixelRatio, 2),
+        }}
+      >
+        <ambientLight intensity={1} color="#ffffff" />
+        <pointLight position={[10, 10, 10]} intensity={2.5} color="#ffffff" />
+        <spotLight
+          position={[5, 10, 15]}
+          angle={0.3}
+          penumbra={0.5}
+          intensity={2}
+          castShadow
         />
-      </EffectComposer>
-      <Environment preset="night" />
+        <spotLight
+          position={[-5, 10, 1]}
+          angle={0.3}
+          penumbra={0.5}
+          intensity={2}
+          castShadow
+        />
+        <directionalLight position={[3, 5, 5]} castShadow intensity={1.5} />
+        <spotLight
+          position={[0, 20, 10]}
+          angle={0.5}
+          penumbra={0.5}
+          intensity={1.5}
+          castShadow
+        />
+        {/* Apply physics to the chandelier */}
+        <Physics gravity={[0, -9.8, 0]}>
+          <PhysicsChandelier url="/chandelier1.glb" scale={scale} />
+        </Physics>
 
-      <OrbitControls
-        enableDamping={true}
-        dampingFactor={0.1}
-        maxPolarAngle={Math.PI}
-        minPolarAngle={0}
-        minAzimuthAngle={-Infinity}
-        maxAzimuthAngle={Infinity}
-        enableZoom={false}
-        enablePan={false}
-        target={[0, 0, 0]}
-      />
-    </Canvas>
+        {/* Postprocessing effects */}
+        <EffectComposer>
+          <Bloom
+            intensity={0.0005}
+            luminanceThreshold={0.9}
+            luminanceSmoothing={0.9}
+          />
+        </EffectComposer>
+        <Environment preset="night" />
+
+        <OrbitControls
+          enableDamping={true}
+          dampingFactor={0.1}
+          maxPolarAngle={Math.PI}
+          minPolarAngle={0}
+          minAzimuthAngle={-Infinity}
+          maxAzimuthAngle={Infinity}
+          enableZoom={false}
+          enablePan={false}
+          target={[0, 0, 0]}
+        />
+      </Canvas>
+    </div>
   );
 }
 

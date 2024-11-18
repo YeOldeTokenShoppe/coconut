@@ -440,7 +440,7 @@ const Hero = () => {
                 Hold <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
                 in your wallet as a good luck charm and to ward off evil.
                 Commune with your fellow token-holders and play guilt-free games
-                of chance to win more tokens. Our Lady of Perpetual Profit is
+                of chance to win more tokens. 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙 is
                 your personal guide up and to the right.
               </StyledText>
             </div>
@@ -473,10 +473,14 @@ const Hero = () => {
                 marginLeft: "1rem",
               }}
             >
-              Stake your RL80 tokens to battle evil and earn reward tokens. Pay
-              homage to RL80 or your highly R8ed. Your tribute will be showcased
-              for all to see. Are you ready to prove your hodl mettle and become
-              an RL80 HeavyW8?
+              Stake your{" "}
+              <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> tokens
+              to battle evil and earn reward tokens that let you pay homage to
+              𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙 or appreci8 the under8ed. Your
+              tribute will be showcased for all to see. Are you ready to prove
+              your <b>HODL MEDL</b> and become an{" "}
+              <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
+              <b>HEAVYW8?</b>
             </StyledText>
             <Box display="flex" justifyContent="center" alignItems="center">
               <Link href="/gallery">

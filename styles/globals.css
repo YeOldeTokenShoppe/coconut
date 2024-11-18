@@ -24,7 +24,18 @@
   font-style: normal;
   font-variation-settings: "slnt" 0;
 }
-
+:root {
+  --hue: 163;
+  --hue2: 43;
+  --fg: hsl(0, 0%, 100%);
+  font-size: calc(20px + (40 - 20) * (100vw - 280px) / (3840 - 280));
+}
+* {
+  border: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 /* @layer base {
   body {
     @apply bg-zinc-950 text-neutral-200;
@@ -160,7 +171,12 @@
   font-weight: normal;
   font-style: normal;
 } */
-
+@font-face {
+  font-family: "Oleo Script";
+  src: url("../styles/OleoScript-Bold.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
 .oleo-script-regular {
   font-family: "Oleo Script", system-ui;
   font-weight: 400;
@@ -169,6 +185,29 @@
 
 .oleo-script-bold {
   font-family: "Oleo Script", system-ui;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "New Rocker";
+  src: url("../styles/NewRocker-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.new-rocker-regular {
+  font-family: "New Rocker", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "UnifrakturCook";
+  src: url("../styles/UnifrakturCook-Bold.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.unifrakturcook-bold {
+  font-family: "UnifrakturCook", serif;
   font-weight: 700;
   font-style: normal;
 }
@@ -1975,7 +2014,7 @@ s.box .shimmer {
   margin-bottom: 2rem;
 }
 
-@media screen and (max-width: 1280px) {
+/* @media screen and (max-width: 1280px) {
   #footer .inner {
     padding: 6rem 0 4rem 0;
   }
@@ -1997,7 +2036,7 @@ s.box .shimmer {
   #footer .inner {
     padding: 2rem 0 0.1rem 0;
   }
-}
+} */
 
 /* Statistical Displays */
 .box {
@@ -2851,7 +2890,7 @@ h3 {
 .flash {
   animation: flash 1s infinite;
 }
-@keyframes spin {
+/* @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
@@ -2862,7 +2901,7 @@ h3 {
 
 .spin {
   animation: spin 2s linear infinite;
-}
+} */
 @keyframes shake {
   0%,
   100% {
@@ -3690,8 +3729,8 @@ div.css-161tt0w {
 
 .thelma1 {
   color: #8e662b;
-  text-shadow: 3px 3px 5px #000, -1px -1px 5px pink;
-  font-size: 3rem; /* default to 4rem for small screens */
+  text-shadow: 4px 4px 6px #000, -1px -1px 5px pink;
+  font-size: 4rem; /* default to 4rem for small screens */
   font-weight: 900;
   line-height: 0.8;
   transform: rotate(-8deg) skew(-15deg);
@@ -4713,4 +4752,57 @@ body {
   text-overflow: ellipsis; /* Add ellipsis for overflow */
   width: 100%; /* Ensure it stays within the player width */
   margin: 0 auto; /* Center align within player box */
+}
+.music-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+  justify-content: center;
+}
+:root {
+  --shimmer-hue-1: 213deg;
+  --shimmer-sat-1: 95%;
+  --shimmer-lit-1: 91%;
+  --shimmer-hue-2: 248deg;
+  --shimmer-sat-2: 100%;
+  --shimmer-lit-2: 86%;
+  --shimmer-hue-3: 293deg;
+  --shimmer-sat-3: 78%;
+  --shimmer-lit-3: 89%;
+  --glow-hue: 222deg;
+  --spring-easing: ease;
+  --spring-duration: 1.33s;
+}
+/* Add this CSS to your stylesheet */
+.canvas-container {
+  width: 30vw;
+  height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .canvas-container {
+    width: 100vw;
+    height: 100vh;
+  }
+}
+.votiveContainer {
+  position: relative;
+  width: 70vw;
+  height: 90vh;
+  z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .votiveContainer {
+    width: 100vw;
+  }
+}
+.responsive-iframe {
+  width: 35%;
+}
+
+@media (max-width: 600px) {
+  .responsive-iframe {
+    width: 85%;
+  }
 }

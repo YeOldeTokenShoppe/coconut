@@ -408,7 +408,10 @@
 
 @media screen and (max-width: 480px) {
   .music-player {
-    font-size: 0.7rem; /* Adjust this for smaller screens */
+    font-size: 0.5rem; /* Adjust this for smaller screens */
+  }
+  .music-player-container {
+    transform: scale(0.5); /* Adjust the scale to your preference */
   }
 }
 @media screen and (max-width: 280px) {
@@ -417,5 +420,5 @@
   }
 }
 .music-player-container {
-  transform: scale(0.5); /* Adjust the scale to your preference */
+  transform: scale(0.8); /* Adjust the scale to your preference */
 }

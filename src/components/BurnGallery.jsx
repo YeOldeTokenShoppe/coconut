@@ -38,6 +38,7 @@ import DoorComponent from "./Door";
 import GLBViewer from "./3dObject";
 import Chandelier from "./3dChandelier";
 import ThreeDVotiveStand from "./3dVotiveStand";
+import NeonSign from "./NeonSign";
 
 const BurnModal = dynamic(() => import("./BurnModal"), {
   ssr: false,
@@ -61,7 +62,7 @@ const contract = getContract({
   address: "0xde7Cc5B93e0c1A2131c0138d78d0D0a33cc36e42",
 });
 
-const BurnGallery = () => {
+function BurnGallery({ setIsLoading }) {
   const router = useRouter();
   const { user } = useUser();
   const { openSignIn } = useClerk();
@@ -79,6 +80,23 @@ const BurnGallery = () => {
   const [isFlameVisible, setIsFlameVisible] = useState(true);
 
   const [currentPath, setCurrentPath] = useState("/");
+  const [marginTop, setMarginTop] = useState("17rem");
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setMarginTop("7rem");
+      } else {
+        setMarginTop("17rem");
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call the function initially to set the correct style
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     // Ensure we capture the current path correctly, fallback to the root if router is not ready
@@ -383,186 +401,66 @@ const BurnGallery = () => {
   return (
     <>
       <Box py="0" mb="5em">
-        <Grid templateColumns="repeat(12, 1fr)" gap={2}>
-          {/* First Section */}
-          <GridItem
-            colSpan={{ base: 12, sm: 12, md: 4 }}
-            mb={{ base: "4em", md: "8em" }}
-          >
-            <div style={{ position: "relative", zIndex: 0 }}>
-              <div style={{ zIndex: 1 }}>
-                <Box>
-                  <div
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      height: "auto",
-                    }}
-                  >
-                    <Box position={"absolute"} top={"-24rem"}>
-                      <Chandelier />
-                    </Box>
-                    <Image
-                      src="heartwindow.svg"
-                      alt="Image description"
-                      layout="responsive"
-                      width={250}
-                      height="auto"
-                      position="relative"
-                      top={"5rem"}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "2.3rem",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "relative",
-                          zIndex: "2",
-                          left: "3.8rem",
-                          bottom: "0",
-                        }}
-                      >
-                        {/* <Candle size={0.4} isFlameVisible={isFlameVisible} /> */}
-                      </div>
-                      <div
-                        style={{
-                          position: "relative",
-                          zIndex: "3",
-                          left: "1.2rem",
-                          bottom: "0",
-                        }}
-                      >
-                        {/* <Candle size={0.35} isFlameVisible={isFlameVisible} /> */}
-                      </div>
-                      <div
-                        style={{
-                          position: "relative",
-                          zIndex: "2",
-                          left: "-5.2rem",
-                          bottom: "0",
-                        }}
-                      >
-                        {/* <Candle size={0.38} isFlameVisible={isFlameVisible} /> */}
-                      </div>
-                    </div>
-                  </div>
-                </Box>
-              </div>
-            </div>
-          </GridItem>
-
-          <GridItem
-            colSpan={{ base: 12, sm: 12, md: 8 }}
-            mb={"5em"}
-            style={{
-              position: "relative",
-              width: "auto",
-              overflow: "hidden",
-            }}
-          >
-            <Grid
-              templateColumns={{
-                base: "repeat(1, 1fr)",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-              }}
-              // gap={4}
-            >
-              {combinedImages.map((image, index) => {
-                const isFirstImage =
-                  image.isFirstImage || image.src === avatarUrl;
-                const isVideo = image.isVideo;
-                const frameChoice = isVideo
-                  ? null
-                  : image.frameChoice || "frame1";
-
-                return (
-                  <ImageBox
-                    key={index}
-                    image={{
-                      ...image,
-                      isFirstImage,
-                      frameChoice,
-                      isVideo,
-                    }}
-                    avatarUrl={avatarUrl}
-                  />
-                );
-              })}
-            </Grid>
-            <Flex justifyContent="center" alignItems="center" mt={4}>
-              {/* <h1 className="thelma1">BurnerBoard</h1> */}
-            </Flex>
-          </GridItem>
-        </Grid>
-
-        {/* New Section */}
         <Grid
-          templateColumns="repeat(12, 1fr)"
+          templateColumns={{ base: "1fr", md: "30% 70%" }}
           gap={0}
-          margin="0 2rem 1rem 2rem"
+          position="relative"
         >
-          <GridItem
-            colSpan={{ base: 12, sm: 12, md: 6 }}
-            mt="2rem"
-            ml="1rem"
-            mb="-2rem"
-          >
-            <Flex justify="center" mt={2} mb={0}>
-              <Box zIndex={"-1"}>
+          {/* Left Column */}
+          <GridItem>
+            <Flex direction="column" align="center">
+              <Box position="relative" zIndex={0} mb="2rem">
+                <Box position="absolute" top="-29rem" zIndex={20}>
+                  <Chandelier />
+                </Box>
+                <Flex justifyContent="center" alignItems="center" ml="2rem">
+                  <Image
+                    src="sgframed.png"
+                    alt="Image description"
+                    layout="responsive"
+                    width={250}
+                    height="auto"
+                    style={{ position: "relative", top: "5rem" }}
+                  />
+                </Flex>
+              </Box>
+              <Box zIndex={100} textAlign="center" ml="2rem">
                 <h1
-                  style={{
-                    position: "relative",
-                    marginBottom: "3rem",
-                    zIndex: 1,
-                  }}
                   className="thelma1"
+                  style={{ marginBottom: "1rem", marginTop: "8rem" }}
                 >
                   Peril & Piety
                 </h1>
-                <Text mb="2rem">
+                <Text mb="2rem" mt="2rem">
                   Prow scuttle parrel provost Sail ho shrouds spirits boom
                   mizzenmast yardarm. Pinnace holystone mizzenmast quarter
                   crow's nest nipperkin grog yardarm hempen halter furl. Swab
                   barque interloper chantey doubloon starboard grog black jack
                   gangway rutters.
                 </Text>
-
-                <Flex flexDirection="column" alignItems="center">
-                  <Button
-                    zIndex={2}
-                    width="7rem"
-                    className="burnButton"
-                    onClick={handleOpenBurnModal}
-                  >
-                    Burn Tokens
-                  </Button>
-                </Flex>
+                <Button
+                  width="7rem"
+                  className="burnButton"
+                  onClick={handleOpenBurnModal}
+                >
+                  Burn Tokens
+                </Button>
               </Box>
             </Flex>
-            <Box zIndex={3} position="relative" top="2rem">
-              <GLBViewer />
-              <ThreeDVotiveStand />
-            </Box>
           </GridItem>
-          <GridItem colSpan={{ base: 12, sm: 12, md: 6 }} mb="" mt="20rem">
-            <Box mb="">
-              <DoorComponent />
-              {/* <h2>Choose Your Adventure</h2> */}
-              {/* <p>Some text content for the new section.</p>
-              <p>Additional text content for the new section.</p>
-              <p>Some text content for the new section.</p>
-              <p>Additional text content for the new section.</p> */}
+
+          {/* Right Column */}
+          <GridItem>
+            <Box
+              zIndex={4}
+              position="absolute"
+              top={0}
+              bottom={0}
+              height="100vh"
+              width="100%"
+              left="10%"
+            >
+              <GLBViewer setIsLoading={setIsLoading} />
             </Box>
           </GridItem>
         </Grid>
@@ -573,8 +471,8 @@ const BurnGallery = () => {
             onClose={() => setIsBurnModalOpen(false)}
             selectedImage={selectedImage}
             setSelectedImage={setSelectedImage}
-            burnedAmount={burnedAmount} // Pass the burnedAmount value
-            setBurnedAmount={setBurnedAmount} // Pass the setter function
+            burnedAmount={burnedAmount}
+            setBurnedAmount={setBurnedAmount}
             setIsResultSaved={setIsResultSaved}
             setSaveMessage={setSaveMessage}
             isResultSaved={isResultSaved}
@@ -584,6 +482,6 @@ const BurnGallery = () => {
       </Box>
     </>
   );
-};
+}
 
 export default BurnGallery;

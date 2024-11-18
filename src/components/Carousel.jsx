@@ -163,6 +163,28 @@ const Carousel = ({ images, logos }) => {
 
     return () => unsubscribe(); // Return the unsubscribe function for cleanup
   };
+
+  const updateBeastChat = async (beastId, riderData, message = "") => {
+    try {
+      const beastChatRef = doc(db, "carouselChat", beastId);
+
+      // Merge rider data and message
+      await setDoc(
+        beastChatRef,
+        {
+          beastId,
+          ...riderData,
+          message,
+          timestamp: serverTimestamp(),
+        },
+        { merge: true } // Update existing fields, add new ones if missing
+      );
+
+      console.log(`Beast chat updated for ${beastId}`);
+    } catch (error) {
+      console.error(`Failed to update chat for ${beastId}:`, error);
+    }
+  };
   const confirmRide = async () => {
     setIsRideConfirmationOpen(false);
 
@@ -232,6 +254,45 @@ const Carousel = ({ images, logos }) => {
       setActiveBeastId(null);
     }
   };
+
+  useEffect(() => {
+    const syncState = async () => {
+      try {
+        const ridersSnapshot = await getDocs(collection(db, "carouselBeasts"));
+        const fetchedRiders = {};
+        let userActiveBeast = null;
+
+        ridersSnapshot.forEach((doc) => {
+          const beastId = doc.id;
+          const riderData = doc.data();
+          fetchedRiders[beastId] = riderData;
+
+          if (user && riderData.userId === user.id) {
+            userActiveBeast = beastId;
+          }
+        });
+
+        setRiders(fetchedRiders);
+        setActiveBeastId(userActiveBeast || null);
+        setIsRiding(!!userActiveBeast);
+
+        const messagesSnapshot = await getDocs(collection(db, "carouselChat"));
+        const fetchedMessages = {};
+        messagesSnapshot.forEach((doc) => {
+          const { beastId, ...messageData } = doc.data();
+          if (!fetchedMessages[beastId]) fetchedMessages[beastId] = [];
+          fetchedMessages[beastId].push(messageData);
+        });
+
+        setMessages(fetchedMessages);
+      } catch (error) {
+        console.error("Error syncing state with Firestore:", error);
+      }
+    };
+
+    if (isLoaded && isSignedIn) syncState();
+  }, [isLoaded, isSignedIn, user]);
+
   useEffect(() => {
     if (!activeBeastId) {
       console.log("No active beast ID, skipping chat box");
@@ -309,69 +370,56 @@ const Carousel = ({ images, logos }) => {
       showPopupMessage("Failed to send the message. Please try again.");
     }
   };
-
   useEffect(() => {
+    if (!isRiding || !activeBeastId) return;
+
     const intervalId = setInterval(async () => {
-      for (let index = 0; index < images.length; index++) {
-        const beastId = `beast${index + 1}`;
-        const beastRef = doc(db, "carouselBeasts", beastId);
+      try {
+        const beastRef = doc(db, "carouselBeasts", activeBeastId);
         const beastDoc = await getDoc(beastRef);
 
-        if (beastDoc.exists() && beastDoc.data().timestamp) {
+        if (beastDoc.exists()) {
+          const rideData = beastDoc.data();
+          const rideStartTime = rideData.timestamp?.toMillis();
           const currentTime = Date.now();
-          const rideTime = beastDoc.data().timestamp.toMillis();
-          const timeElapsed = currentTime - rideTime;
-          const totalTime = 10 * 60 * 1000; // 10 minutes in milliseconds
-          const timeLeft = totalTime - timeElapsed;
+          const elapsedTime = currentTime - rideStartTime;
+          const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-          // Update time remaining for the active rider
-          if (activeBeastId === beastId) {
-            if (timeLeft > 0) {
-              const minutes = Math.floor(timeLeft / (1000 * 60));
-              const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-              setTimeRemaining(`${minutes}m ${seconds}s`);
-            } else {
-              setTimeRemaining("Ride has ended");
-              setIsRiding(false); // This hides the chat box when time is up
-              setActiveBeastId(null);
-            }
-          }
-
-          // Remove rider and messages if ride time exceeds 10 minutes
-          if (timeElapsed > totalTime) {
-            // Delete the rider from the beast
+          if (elapsedTime >= maxRideTime) {
+            // Time expired: Delete Firestore document
             await deleteDoc(beastRef);
+
+            // Update local state
             setRiders((prevRiders) => ({
               ...prevRiders,
-              [beastId]: null,
+              [activeBeastId]: null,
             }));
 
-            // Query and delete all messages for this beast
-            const messagesQuery = query(
-              collection(db, "carouselChat"),
-              where("beastId", "==", beastId)
-            );
-            const messagesSnapshot = await getDocs(messagesQuery);
-
-            // Use writeBatch for efficient deletions
-            const batch = writeBatch(db);
-            messagesSnapshot.forEach((doc) => {
-              batch.delete(doc.ref);
-            });
-            await batch.commit();
-
-            // Clear messages from local state
             setMessages((prevMessages) => ({
               ...prevMessages,
-              [beastId]: [],
+              [activeBeastId]: [],
             }));
+
+            setActiveBeastId(null);
+            setIsRiding(false);
+            setTimeRemaining("Ride has ended");
+
+            console.log(`Ride for ${activeBeastId} has ended.`);
+          } else {
+            // Update remaining time display
+            const timeLeft = maxRideTime - elapsedTime;
+            const minutes = Math.floor(timeLeft / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            setTimeRemaining(`${minutes}m ${seconds}s`);
           }
         }
+      } catch (error) {
+        console.error("Error in ride expiration logic:", error);
       }
-    }, 1000); // Update every second for time tracking
+    }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [images, activeBeastId]);
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [activeBeastId, isRiding]);
 
   // Handle real-time message updates
   useEffect(() => {
@@ -405,24 +453,24 @@ const Carousel = ({ images, logos }) => {
         [activeBeastId]: null,
       }));
 
-      // Query Firestore for all messages for the current beast from this user
+      // Query Firestore for all messages for the current beast
       const messagesQuery = query(
         collection(db, "carouselChat"),
-        where("beastId", "==", activeBeastId),
-        where("riderId", "==", user.id) // Find all messages by the current user
+        where("beastId", "==", activeBeastId)
       );
       const messagesSnapshot = await getDocs(messagesQuery);
 
-      // Delete all messages for this user on the current beast
+      // Delete all messages for this beast in Firestore
       const batch = writeBatch(db);
       messagesSnapshot.forEach((doc) => {
         batch.delete(doc.ref);
       });
       await batch.commit();
 
+      // Clear messages from local state
       setMessages((prevMessages) => ({
         ...prevMessages,
-        [activeBeastId]: [], // Clear local state as well
+        [activeBeastId]: [], // Ensure local messages are also cleared
       }));
 
       setActiveBeastId(null);
@@ -458,6 +506,7 @@ const Carousel = ({ images, logos }) => {
     return () => unsubscribeMessages(); // Cleanup listener on component unmount
   }, [activeBeastId]);
   // Ensure that no other instances of the user's avatar remain:
+
   useEffect(() => {
     const checkExistingRides = async () => {
       if (user) {
@@ -485,6 +534,84 @@ const Carousel = ({ images, logos }) => {
 
     checkExistingRides();
   }, [user, activeBeastId]);
+
+  useEffect(() => {
+    const unsubscribeRiders = onSnapshot(
+      collection(db, "carouselBeasts"),
+      (snapshot) => {
+        const updatedRiders = {};
+        let userActiveBeast = null;
+
+        snapshot.forEach((doc) => {
+          const beastId = doc.id;
+          const riderData = doc.data();
+
+          const rideStartTime = riderData.timestamp?.toMillis();
+          const currentTime = Date.now();
+          const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+          if (rideStartTime && currentTime - rideStartTime < maxRideTime) {
+            updatedRiders[beastId] = riderData;
+
+            if (user && riderData.userId === user.id) {
+              userActiveBeast = beastId;
+            }
+          } else {
+            // Rider expired: Automatically clean up Firestore
+            deleteDoc(doc.ref).catch((error) => {
+              console.error("Failed to delete expired ride document:", error);
+            });
+          }
+        });
+
+        setRiders(updatedRiders);
+
+        if (userActiveBeast) {
+          setActiveBeastId(userActiveBeast);
+          setIsRiding(true);
+        } else {
+          setActiveBeastId(null);
+          setIsRiding(false);
+        }
+      }
+    );
+
+    return () => unsubscribeRiders(); // Cleanup listener on unmount
+  }, [user]);
+
+  useEffect(() => {
+    const unsubscribeRiders = onSnapshot(
+      collection(db, "carouselBeasts"),
+      (snapshot) => {
+        const updatedRiders = {};
+        snapshot.forEach((doc) => {
+          const beastId = doc.id;
+          const riderData = doc.data();
+          updatedRiders[beastId] = riderData;
+        });
+        setRiders(updatedRiders);
+      }
+    );
+
+    const unsubscribeMessages = onSnapshot(
+      collection(db, "carouselChat"),
+      (snapshot) => {
+        const updatedMessages = {};
+        snapshot.forEach((doc) => {
+          const { beastId, ...messageData } = doc.data();
+          if (!updatedMessages[beastId]) updatedMessages[beastId] = [];
+          updatedMessages[beastId].push(messageData);
+        });
+        setMessages(updatedMessages);
+      }
+    );
+
+    return () => {
+      unsubscribeRiders();
+      unsubscribeMessages();
+    };
+  }, []);
+
   const handleCloseChatBox = () => {
     if (rideActive) {
       // Show a confirmation popup only if the ride is still active
@@ -670,7 +797,6 @@ const Carousel = ({ images, logos }) => {
           )}
         </main>
 
-        {/* Chat box and other conditional rendering */}
         {isRiding && activeBeastId && (
           <div
             className="chat-box-container"
@@ -678,7 +804,6 @@ const Carousel = ({ images, logos }) => {
               backgroundColor: "#ffc3ec",
               border: "1px solid black",
               padding: "10px",
-              marginTop: "20px",
               position: "fixed",
               zIndex: 9999,
               fontSize: "12px",
@@ -722,6 +847,7 @@ const Carousel = ({ images, logos }) => {
                 marginTop: "10px",
                 display: "flex",
                 alignItems: "center",
+                width: "90%",
               }}
             >
               <Input
@@ -736,7 +862,7 @@ const Carousel = ({ images, logos }) => {
                 disabled={!rideActive}
                 style={{
                   backgroundColor: "white",
-                  width: "90%",
+                  width: "100%",
                   marginRight: "10px",
                   color: "black",
                 }}
@@ -812,11 +938,11 @@ const Carousel = ({ images, logos }) => {
           marginBottom="-.5rem"
         ></Text>
         <Text>
-          Join your friends and fellow token-holders for a wild ride with RL80's
-          collection of creatures through the ups and downs of the markets. Must
-          be at least 36" tall and hold RL80 or PY80 tokens. 10 minutes per
-          ride. Your username and avatar will be displayed live! Click on any
-          available beast to ride.
+          {" "}
+          Charter a wild ride on the charts with your frens and fellow token
+          holders! Must be at least 36" tall and hold RL80 or PY80 tokens. 10
+          minutes per ride. Your username and avatar will be displayed live!
+          Click on any available beast to ride.
         </Text>
       </Box>
     </div>

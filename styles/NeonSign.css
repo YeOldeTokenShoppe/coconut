@@ -16,6 +16,16 @@
   --neon-border-color: #08f;
 }
 
+.neon-sign-container {
+  display: flex;
+  justify-content: center;
+
+  align-items: center;
+  background: transparent;
+  min-height: 10rem;
+  transform: scale(0.7); /* Adjust the scale as needed */
+}
+
 .neon-sign {
   font-family: "Exo 2", sans-serif !important;
   display: flex;
@@ -28,7 +38,7 @@
 
 #neon-text {
   font-family: "Exo 2", sans-serif !important;
-  font-size: 13rem;
+  font-size: 10rem;
   font-weight: 200;
   font-style: italic;
   color: #fff;
@@ -37,8 +47,9 @@
   border-radius: 2rem;
   text-transform: uppercase;
   animation: flicker 1.5s infinite alternate;
-  min-width: 30rem;
+  min-width: 40rem;
   text-align: center;
+  display: inline-block;
 }
 
 #neon-text::-moz-selection {

@@ -1,21 +1,27 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, OrbitControls, useAnimations } from "@react-three/drei";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "../utilities/firebaseClient";
 import * as THREE from "three";
 
-function Model({ url, scale, userData, setTooltipData }) {
+function Model({ url, scale, userData, setTooltipData, setIsLoading }) {
   const modelRef = useRef();
   const gltf = useGLTF(url);
   const { actions, mixer } = useAnimations(gltf.animations, modelRef);
+
+  useEffect(() => {
+    if (gltf && gltf.scene) {
+      setIsLoading(false); // Notify that loading is complete
+    }
+  }, [gltf, setIsLoading]);
 
   useEffect(() => {
     if (modelRef.current) {
       const box = new THREE.Box3().setFromObject(modelRef.current);
       const center = box.getCenter(new THREE.Vector3());
       modelRef.current.position.sub(center);
-      modelRef.current.scale.set(3 * scale, 3 * scale, 3 * scale);
+      modelRef.current.scale.set(2 * scale, 2 * scale, 2 * scale);
 
       const action = actions["Take 001"];
       if (action) {
@@ -72,14 +78,52 @@ function Model({ url, scale, userData, setTooltipData }) {
     <primitive
       ref={modelRef}
       object={gltf.scene}
-      position={[1, 0, 12]}
-      scale={3 * scale}
-      rotation={[-0.01, Math.PI / -3.9, 0]}
+      position={[0, -1, 10]}
+      scale={1 * scale}
+      rotation={[0.0, Math.PI / 1.1, 0]}
     />
   );
 }
 
-function GLBViewer() {
+function ResizeHandler() {
+  const { gl, camera } = useThree();
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // Update renderer size
+      gl.setSize(width, height);
+      gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Update camera
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      // Adjust camera position or fov for smaller screens
+      if (width <= 768) {
+        camera.position.set(0, 0, -10); // Move camera closer for small screens
+        camera.fov = 50; // Increase fov to reduce object size in view
+      } else {
+        camera.position.set(0, 0, -25); // Default for larger screens
+        camera.fov = 40; // Default fov
+      }
+      camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call once initially to set sizes
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [gl, camera]);
+
+  return null;
+}
+
+function GLBViewer({ setIsLoading }) {
   const [isClient, setIsClient] = useState(false);
   const [userData, setUserData] = useState([]);
   const [tooltipData, setTooltipData] = useState([]);
@@ -109,30 +153,44 @@ function GLBViewer() {
   return (
     <div
       style={{
-        position: "relative",
-        width: "70vw",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100vw",
         height: "100vh",
-        zIndex: "1",
+        position: "relative",
+        zIndex: -1,
       }}
     >
       <Canvas
-        style={{ width: "100%", height: "100%" }}
-        camera={{ position: [10, 5, -30], fov: 30 }}
+        style={{
+          width: "100vw", // Ensure 70% width
+          height: "100vh", // Ensure full height
+          margin: 0,
+          paddingTop: "3rem",
+          paddingBottom: "2rem",
+          position: "relative",
+          bottom: "0rem",
+          zIndex: -1,
+        }}
+        camera={{ position: [0, 2, 10], fov: 30 }} // Adjust camera position
         gl={{
           antialias: true,
           pixelRatio: Math.min(window.devicePixelRatio, 2),
         }}
       >
-        <ambientLight intensity={0.75} />
+        <ResizeHandler />
+        <ambientLight intensity={0.6} />
         {/* <pointLight position={[2, 13, 15]} /> */}
         {/* <directionalLight position={[5, 16, 15]} castShadow /> */}
         {/* <directionalLight position={[2, 1, 25]} castShadow /> */}
         <directionalLight position={[7, 0, 2]} castShadow />
         <Model
-          url="/superCandle.glb"
-          scale={0.9}
+          url="/ultima.glb"
+          scale={0.5}
           userData={userData}
           setTooltipData={setTooltipData}
+          setIsLoading={setIsLoading}
         />
         <OrbitControls
           enableDamping
@@ -142,6 +200,8 @@ function GLBViewer() {
           enableZoom={false}
           enablePan={false}
           target={[0, 0, 0]}
+          minDistance={18} // Set the minimum zoom distance
+          maxDistance={22}
         />
       </Canvas>
 

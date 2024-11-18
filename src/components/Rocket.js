@@ -572,7 +572,7 @@ const RocketSimulator = () => {
               borderRadius: "5px",
             }}
           >
-            Redirecting in {countdown} seconds...
+            Arriving at destination in {countdown} seconds...
           </div>
         )}
       </div>

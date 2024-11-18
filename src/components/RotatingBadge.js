@@ -26,24 +26,48 @@ const RotatingBadge = () => {
         {" "}
       </span> */}
       <span className="badge__char" style={{ color: "#e1b67e" }}>
+        {" "}
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        S
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        E
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        M
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        P
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        E
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        R
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        {" "}
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        D
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        E
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
         F
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
         I
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
-        A
+        ★
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
-        T
-      </span>
-      <span className="badge__char" style={{ color: "#e1b67e" }}>
-        {""}
+        {" "}
       </span>
       {/* <span className="badge__char" style={{ color: "#e1b67e" }}>
-        L
-      </span>
-      <span className="badge__char" style={{ color: "#e1b67e" }}>
         U
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
@@ -83,28 +107,55 @@ const RotatingBadge = () => {
       <span className="badge__char" style={{ color: "#e1b67e" }}>
         {" "}
       </span>
-
       <span className="badge__char" style={{ color: "#e1b67e" }}>
-        S
-      </span>
-      <span className="badge__char" style={{ color: "#e1b67e" }}>
-        I
-      </span>
-      <span className="badge__char" style={{ color: "#e1b67e" }}>
-        N
+        P
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
         E
       </span>
-      {/* <span className="badge__char" style={{ color: "#e1b67e" }}>
-        {" "}
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        R
       </span>
       <span className="badge__char" style={{ color: "#e1b67e" }}>
-        ★
+        P
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        E
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        T
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        U
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        U
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        U
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        E
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        M
+      </span>
+      {/* <span className="badge__char" style={{ color: "#e1b67e" }}>
+        T
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        U
+      </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        U
       </span> */}
       <span className="badge__char" style={{ color: "#e1b67e" }}>
         {" "}
       </span>
+      <span className="badge__char" style={{ color: "#e1b67e" }}>
+        ★
+      </span>
+
       <img
         className="badge__emoji"
         src="/nuhart1.svg"

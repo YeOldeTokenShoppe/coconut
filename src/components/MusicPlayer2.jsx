@@ -9,24 +9,24 @@ const MusicPlayer = () => {
   const audioRef = useRef(null); // Initialize as `null` and set in `useEffect`
 
   const albums = [
-    "Dawn",
-    "Me & You",
-    "Electro Boy",
-    "Home",
+    "Doo-Wops & Hooligans",
+    "Every 1's A Winner",
+    "The Cold Vein",
+    "Hozier",
     "Proxy (Original Mix)",
   ];
   const trackNames = [
-    "Skylike - Dawn",
-    "Alex Skrindo - Me & You",
-    "Kaaze - Electro Boy",
-    "Jordan Schor - Home",
+    "Talking To The Moon - Bruo Mars",
+    "Every 1's A Winner - Hot Chocolate",
+    "Ox out the Cage - Cannibal Ox",
+    "Take Me To Church - Hozier",
     "Martin Garrix - Proxy",
   ];
   const trackUrls = [
     "https://raw.githubusercontent.com/abxlfazl/music-player-widget/main/src/assets/media/songs/1/song.mp3",
-    "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/2.mp3",
-    "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/3.mp3",
-    "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/4.mp3",
+    "/Winner.mp3",
+    "/Ox.mp3",
+    "/takeMeToChurch.mp3",
     "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/5.mp3",
   ];
 
@@ -120,7 +120,7 @@ const MusicPlayer = () => {
     : "fa-solid fa-play";
 
   return (
-    <div className="music-player flex-column">
+    <div className="music-player">
       <div id="app-cover">
         <div id="player">
           <div id="player-track" className={isPlaying ? "active" : ""}>

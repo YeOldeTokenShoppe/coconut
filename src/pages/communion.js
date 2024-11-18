@@ -7,23 +7,42 @@ import MusicPlayer from "../components/MusicPlayer2";
 import { Heading } from "@chakra-ui/react";
 
 export default function CommunionPage() {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 600 : false
-  );
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+
     if (typeof window !== "undefined") {
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 600);
-      };
-
+      // Check if window is defined
+      handleResize(); // Set initial state
       window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
+      return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
+
+  const imgStyle = isLargeScreen
+    ? {
+        transform: "translateX(-50%) scale(0.6)",
+        top: "2rem",
+        position: "absolute",
+        left: "50%",
+        width: "auto",
+        maxWidth: "none",
+        maxHeight: "none",
+        zIndex: 1000,
+      }
+    : {
+        transform: "translateX(-50%) scale(0.5)",
+        top: "-2rem",
+        position: "absolute",
+        left: "50%",
+        width: "auto",
+        maxWidth: "none",
+        maxHeight: "none",
+        zIndex: 1000,
+      };
 
   return (
     <>
@@ -47,20 +66,7 @@ export default function CommunionPage() {
             alignItems: "center",
           }}
         >
-          <Image
-            src={"/carouselSign.png"}
-            alt="sign"
-            style={{
-              position: "absolute",
-              top: "-6rem",
-              left: "50%",
-              transform: "translateX(-50%) scale(.5)",
-              width: "auto",
-              maxWidth: "none",
-              maxHeight: "none",
-              zIndex: 1000,
-            }}
-          />
+          <Image src="/carouselSign.png" alt="sign" style={imgStyle} />
           <Carousel
             images={[
               { src: "seaMonster.png", title: "Sea Monster" },
@@ -114,20 +120,31 @@ export default function CommunionPage() {
         justifyContent="center"
         marginBottom="2rem"
         position="relative"
+        marginTop="1rem"
         zIndex={1} // Adjust z-index if needed
       >
-        <div
+        <iframe
+          className="responsive-iframe"
+          src="https://open.spotify.com/embed/playlist/5wWiiVDG0Q83zVitjPf6fj?utm_source=generator"
+          width="25%"
+          height="152"
+          frameBorder="0"
+          allowfullscreen=""
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        ></iframe>
+        {/* <div
           className="music-player-container"
-          style={{ marginBottom: "2rem" }}
+          style={{ marginBottom: "4rem", marginTop: "2rem" }}
         >
           <MusicPlayer />
-        </div>
+        </div> */}
       </Box>
 
       <div
         style={{
           position: "relative",
-          marginBottom: "5rem",
+          marginBottom: "2rem",
           marginTop: "3rem",
         }}
       >
@@ -136,13 +153,19 @@ export default function CommunionPage() {
 
       <Communion />
 
-      <style jsx>{`
+      {/* <style jsx>{`
         @media (max-width: 600px) {
           img[src="/carouselSign.png"] {
             top: -2rem;
           }
+          @media (min-width: 1024px){
+          img[src="/carouselSign.png"] {
+            transform: translateX(-50%) scale(.8),
+            top: -2rem;
+          }
+          
         }
-      `}</style>
+      `}</style> */}
     </>
   );
 }

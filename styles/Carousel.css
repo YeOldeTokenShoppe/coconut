@@ -311,12 +311,18 @@
     height: 5rem; /* Adjust height */
     transform: scale(0.8); /* Scaled down */
   }
+  .chat-box-container {
+    margin-top: 5rem;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
   .carousel-container {
     height: 5rem; /* Adjust height */
     transform: scale(0.8); /* Scaled down */
+  }
+  .chat-box-container {
+    margin-top: 3rem;
   }
 }
 
@@ -333,10 +339,18 @@
     transform: scale(0.7); /* Smallest scale */
   }
 }
-@media (max-width: 375px) {
+@media (min-width: 400px) and (max-width: 767px) {
+  .chat-box-container {
+    margin-top: 15rem;
+  }
+}
+@media (max-width: 400px) {
   .carousel-container {
     height: 7rem;
     transform: scale(0.7);
+  }
+  .chat-box-container {
+    margin-top: 5rem;
   }
 }
 
@@ -447,11 +461,11 @@
   border-radius: 12px;
   background-color: #f5f5f5; /* Match color with the arrow */
   max-width: 200px;
-  word-wrap: break-word;
+  word-break: break-word;
   font-size: 8px;
   line-height: 1.2;
   position: absolute; /* Position the bubble relative to the rider */
-  top: -90px; /* Adjust this to move the bubble above */
+  top: -120px; /* Adjust this to move the bubble above */
   left: 40px; /* Adjust this to move the bubble to the right */
   transform: translateX(-50%);
   min-width: 50px;
@@ -460,9 +474,6 @@
   z-index: 1;
   display: inline-block;
   /* overflow: hidden; */
-  animation: message-move calc(var(--rotation-time) / var(--elements) * 1.1)
-    ease-in-out infinite; /* Slower movement */
-  animation-delay: calc(var(--item) * -0.5s);
 }
 @keyframes message-move {
   0%,
@@ -541,13 +552,13 @@
   color: black;
   border: 1px solid black;
   padding: 10px;
-  margin-top: 20px;
+  /* margin-top: 20px; */
   display: flex;
   flex-direction: column;
   align-items: center; /* Centers content horizontally */
   justify-content: center; /* Centers content vertically */
   position: fixed;
-  top: 20rem;
+  top: 10rem;
   right: 0;
   z-index: 9999 !important;
   transform: translateX(-50%);
