@@ -614,3 +614,8 @@
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   color: white;
 }
+#carouselBackground {
+  text-align: center;
+  background: radial-gradient(circle, #593a41, #1b1724);
+  margin-top: 2rem !important;
+}

@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Image, Text } from "@chakra-ui/react";
 import Carousel from "../components/Carousel";
 import NavBar from "../components/NavBar.client";
 import Communion from "../components/Communion";
 import MusicPlayer from "../components/MusicPlayer2";
 import { Heading } from "@chakra-ui/react";
+import gsap from "gsap";
+import Loader from "../components/Loader";
 
 export default function CommunionPage() {
+  const [isLoading, setIsLoading] = useState(true); // Track the overall loading state
+  const [carouselLoaded, setCarouselLoaded] = useState(false); // Track when Hero is loaded
+  const [communionLoaded, setCommunionLoaded] = useState(false); // Track when Communion is loaded
+  useEffect(() => {
+    if (carouselLoaded && communionLoaded) {
+      setIsLoading(false);
+    }
+  }, [carouselLoaded, communionLoaded]);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -24,8 +35,8 @@ export default function CommunionPage() {
 
   const imgStyle = isLargeScreen
     ? {
-        transform: "translateX(-50%) scale(0.6)",
-        top: "2rem",
+        transform: "translateX(-50%) scale(0.5)",
+        top: "-6rem",
         position: "absolute",
         left: "50%",
         width: "auto",
@@ -35,7 +46,7 @@ export default function CommunionPage() {
       }
     : {
         transform: "translateX(-50%) scale(0.5)",
-        top: "-2rem",
+        top: "-6rem",
         position: "absolute",
         left: "50%",
         width: "auto",
@@ -44,8 +55,127 @@ export default function CommunionPage() {
         zIndex: 1000,
       };
 
+  useEffect(() => {
+    const c = canvasRef.current;
+    const ctx = c.getContext("2d");
+    let cw = (c.width = window.innerWidth);
+    let ch = (c.height = window.innerHeight);
+
+    const ticks = 150;
+    const ring1 = [];
+    const ring2 = [];
+    const dur = 12;
+
+    for (let i = 0; i < ticks; i++) {
+      const angle = (i / ticks) * Math.PI * 2;
+      const radius = 250;
+      ring1[i] = {
+        x1: 0,
+        x2: 0,
+        y1: 0,
+        y2: 0,
+        lineWidth: 6,
+        a: angle,
+        r: radius,
+        h: 30 + gsap.utils.wrapYoyo(0, 40, (i / ticks) * 160),
+      };
+      ring2[i] = {
+        x1: 0,
+        x2: 0,
+        y1: 0,
+        y2: 0,
+        lineWidth: 2,
+        a: angle,
+        r: radius / 2,
+        h: 10 + gsap.utils.wrapYoyo(0, 40, (i / ticks) * 160),
+      };
+    }
+
+    const tl = gsap
+      .timeline({ onUpdate: update })
+      .fromTo(
+        [ring1, ring2],
+        {
+          x1: (i, t) => Math.cos(t.a) * t.r * -2,
+          y1: (i, t) => Math.sin(t.a) * t.r * -2,
+          x2: (i, t) => Math.cos(t.a) * t.r * 15,
+          y2: (i, t) => Math.sin(t.a) * t.r * 8,
+        },
+        {
+          x1: (i, t) => Math.cos(t.a) * t.r * 0.3,
+          y1: (i, t) => Math.sin(t.a) * t.r * 0.3,
+          x2: (i, t) => Math.cos(t.a) * t.r * 0.12,
+          y2: (i, t) => Math.sin(t.a) * t.r * 0.12,
+          duration: dur / 2,
+          ease: "back",
+          repeat: -1,
+          yoyo: true,
+        },
+        0
+      )
+      .to(
+        ring1,
+        {
+          lineWidth: 1,
+          h: "+=120",
+          duration: dur * 0.25,
+          ease: "power4",
+          yoyoEase: "power2.in",
+          stagger: { amount: dur, from: 0, repeat: -1, yoyo: true },
+        },
+        0
+      )
+      .play(dur * 1.5);
+
+    function drawPath(t) {
+      ctx.strokeStyle = "hsl(" + t.h + ",100%,50%)";
+      ctx.lineCap = "round";
+      ctx.lineWidth = t.lineWidth;
+      ctx.setLineDash([t.lineWidth * 2, 30]);
+      ctx.beginPath();
+      ctx.moveTo(t.x1 + cw / 2, t.y1 + ch / 2);
+      ctx.lineTo(t.x2 + cw / 2, t.y2 + ch / 2);
+      ctx.stroke();
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, cw, ch);
+      ring1.forEach(drawPath);
+      ring2.forEach(drawPath);
+    }
+
+    window.onresize = () => {
+      cw = c.width = window.innerWidth;
+      ch = c.height = window.innerHeight;
+      update();
+    };
+
+    window.onpointerup = () => {
+      gsap.to(tl, {
+        duration: 1,
+        ease: "power3",
+        timeScale: tl.isActive() ? 0 : 1,
+      });
+    };
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("pointerup", update);
+    };
+  }, []);
+
   return (
     <>
+      {isLoading && <Loader />}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "45%",
+        }}
+      ></canvas>
       <div
         style={{
           position: "relative",
@@ -68,6 +198,7 @@ export default function CommunionPage() {
         >
           <Image src="/carouselSign.png" alt="sign" style={imgStyle} />
           <Carousel
+            setCarouselLoaded={setCarouselLoaded}
             images={[
               { src: "seaMonster.png", title: "Sea Monster" },
               { src: "bull.png", title: "Bull" },
@@ -126,19 +257,13 @@ export default function CommunionPage() {
         <iframe
           className="responsive-iframe"
           src="https://open.spotify.com/embed/playlist/5wWiiVDG0Q83zVitjPf6fj?utm_source=generator"
-          width="25%"
-          height="152"
+          width="100%"
+          height="352"
           frameBorder="0"
           allowfullscreen=""
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
         ></iframe>
-        {/* <div
-          className="music-player-container"
-          style={{ marginBottom: "4rem", marginTop: "2rem" }}
-        >
-          <MusicPlayer />
-        </div> */}
       </Box>
 
       <div
@@ -150,22 +275,8 @@ export default function CommunionPage() {
       >
         <NavBar />
       </div>
-
-      <Communion />
-
-      {/* <style jsx>{`
-        @media (max-width: 600px) {
-          img[src="/carouselSign.png"] {
-            top: -2rem;
-          }
-          @media (min-width: 1024px){
-          img[src="/carouselSign.png"] {
-            transform: translateX(-50%) scale(.8),
-            top: -2rem;
-          }
-          
-        }
-      `}</style> */}
+      {/* </div> */}
+      <Communion setCommunionLoaded={setCommunionLoaded} />
     </>
   );
 }

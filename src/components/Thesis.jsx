@@ -5,7 +5,17 @@ import Image from "next/image";
 
 const scrollUrl = "/html/scroll.html";
 
-const Thesis = () => {
+function Thesis({ setThesisLoaded }) {
+  useEffect(() => {
+    // Simulate async data or image loading
+    const loadThesisContent = async () => {
+      // Example: simulate loading (replace with real logic)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setThesisLoaded(true); // Notify parent that loading is complete
+    };
+
+    loadThesisContent();
+  }, [setThesisLoaded]);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
@@ -87,6 +97,6 @@ const Thesis = () => {
       </Box>
     </>
   );
-};
+}
 
 export default Thesis;

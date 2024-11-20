@@ -97,9 +97,19 @@ const usePriceChange = (tokenSymbol) => {
 
   return priceChange;
 };
-const Numerology = () => {
+const Numerology = ({ setNumerologyLoaded }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [dexdata, setDexdata] = useState({});
+  useEffect(() => {
+    // Simulate async data or image loading
+    const loadNumerologyContent = async () => {
+      // Example: simulate loading (replace with real logic)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setNumerologyLoaded(true); // Notify parent that loading is complete
+    };
+
+    loadNumerologyContent();
+  }, [setNumerologyLoaded]);
 
   useEffect(() => {
     const fetchData = async () => {

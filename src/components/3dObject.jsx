@@ -78,7 +78,7 @@ function Model({ url, scale, userData, setTooltipData, setIsLoading }) {
     <primitive
       ref={modelRef}
       object={gltf.scene}
-      position={[0, -1, 10]}
+      position={[0, -1, 12]}
       scale={1 * scale}
       rotation={[0.0, Math.PI / 1.1, 0]}
     />
@@ -173,7 +173,7 @@ function GLBViewer({ setIsLoading }) {
           bottom: "0rem",
           zIndex: -1,
         }}
-        camera={{ position: [0, 2, 10], fov: 30 }} // Adjust camera position
+        camera={{ position: [0, 2, 10], fov: 40 }} // Adjust camera position
         gl={{
           antialias: true,
           pixelRatio: Math.min(window.devicePixelRatio, 2),

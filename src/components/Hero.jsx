@@ -104,7 +104,17 @@ const useOutsideClick = (refs, handler) => {
   }, [refs, handler]);
 };
 
-const Hero = () => {
+function Hero({ setHeroLoaded }) {
+  useEffect(() => {
+    // Simulate async data or image loading
+    const loadHeroContent = async () => {
+      // Example: simulate loading (replace with real logic)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setHeroLoaded(true); // Notify parent that loading is complete
+    };
+
+    loadHeroContent();
+  }, [setHeroLoaded]);
   const coinRef = useRef(null);
 
   useEffect(() => {
@@ -599,6 +609,6 @@ const Hero = () => {
       </div>
     </>
   );
-};
+}
 
 export default Hero;

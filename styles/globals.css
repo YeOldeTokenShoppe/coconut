@@ -24,18 +24,13 @@
   font-style: normal;
   font-variation-settings: "slnt" 0;
 }
-:root {
-  --hue: 163;
-  --hue2: 43;
-  --fg: hsl(0, 0%, 100%);
-  font-size: calc(20px + (40 - 20) * (100vw - 280px) / (3840 - 280));
-}
-* {
+
+/* * {
   border: 0;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
+} */
 /* @layer base {
   body {
     @apply bg-zinc-950 text-neutral-200;
@@ -1175,11 +1170,13 @@ span.bm-cross {
   background: none;
   pointer-events: none;
   opacity: 0 !important;
+  overflow: hidden;
 }
 
 /* Enable pointer events when the menu is open */
 .bm-menu-open .bm-overlay {
   pointer-events: auto;
+  overflow: hidden;
 }
 .bm-menu-wrap {
   position: absolute;

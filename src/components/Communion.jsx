@@ -3,7 +3,17 @@ import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-function Communion() {
+function Communion({ setCommunionLoaded }) {
+  useEffect(() => {
+    // Simulate async data or image loading
+    const loadCommunionContent = async () => {
+      // Example: simulate loading (replace with real logic)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setCommunionLoaded(true); // Notify parent that loading is complete
+    };
+
+    loadCommunionContent();
+  }, [setCommunionLoaded]);
   return (
     <div
       style={{

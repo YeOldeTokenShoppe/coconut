@@ -9,7 +9,14 @@ import DoorComponent from "../components/Door";
 import Loader from "../components/Loader";
 
 export default function GalleryPage() {
-  const [isLoading, setIsLoading] = useState(true); // Manage loading state
+  const [isLoading, setIsLoading] = useState(true); // Track the overall loading state
+  const [burnGalleryLoaded, setBurnGalleryLoaded] = useState(false); // Track when Hero is loaded
+  const [communionLoaded, setCommunionLoaded] = useState(false); // Track when Communion is loaded
+  useEffect(() => {
+    if (burnGalleryLoaded && communionLoaded) {
+      setIsLoading(false);
+    }
+  }, [burnGalleryLoaded, communionLoaded]);
 
   const bgRef = useRef(null);
   const [bgStyle, setBgStyle] = useState({
@@ -68,7 +75,7 @@ export default function GalleryPage() {
         <div style={{ marginTop: "10rem", zIndex: 2000 }}>
           <NavBar />
         </div>
-        <Communion />
+        <Communion setCommunionLoaded={setCommunionLoaded} />
       </div>
       <style jsx>{`
         @media (max-width: 600px) {

@@ -33,7 +33,7 @@ import { signInWithCustomToken } from "firebase/auth";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs"; // Add this line if it's missing
 
-const Carousel = ({ images, logos }) => {
+const Carousel = ({ images, logos, setCarouselLoaded }) => {
   const { isSignedIn, user, isLoaded } = useUser();
   const { openSignIn } = useClerk();
   const [firebaseUser, setFirebaseUser] = useState(null); // To store Firebase user data
@@ -51,6 +51,17 @@ const Carousel = ({ images, logos }) => {
   const router = useRouter();
   const [currentPath, setCurrentPath] = useState("/");
   const MAX_MESSAGE_LENGTH = 100;
+
+  useEffect(() => {
+    // Simulate async data or image loading
+    const loadCarouselContent = async () => {
+      // Example: simulate loading (replace with real logic)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setCarouselLoaded(true); // Notify parent that loading is complete
+    };
+
+    loadCarouselContent();
+  }, [setCarouselLoaded]);
 
   useEffect(() => {
     // Ensure we capture the current path correctly, fallback to the root if router is not ready
@@ -143,6 +154,11 @@ const Carousel = ({ images, logos }) => {
   };
 
   const loadMessages = (beastId) => {
+    if (!beastId) {
+      console.error("Invalid beastId provided to loadMessages");
+      return () => {}; // Return a no-op cleanup function
+    }
+
     const messagesQuery = query(
       collection(db, "carouselChat"),
       where("beastId", "==", beastId)
@@ -161,7 +177,11 @@ const Carousel = ({ images, logos }) => {
       }));
     });
 
-    return () => unsubscribe(); // Return the unsubscribe function for cleanup
+    console.log(`Subscribed to messages for beastId: ${beastId}`);
+    return () => {
+      console.log(`Unsubscribed from messages for beastId: ${beastId}`);
+      unsubscribe();
+    };
   };
 
   const updateBeastChat = async (beastId, riderData, message = "") => {
@@ -186,8 +206,6 @@ const Carousel = ({ images, logos }) => {
     }
   };
   const confirmRide = async () => {
-    setIsRideConfirmationOpen(false);
-
     if (!user) {
       showPopupMessage("Please sign in to ride the beast.");
       return;
@@ -195,66 +213,38 @@ const Carousel = ({ images, logos }) => {
 
     try {
       const beastId = selectedImage.beastId;
-      const newRiderData = {
-        userId: user.id,
-        imageUrl: user.imageUrl,
-        username: user.username || "Anonymous",
-      };
 
-      console.log("Setting active beast ID:", beastId); // Log the beast ID
+      // Check for and clean up any old rides
+      await checkExistingRides();
 
-      // Update local state immediately to show the avatar and username
-      setRiders((prevRiders) => ({
-        ...prevRiders,
-        [beastId]: newRiderData,
-      }));
-      setActiveBeastId(beastId); // Ensure this is correctly set
-      setIsRiding(true);
-      setSelectedImage(null);
+      // Check if the beast is already occupied
+      const beastRef = doc(db, "carouselBeasts", beastId);
+      const beastDoc = await getDoc(beastRef);
 
-      // Check if the user is already riding any beast
-      const existingRidesQuery = query(
-        collection(db, "carouselBeasts"),
-        where("userId", "==", user.id)
-      );
-      const existingRidesSnapshot = await getDocs(existingRidesQuery);
-
-      // If the user is already riding another beast, remove the existing ride
-      if (!existingRidesSnapshot.empty) {
-        const existingRideRef = existingRidesSnapshot.docs[0].ref;
-        await deleteDoc(existingRideRef);
+      if (beastDoc.exists() && beastDoc.data().userId) {
+        throw new Error("Beast is already occupied by another rider.");
       }
 
-      await runTransaction(db, async (transaction) => {
-        const beastRef = doc(db, "carouselBeasts", beastId);
-        const beastDoc = await transaction.get(beastRef);
+      const riderData = {
+        userId: user.id,
+        username: user.username || "Anonymous",
+        imageUrl: user.imageUrl || "/defaultAvatar.png",
+        timestamp: serverTimestamp() || new Date(), // Add fallback
+      };
 
-        if (!beastDoc.exists() || !beastDoc.data().userId) {
-          transaction.set(beastRef, {
-            ...newRiderData,
-            timestamp: serverTimestamp(),
-          });
-        } else {
-          throw new Error("Beast is already occupied by another rider.");
-        }
-      });
+      // Save the rider to Firestore
+      await setDoc(beastRef, riderData);
+      console.log("Rider successfully set in Firestore:", riderData);
 
-      // Load messages for this beast
-      loadMessages(beastId); // Ensure this is called correctly
-
-      console.log("Rider set successfully:", newRiderData);
+      // Update state
+      setActiveBeastId(beastId);
+      setIsRiding(true);
+      setIsRideConfirmationOpen(false);
     } catch (error) {
-      console.error("Failed to ride beast:", error);
-      showPopupMessage("Failed to ride beast. Please try again.");
-      setRiders((prevRiders) => ({
-        ...prevRiders,
-        [selectedImage.beastId]: null,
-      }));
-      setIsRiding(false);
-      setActiveBeastId(null);
+      console.error("Failed to confirm ride:", error);
+      showPopupMessage(error.message || "Failed to confirm ride.");
     }
   };
-
   useEffect(() => {
     const syncState = async () => {
       try {
@@ -265,26 +255,19 @@ const Carousel = ({ images, logos }) => {
         ridersSnapshot.forEach((doc) => {
           const beastId = doc.id;
           const riderData = doc.data();
-          fetchedRiders[beastId] = riderData;
+          if (riderData.userId) {
+            fetchedRiders[beastId] = riderData;
+          }
 
           if (user && riderData.userId === user.id) {
             userActiveBeast = beastId;
           }
         });
 
+        console.log("Synced riders from Firestore:", fetchedRiders);
         setRiders(fetchedRiders);
         setActiveBeastId(userActiveBeast || null);
         setIsRiding(!!userActiveBeast);
-
-        const messagesSnapshot = await getDocs(collection(db, "carouselChat"));
-        const fetchedMessages = {};
-        messagesSnapshot.forEach((doc) => {
-          const { beastId, ...messageData } = doc.data();
-          if (!fetchedMessages[beastId]) fetchedMessages[beastId] = [];
-          fetchedMessages[beastId].push(messageData);
-        });
-
-        setMessages(fetchedMessages);
       } catch (error) {
         console.error("Error syncing state with Firestore:", error);
       }
@@ -294,12 +277,11 @@ const Carousel = ({ images, logos }) => {
   }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
-    if (!activeBeastId) {
-      console.log("No active beast ID, skipping chat box");
-      return;
-    }
+    if (!activeBeastId) return;
 
-    console.log("Listening for messages for beast ID:", activeBeastId);
+    console.log(
+      `Setting up listener for messages on beastId: ${activeBeastId}`
+    );
 
     const messagesQuery = query(
       collection(db, "carouselChat"),
@@ -312,7 +294,7 @@ const Carousel = ({ images, logos }) => {
         newMessages.push(doc.data());
       });
 
-      console.log("New messages received:", newMessages);
+      console.log("New messages received:", newMessages); // Log messages for debugging
 
       setMessages((prevMessages) => ({
         ...prevMessages,
@@ -320,54 +302,68 @@ const Carousel = ({ images, logos }) => {
       }));
     });
 
-    return () => unsubscribeMessages(); // Cleanup listener on component unmount
+    return () => {
+      console.log(
+        `Cleaning up listener for messages on beastId: ${activeBeastId}`
+      );
+      unsubscribeMessages();
+    };
   }, [activeBeastId]);
   const handleSendMessage = async (beastId) => {
-    if (newMessage.trim() === "" || !user) {
+    if (!newMessage.trim() || !user) {
       showPopupMessage("Please enter a message and ensure you are logged in.");
       return;
     }
 
-    if (newMessage.length > MAX_MESSAGE_LENGTH) {
-      showPopupMessage(
-        `Message is too long. Maximum length is ${MAX_MESSAGE_LENGTH} characters.`
-      );
-      return;
-    }
-
     try {
-      // Query to find the user's previous message for the same beast
-      const previousMessageQuery = query(
-        collection(db, "carouselChat"),
-        where("beastId", "==", beastId),
-        where("riderId", "==", user.id)
-      );
-
-      const previousMessagesSnapshot = await getDocs(previousMessageQuery);
-
-      // Delete the previous message if it exists
-      const batch = writeBatch(db);
-      previousMessagesSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
-
-      await batch.commit(); // Commit the batch to delete previous messages
-
-      // Add the new message
-      await addDoc(collection(db, "carouselChat"), {
+      const messageData = {
+        beastId,
         message: newMessage,
-        riderId: user.id,
-        riderName: user.username || "Anonymous",
+        userId: user.id,
+        username: user.username || "Anonymous",
         imageUrl: user.imageUrl || "/defaultAvatar.png",
         timestamp: serverTimestamp(),
-        beastId,
-      });
+      };
 
-      console.log("Message sent successfully to Firestore");
-      setNewMessage(""); // Clear the input after sending the message
+      // Use setDoc with beastId as the document ID to overwrite previous messages
+      const messageRef = doc(db, "carouselChat", beastId);
+      await setDoc(messageRef, messageData);
+
+      console.log("Message sent and replaced successfully in Firestore");
+      setNewMessage(""); // Clear input
     } catch (error) {
       console.error("Failed to send message:", error);
       showPopupMessage("Failed to send the message. Please try again.");
+    }
+  };
+
+  const deleteMessagesForBeast = async (beastId) => {
+    try {
+      const messagesQuery = query(
+        collection(db, "carouselChat"),
+        where("beastId", "==", beastId)
+      );
+      const messagesSnapshot = await getDocs(messagesQuery);
+
+      console.log(
+        `Found ${messagesSnapshot.size} messages to delete for beastId: ${beastId}`
+      );
+
+      if (!messagesSnapshot.empty) {
+        const batch = writeBatch(db);
+
+        messagesSnapshot.forEach((doc) => {
+          console.log(`Deleting document: ${doc.id}`);
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        console.log("Batch deletion successful for beastId:", beastId);
+      } else {
+        console.log("No messages to delete for beastId:", beastId);
+      }
+    } catch (error) {
+      console.error("Error deleting messages for beastId:", beastId, error);
     }
   };
   useEffect(() => {
@@ -381,15 +377,28 @@ const Carousel = ({ images, logos }) => {
         if (beastDoc.exists()) {
           const rideData = beastDoc.data();
           const rideStartTime = rideData.timestamp?.toMillis();
+
+          if (!rideStartTime) {
+            console.error(
+              "Invalid rideStartTime. Skipping expiration check.",
+              rideData
+            );
+            return;
+          }
+
           const currentTime = Date.now();
           const elapsedTime = currentTime - rideStartTime;
           const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
 
           if (elapsedTime >= maxRideTime) {
-            // Time expired: Delete Firestore document
-            await deleteDoc(beastRef);
+            console.log(
+              "Ride expired. Deleting beast and messages:",
+              activeBeastId
+            );
 
-            // Update local state
+            await deleteDoc(beastRef);
+            await deleteMessagesForBeast(activeBeastId);
+
             setRiders((prevRiders) => ({
               ...prevRiders,
               [activeBeastId]: null,
@@ -403,8 +412,6 @@ const Carousel = ({ images, logos }) => {
             setActiveBeastId(null);
             setIsRiding(false);
             setTimeRemaining("Ride has ended");
-
-            console.log(`Ride for ${activeBeastId} has ended.`);
           } else {
             // Update remaining time display
             const timeLeft = maxRideTime - elapsedTime;
@@ -418,7 +425,7 @@ const Carousel = ({ images, logos }) => {
       }
     }, 1000);
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    return () => clearInterval(intervalId);
   }, [activeBeastId, isRiding]);
 
   // Handle real-time message updates
@@ -447,11 +454,7 @@ const Carousel = ({ images, logos }) => {
 
       // Remove the rider from the beast
       await deleteDoc(beastRef);
-
-      setRiders((prevRiders) => ({
-        ...prevRiders,
-        [activeBeastId]: null,
-      }));
+      console.log(`Deleted Firestore document for beastId: ${activeBeastId}`);
 
       // Query Firestore for all messages for the current beast
       const messagesQuery = query(
@@ -480,48 +483,26 @@ const Carousel = ({ images, logos }) => {
       showPopupMessage("Error quitting the ride. Please try again.");
     }
   };
-  useEffect(() => {
-    if (!activeBeastId) return;
 
-    const messagesQuery = query(
-      collection(db, "carouselChat"),
-      where("beastId", "==", activeBeastId)
-    );
-
-    const unsubscribeMessages = onSnapshot(messagesQuery, (querySnapshot) => {
-      const newMessages = [];
-      querySnapshot.forEach((doc) => {
-        newMessages.push(doc.data());
-      });
-
-      console.log("New messages received:", newMessages); // Log messages here
-
-      // Update the messages state
-      setMessages((prevMessages) => ({
-        ...prevMessages,
-        [activeBeastId]: newMessages,
-      }));
-    });
-
-    return () => unsubscribeMessages(); // Cleanup listener on component unmount
-  }, [activeBeastId]);
-  // Ensure that no other instances of the user's avatar remain:
-
-  useEffect(() => {
-    const checkExistingRides = async () => {
-      if (user) {
+  const checkExistingRides = async () => {
+    if (user) {
+      try {
         const existingRidesQuery = query(
           collection(db, "carouselBeasts"),
           where("userId", "==", user.id)
         );
         const existingRidesSnapshot = await getDocs(existingRidesQuery);
 
-        // Remove all instances where the user is riding
-        existingRidesSnapshot.forEach(async (doc) => {
-          await deleteDoc(doc.ref);
-        });
+        // Iterate through existing rides and delete them
+        for (const rideDoc of existingRidesSnapshot.docs) {
+          if (rideDoc.id !== activeBeastId) {
+            // Skip active beast
+            console.log(`Deleting old ride for beast: ${rideDoc.id}`);
+            await deleteDoc(rideDoc.ref);
+          }
+        }
 
-        // Update the local state to reflect these changes
+        // Update local state to reflect the changes
         setRiders((prevRiders) =>
           Object.fromEntries(
             Object.entries(prevRiders).map(([key, value]) =>
@@ -529,55 +510,11 @@ const Carousel = ({ images, logos }) => {
             )
           )
         );
+      } catch (error) {
+        console.error("Error checking existing rides:", error);
       }
-    };
-
-    checkExistingRides();
-  }, [user, activeBeastId]);
-
-  useEffect(() => {
-    const unsubscribeRiders = onSnapshot(
-      collection(db, "carouselBeasts"),
-      (snapshot) => {
-        const updatedRiders = {};
-        let userActiveBeast = null;
-
-        snapshot.forEach((doc) => {
-          const beastId = doc.id;
-          const riderData = doc.data();
-
-          const rideStartTime = riderData.timestamp?.toMillis();
-          const currentTime = Date.now();
-          const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
-
-          if (rideStartTime && currentTime - rideStartTime < maxRideTime) {
-            updatedRiders[beastId] = riderData;
-
-            if (user && riderData.userId === user.id) {
-              userActiveBeast = beastId;
-            }
-          } else {
-            // Rider expired: Automatically clean up Firestore
-            deleteDoc(doc.ref).catch((error) => {
-              console.error("Failed to delete expired ride document:", error);
-            });
-          }
-        });
-
-        setRiders(updatedRiders);
-
-        if (userActiveBeast) {
-          setActiveBeastId(userActiveBeast);
-          setIsRiding(true);
-        } else {
-          setActiveBeastId(null);
-          setIsRiding(false);
-        }
-      }
-    );
-
-    return () => unsubscribeRiders(); // Cleanup listener on unmount
-  }, [user]);
+    }
+  };
 
   useEffect(() => {
     const unsubscribeRiders = onSnapshot(
@@ -585,33 +522,16 @@ const Carousel = ({ images, logos }) => {
       (snapshot) => {
         const updatedRiders = {};
         snapshot.forEach((doc) => {
-          const beastId = doc.id;
-          const riderData = doc.data();
-          updatedRiders[beastId] = riderData;
+          const data = doc.data();
+          console.log(`Firestore document change: ${doc.id}`, data); // Log every change
+          updatedRiders[doc.id] = data;
         });
         setRiders(updatedRiders);
       }
     );
 
-    const unsubscribeMessages = onSnapshot(
-      collection(db, "carouselChat"),
-      (snapshot) => {
-        const updatedMessages = {};
-        snapshot.forEach((doc) => {
-          const { beastId, ...messageData } = doc.data();
-          if (!updatedMessages[beastId]) updatedMessages[beastId] = [];
-          updatedMessages[beastId].push(messageData);
-        });
-        setMessages(updatedMessages);
-      }
-    );
-
-    return () => {
-      unsubscribeRiders();
-      unsubscribeMessages();
-    };
+    return () => unsubscribeRiders();
   }, []);
-
   const handleCloseChatBox = () => {
     if (rideActive) {
       // Show a confirmation popup only if the ride is still active
@@ -736,10 +656,10 @@ const Carousel = ({ images, logos }) => {
               <div
                 style={{
                   backgroundColor: "pink",
-                  border: "2px solid goldenrod",
+                  border: "3px solid goldenrod",
                   position: "absolute",
                   padding: "1rem",
-                  gap: "10px",
+                  // gap: "10px",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -749,20 +669,21 @@ const Carousel = ({ images, logos }) => {
                   transform: "translate(-50%, -50%)",
                   zIndex: 1000,
                   textAlign: "center",
+                  borderRadius: "10px",
                 }}
                 onClick={(e) => e.stopPropagation()} // Prevent click from closing pop-up
               >
-                <h4>{selectedImage.title}</h4>
+                <Heading>{selectedImage.title}</Heading>
                 <Image
                   src={selectedImage.src}
                   alt={selectedImage.title}
                   style={{
-                    width: "100px",
-                    height: "100px",
+                    width: "8rem",
+                    height: "8rem",
                     objectFit: "contain",
                   }}
                 />
-                <p>Would you like to ride this beast?</p>
+                <p>Ride this beast?</p>
                 <div
                   style={{
                     marginTop: "10px",
