@@ -16,6 +16,7 @@ function Thesis({ setThesisLoaded }) {
 
     loadThesisContent();
   }, [setThesisLoaded]);
+
   const [imageLoaded, setImageLoaded] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
@@ -27,22 +28,10 @@ function Thesis({ setThesisLoaded }) {
       const handleResize = () => {
         setWindowWidth(window.innerWidth);
       };
-
       window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
+      return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
-
-  useEffect(() => {
-    if (windowWidth < 400) {
-      setIframeHeight("50vh");
-    } else {
-      setIframeHeight("40vh");
-    }
-  }, [windowWidth]);
 
   return (
     <>

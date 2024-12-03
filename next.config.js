@@ -1,4 +1,3 @@
-/** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
   images: {
@@ -17,5 +16,8 @@ module.exports = {
     }
 
     return config;
+  },
+  experimental: {
+    optimizePackageImports: ["@chakra-ui/react"],
   },
 };

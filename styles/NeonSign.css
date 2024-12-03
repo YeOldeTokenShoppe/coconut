@@ -19,11 +19,13 @@
 .neon-sign-container {
   display: flex;
   justify-content: center;
+  background-image: url("/wall3.png");
 
+  background-size: cover;
   align-items: center;
   background: transparent;
-  min-height: 10rem;
-  transform: scale(0.7); /* Adjust the scale as needed */
+  min-height: 3rem;
+  transform: scale(0.4); /* Adjust the scale as needed */
 }
 
 .neon-sign {
@@ -32,8 +34,8 @@
   justify-content: center;
   align-items: center;
   background: #000;
-  min-height: 10rem;
-  transform: scale(0.3);
+  /* min-height: 10rem; */
+  transform: scale(0.4);
 }
 
 #neon-text {
@@ -42,7 +44,7 @@
   font-weight: 200;
   font-style: italic;
   color: #fff;
-  padding: 4rem 6rem 5.5rem;
+  padding: 4rem 6rem 4.5rem;
   border: 0.4rem solid #fff;
   border-radius: 2rem;
   text-transform: uppercase;

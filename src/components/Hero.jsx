@@ -411,9 +411,18 @@ function Hero({ setHeroLoaded }) {
                 </Link>
               </div>
             </div>
-            <div className="emoji-container">
+            {/* <div className="emoji-container">
               <span className="emoji">👈</span>
-            </div>
+              <Text
+                className="emoji"
+                fontSize={"1.8rem"}
+                color={"goldenrod"}
+                fontFamily={"Pirata One"}
+                style={{ transform: "rotate(-45deg)" }}
+              >
+                Click to Buy!
+              </Text>
+            </div> */}
           </Box>
 
           {/* Right Column for the Text */}
@@ -438,7 +447,7 @@ function Hero({ setHeroLoaded }) {
                 style={{
                   lineHeight: "1.2",
                   marginTop: "1rem",
-                  marginBottom: "2rem",
+                  marginBottom: "0rem",
                   marginRight: "1rem",
                   marginLeft: "1rem",
                   transform: "skew(10deg)", // Counter-skew the text to make it appear normal
@@ -446,13 +455,23 @@ function Hero({ setHeroLoaded }) {
               >
                 The
                 <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> token
-                lets you pay homage to the Patron Saint of Day Traders herself.
-                Hold <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
-                in your wallet as a good luck charm and to ward off evil.
-                Commune with your fellow token-holders and play guilt-free games
-                of chance to win more tokens. 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙 is
-                your personal guide up and to the right.
+                lets you pay homage and light green candles to the Patron Saint
+                of Day Traders, 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙. Hold{" "}
+                <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> in
+                your wallet as a good luck charm and to ward off evil. 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞
+                𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙 is your personal guide up and to the right.
               </StyledText>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Link href="#">
+                  <Button
+                    width="5rem"
+                    className="shimmer-button"
+                    style={{ transform: "skew(7deg)" }}
+                  >
+                    Buy RL80<span className="shimmer"></span>
+                  </Button>
+                </Link>
+              </Box>
             </div>
           </Box>
         </Flex>
@@ -470,7 +489,7 @@ function Hero({ setHeroLoaded }) {
       >
         <Flex direction={{ base: "column", md: "row" }} flexWrap="nowrap">
           <Box flex="1" mt={3}>
-            <Heading fontSize={"3.9rem"} lineHeight={".9"}>
+            <Heading fontSize={"3rem"} lineHeight={".9"}>
               Vanquish Evil for Fun and Profit
             </Heading>
             <StyledText
@@ -478,23 +497,26 @@ function Hero({ setHeroLoaded }) {
                 textAlign: "center",
                 lineHeight: "1.2",
                 marginTop: "1rem",
-                marginBottom: "1rem",
+                marginBottom: "-1rem",
                 marginRight: "1rem",
                 marginLeft: "1rem",
               }}
             >
               Stake your{" "}
               <span style={{ fontFamily: "Oleo Script" }}> RL80 </span> tokens
-              to battle evil and earn reward tokens that let you pay homage to
-              𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙 or appreci8 the under8ed. Your
-              tribute will be showcased for all to see. Are you ready to prove
-              your <b>HODL MEDL</b> and become an{" "}
-              <span style={{ fontFamily: "Oleo Script" }}> RL80 </span>{" "}
-              <b>HEAVYW8?</b>
+              to battle evil and earn reward tokens that let you burn green
+              candles for 𝓞𝖚𝖗 𝕷𝖆𝖉𝖞 𝔬𝔣 𝕻𝖊𝖗𝖕𝖊𝖙𝖚𝖆𝖑 𝕻𝖗𝖔𝖋𝖎𝖙. Are you ready to prove
+              your <b>HODL </b>
+              mettle? Onward, crypto soldiers!
             </StyledText>
-            <Box display="flex" justifyContent="center" alignItems="center">
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              mt="3rem"
+            >
               <Link href="/gallery">
-                <Button width="100%" className="shimmer-button burnButton">
+                <Button width="5rem" className="shimmer-button">
                   LFG!<span className="shimmer"></span>
                 </Button>
               </Link>
@@ -607,6 +629,9 @@ function Hero({ setHeroLoaded }) {
           </Flex>
         </Box>
       </div>
+      {/* <div style={{ position: "absolute"}}>
+        <NeonSign />
+      </div> */}
     </>
   );
 }

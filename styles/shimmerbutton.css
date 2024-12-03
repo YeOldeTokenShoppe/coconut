@@ -1,7 +1,7 @@
 .shimmer-button {
-  font-weight: 600 !;
-  font-family: Arial, sans-serif; /* replace with your preferred font */
-  font-size: 16px; /* replace with your preferred size */
+  font-weight: 600;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
   background-image: linear-gradient(
     315deg,
     #ffc4ec -10%,
@@ -11,35 +11,34 @@
   padding: 0.8em 1.4em;
   position: relative;
   margin: 1rem;
-
   isolation: isolate;
-  box-shadow: 0 2px 3px 1px hsl(var(--glow-hue) 50% 20% / 50%),
-    inset 0 -10px 20px -10px hsla(var(--shadow-hue), 10%, 90%, 95%);
+  box-shadow: 0 4px 8px -2px hsl(var(--glow-hue) 50% 20% / 50%),
+    inset 0 0 0 transparent;
   border-radius: 0.66em;
-  scale: 1;
-  transition: all var(--spring-duration) var(--spring-easing);
+  scale: 1.2; /* Base scale */
+  /* Modified transition for smoother scaling */
+  transition: scale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   justify-content: center;
   align-items: center;
-
-  /* Add these lines */
-  min-width: 150px; /* Adjust as needed */
-  min-height: 50px; /* Adjust as needed */
+  min-width: 150px;
+  min-height: 50px;
 }
 
-.shimmer-button:hover:not(:active),
-.shimmer-button.active {
-  transition-duration: calc(var(--spring-duration) * 0.5);
-  scale: 1.2;
-  box-shadow: 0 4px 8px -2px hsl(var(--glow-hue) 50% 20% / 50%),
-    inset 0 0 0 transparent;
+/* Smoother hover transition */
+.shimmer-button:hover {
+  scale: 1.3;
+  transition: scale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #ffffff;
 }
 
+/* Quicker active state for better feedback */
 .shimmer-button:active {
   scale: 1.1;
-  transition-duration: calc(var(--spring-duration) * 0.5);
+  transition: scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Rest of the CSS remains exactly the same */
 .shimmer-button .shimmer {
   position: absolute;
   inset: -40px;
@@ -58,27 +57,23 @@
   );
   mask-size: cover;
   mix-blend-mode: plus-lighter;
-  animation: shimmer 1s linear infinite both;
+  animation: shimmer 3s linear infinite both;
 }
 
-.shimmer-button:hover .shimmer::before,
-.shimmer-button:hover .shimmer::after,
-.shimmer-button.active .shimmer::before,
-.shimmer-button.active .shimmer::after {
-  opacity: 1;
-  animation: shine 1.2s ease-in 1 forwards;
-}
+/* Rest of the CSS remains the same as before... */
 
 .shimmer-button .shimmer::before,
 .shimmer-button .shimmer::after {
   transition: all 0.5s ease;
-  opacity: 0;
+  opacity: 1;
   content: "";
   border-radius: inherit;
   position: absolute;
   mix-blend-mode: color;
   inset: 40px;
   pointer-events: none;
+  /* animation: shine 1.2s ease-in infinite; */
+  animation: shine 1.2s ease-in 1 forwards;
 }
 
 .shimmer-button .shimmer::before {
@@ -110,12 +105,10 @@
   background-repeat: no-repeat;
   background-size: 300% 300%;
   background-position: center 200%;
+  animation: text 0.66s ease-in infinite;
 }
 
-.shimmer-button:hover .text,
-.shimmer-button.active .text {
-  animation: text 0.66s ease-in 1 both;
-}
+/* Rest of the CSS remains exactly the same */
 :root {
   --glow-hue: 222deg;
   --shadow-hue: 180deg;
@@ -154,6 +147,7 @@
   );
   --spring-duration: 1.33s;
 }
+
 @property --shimmer {
   syntax: "<angle>";
   inherits: false;
@@ -171,7 +165,7 @@
 
 @keyframes shine {
   0% {
-    opacity: 0;
+    opacity: 0.7;
   }
   15% {
     opacity: 1;
@@ -180,9 +174,10 @@
     opacity: 1;
   }
   100% {
-    opacity: 0;
+    opacity: 0.7;
   }
 }
+
 @keyframes text {
   0% {
     background-position: 100% center;
@@ -203,6 +198,5 @@
 
 .css-vmo6d2 {
   color: #1b1724 !important;
-
   background-color: #1b1724 !important;
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -9,6 +7,10 @@ import {
   deleteDoc,
   doc,
   addDoc,
+  orderBy,
+  limit,
+  batch,
+  set,
   onSnapshot,
   runTransaction,
   serverTimestamp,
@@ -51,7 +53,6 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
   const router = useRouter();
   const [currentPath, setCurrentPath] = useState("/");
   const MAX_MESSAGE_LENGTH = 100;
-
   useEffect(() => {
     // Simulate async data or image loading
     const loadCarouselContent = async () => {
@@ -143,16 +144,101 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
   useEffect(() => {
     console.log("firebaseUser:", firebaseUser);
   }, [firebaseUser]);
-  const handleRideBeastClick = (image, beastId) => {
-    if (isSignedIn) {
-      // If signed in, proceed with the ride confirmation
-      handleImageClick(image, beastId);
-    } else {
-      // Show Clerk sign-in modal if not signed in
-      openSignIn({ forceRedirectUrl: currentPath });
-    }
+
+  const promptWaitlistAddition = () => {
+    showPopupMessage(
+      "All beasts are occupied. Would you like to be added to the waitlist?",
+      handleWaitlistAddition, // This will be executed if the user confirms
+      handleClosePopup // This will close the popup if the user declines
+    );
   };
 
+  const handleWaitlistAddition = async () => {
+    try {
+      const waitlistRef = collection(db, "carouselWaitlist");
+      const waitlistQuery = query(waitlistRef, where("userId", "==", user.id));
+      const waitlistSnapshot = await getDocs(waitlistQuery);
+
+      if (!waitlistSnapshot.empty) {
+        console.log("User is already on the waitlist.");
+        return;
+      }
+
+      await addDoc(waitlistRef, {
+        userId: user.id,
+        username: user.username,
+        imageUrl: user.imageUrl,
+        timestamp: serverTimestamp(),
+      });
+
+      console.log("User added to the waitlist successfully.");
+      showPopupMessage(
+        "You have been added to the waitlist. We will notify you when a beast is available. Please enjoy the Moon Room in the meantime.",
+        null,
+        handleClosePopup,
+        true
+      );
+    } catch (error) {
+      console.error("Failed to add user to the waitlist:", error);
+      showPopupMessage(
+        "An error occurred while adding you to the waitlist. Please try again.",
+        null,
+        handleClosePopup,
+        true
+      );
+    }
+  };
+  const handleRideBeastClick = async (image, beastId) => {
+    if (!isSignedIn) {
+      openSignIn({ forceRedirectUrl: currentPath });
+      return;
+    }
+
+    try {
+      // Check if the user is already riding a beast
+      const existingRidesQuery = query(
+        collection(db, "carouselBeasts"),
+        where("userId", "==", user.id)
+      );
+      const existingRidesSnapshot = await getDocs(existingRidesQuery);
+
+      if (!existingRidesSnapshot.empty) {
+        showPopupMessage("You are already riding another beast.");
+        return; // Exit early to avoid further checks
+      }
+
+      // Check if the selected beast is occupied
+      const beastRef = doc(db, "carouselBeasts", beastId);
+      const beastDoc = await getDoc(beastRef);
+
+      if (beastDoc.exists() && beastDoc.data().userId) {
+        // Fetch all beasts to check if any are available
+        const beastsSnapshot = await getDocs(collection(db, "carouselBeasts"));
+
+        const availableBeast = beastsSnapshot.docs.find(
+          (doc) => !doc.data().userId // Find the first unoccupied beast
+        );
+
+        if (!availableBeast) {
+          // If no available beasts, prompt for the waitlist
+          promptWaitlistAddition();
+        } else {
+          // Notify the user that the current beast is occupied
+          showPopupMessage(
+            "This beast is occupied. Please select an available beast."
+          );
+        }
+        return;
+      }
+
+      // If the selected beast is unoccupied, prompt to confirm the ride
+      setSelectedImage({ ...image, beastId });
+      setIsRideConfirmationOpen(true);
+    } catch (error) {
+      console.error("Error checking beast occupancy:", error);
+      showPopupMessage("An error occurred. Please try again.");
+    }
+  };
   const loadMessages = (beastId) => {
     if (!beastId) {
       console.error("Invalid beastId provided to loadMessages");
@@ -206,23 +292,41 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
     }
   };
   const confirmRide = async () => {
+    console.log("confirmRide triggered");
+
     if (!user) {
       showPopupMessage("Please sign in to ride the beast.");
       return;
     }
 
     try {
-      const beastId = selectedImage.beastId;
+      const beastId = selectedImage?.beastId;
+      if (!beastId) {
+        console.error("No beast ID selected.");
+        return;
+      }
 
-      // Check for and clean up any old rides
-      await checkExistingRides();
+      // Check if the user is already riding
+      const existingRidesQuery = query(
+        collection(db, "carouselBeasts"),
+        where("userId", "==", user.id)
+      );
+      const existingRidesSnapshot = await getDocs(existingRidesQuery);
 
-      // Check if the beast is already occupied
+      if (!existingRidesSnapshot.empty) {
+        showPopupMessage("You are already riding another beast.");
+        return; // Exit early if the user is already riding
+      }
+
+      // Check if the selected beast is occupied
       const beastRef = doc(db, "carouselBeasts", beastId);
       const beastDoc = await getDoc(beastRef);
 
       if (beastDoc.exists() && beastDoc.data().userId) {
-        throw new Error("Beast is already occupied by another rider.");
+        showPopupMessage(
+          "Beast is already occupied. Please choose another beast."
+        );
+        return;
       }
 
       const riderData = {
@@ -239,6 +343,8 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
       // Update state
       setActiveBeastId(beastId);
       setIsRiding(true);
+
+      // Close the confirmation box
       setIsRideConfirmationOpen(false);
     } catch (error) {
       console.error("Failed to confirm ride:", error);
@@ -367,57 +473,45 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
     }
   };
   useEffect(() => {
-    if (!isRiding || !activeBeastId) return;
-
     const intervalId = setInterval(async () => {
       try {
-        const beastRef = doc(db, "carouselBeasts", activeBeastId);
-        const beastDoc = await getDoc(beastRef);
+        const beastsSnapshot = await getDocs(collection(db, "carouselBeasts"));
+        const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+        const currentTime = Date.now();
 
-        if (beastDoc.exists()) {
-          const rideData = beastDoc.data();
+        for (const doc of beastsSnapshot.docs) {
+          const rideData = doc.data();
           const rideStartTime = rideData.timestamp?.toMillis();
 
-          if (!rideStartTime) {
-            console.error(
-              "Invalid rideStartTime. Skipping expiration check.",
-              rideData
-            );
-            return;
-          }
+          if (!rideStartTime) continue;
 
-          const currentTime = Date.now();
           const elapsedTime = currentTime - rideStartTime;
-          const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
 
           if (elapsedTime >= maxRideTime) {
-            console.log(
-              "Ride expired. Deleting beast and messages:",
-              activeBeastId
-            );
+            console.log("Ride expired. Deleting beast and messages:", doc.id);
 
-            await deleteDoc(beastRef);
-            await deleteMessagesForBeast(activeBeastId);
+            // Clear the rider and messages for the expired ride
+            await deleteDoc(doc.ref);
+            await deleteMessagesForBeast(doc.id);
 
+            // Update local state
             setRiders((prevRiders) => ({
               ...prevRiders,
-              [activeBeastId]: null,
+              [doc.id]: null,
             }));
-
             setMessages((prevMessages) => ({
               ...prevMessages,
-              [activeBeastId]: [],
+              [doc.id]: [],
             }));
 
-            setActiveBeastId(null);
-            setIsRiding(false);
-            setTimeRemaining("Ride has ended");
-          } else {
-            // Update remaining time display
-            const timeLeft = maxRideTime - elapsedTime;
-            const minutes = Math.floor(timeLeft / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-            setTimeRemaining(`${minutes}m ${seconds}s`);
+            // If the expired ride matches the activeBeastId, end the ride
+            if (doc.id === activeBeastId) {
+              setIsRiding(false);
+              setActiveBeastId(null);
+            }
+
+            // Optionally assign the next rider from the waitlist
+            await assignBeastFromWaitlist(doc.id);
           }
         }
       } catch (error) {
@@ -426,7 +520,16 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [activeBeastId, isRiding]);
+  }, [riders, activeBeastId]);
+
+  useEffect(() => {
+    if (!isRiding) {
+      setActiveBeastId(null); // Clear active beast
+      setMessages({}); // Clear all messages
+      setNewMessage(""); // Clear input field
+      console.log("Chatbox container cleared.");
+    }
+  }, [isRiding]);
 
   // Handle real-time message updates
   useEffect(() => {
@@ -452,32 +555,19 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
     try {
       const beastRef = doc(db, "carouselBeasts", activeBeastId);
 
-      // Remove the rider from the beast
-      await deleteDoc(beastRef);
-      console.log(`Deleted Firestore document for beastId: ${activeBeastId}`);
+      await deleteDoc(beastRef); // Remove rider from Firestore
+      await deleteMessagesForBeast(activeBeastId); // Remove messages
+      await assignBeastFromWaitlist(activeBeastId); // Assign next user if needed
 
-      // Query Firestore for all messages for the current beast
-      const messagesQuery = query(
-        collection(db, "carouselChat"),
-        where("beastId", "==", activeBeastId)
-      );
-      const messagesSnapshot = await getDocs(messagesQuery);
-
-      // Delete all messages for this beast in Firestore
-      const batch = writeBatch(db);
-      messagesSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-
-      // Clear messages from local state
+      // Reset local state
+      setActiveBeastId(null);
+      setIsRiding(false); // Ensure this is set to false
       setMessages((prevMessages) => ({
         ...prevMessages,
-        [activeBeastId]: [], // Ensure local messages are also cleared
+        [activeBeastId]: [],
       }));
 
-      setActiveBeastId(null);
-      setIsRiding(false);
+      console.log("Ride ended, chat box and messages cleared.");
     } catch (error) {
       console.error("Failed to quit the ride:", error);
       showPopupMessage("Error quitting the ride. Please try again.");
@@ -516,6 +606,319 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
     }
   };
 
+  // const populateMockBeasts = async () => {
+  //   try {
+  //     const beastsCollection = collection(db, "carouselBeasts");
+
+  //     // Fetch existing beast data
+  //     const existingBeastsSnapshot = await getDocs(beastsCollection);
+  //     const existingBeastIds = new Set(
+  //       existingBeastsSnapshot.docs.map((doc) => doc.id)
+  //     );
+
+  //     const now = Date.now();
+  //     const batch = writeBatch(db);
+
+  //     for (let i = 0; i < 12; i++) {
+  //       const beastId = `beast${i + 1}`; // Generate beast ID
+
+  //       // Only create if the beast doesn't already exist in Firestore
+  //       if (!existingBeastIds.has(beastId)) {
+  //         batch.set(doc(beastsCollection, beastId), {
+  //           userId: `mockUser${i + 1}`,
+  //           username: `Mock Rider ${i + 1}`,
+  //           imageUrl: `https://via.placeholder.com/50?text=Rider${i + 1}`,
+  //           timestamp: new Date(now - (i + 1) * 60 * 1000), // Start times staggered by 1 minute
+  //         });
+  //       }
+  //     }
+
+  //     // Commit the batch operation
+  //     await batch.commit();
+  //     console.log("Mock beasts populated successfully.");
+  //   } catch (error) {
+  //     console.error("Error populating mock beasts:", error);
+  //   }
+  // };
+  // const populateRemainingBeasts = async () => {
+  //   try {
+  //     const beastsCollection = collection(db, "carouselBeasts");
+
+  //     // Define specific beast IDs for 10, 11, and 12
+  //     const specificBeastIds = ["beast10", "beast11", "beast12"];
+
+  //     // Fetch existing beast data
+  //     const existingBeastsSnapshot = await getDocs(beastsCollection);
+  //     const existingBeastIds = new Set(
+  //       existingBeastsSnapshot.docs.map((doc) => doc.id)
+  //     );
+
+  //     const now = Date.now();
+  //     batch.set(doc(beastsCollection, beastId), {
+  //       userId: `mockUser${index + 10}`,
+  //       username: `Mock Rider ${index + 10}`,
+  //       imageUrl: `https://via.placeholder.com/50?text=Rider${index + 10}`,
+  //       timestamp: new Date(now), // Use current time to prevent immediate expiration
+  //     });
+
+  //     await batch.commit();
+  //     console.log("Beasts 10-12 populated successfully.");
+  //   } catch (error) {
+  //     console.error("Error populating beasts 10-12:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   const initializeMockData = async () => {
+  //     try {
+  //       await populateMockBeasts();
+  //       await populateRemainingBeasts();
+  //       console.log("All mock riders populated successfully.");
+  //     } catch (error) {
+  //       console.error("Error initializing mock riders:", error);
+  //     }
+  //   };
+
+  //   initializeMockData();
+  // }, []);
+
+  // useEffect(() => {
+  //   const initializeMockData = async () => {
+  //     try {
+  //       await populateMockBeasts();
+  //       console.log("Mock riders populated successfully.");
+  //     } catch (error) {
+  //       console.error("Error initializing mock riders:", error);
+  //     }
+  //   };
+
+  //   initializeMockData();
+  // }, []);
+
+  const addToWaitlist = async (userId, username, imageUrl) => {
+    try {
+      // Check if user is already on the waitlist
+      const waitlistRef = collection(db, "carouselWaitlist");
+      const waitlistQuery = query(waitlistRef, where("userId", "==", userId));
+      const waitlistSnapshot = await getDocs(waitlistQuery);
+
+      if (!waitlistSnapshot.empty) {
+        console.log("User is already on the waitlist:", username);
+        return; // User is already on the waitlist, exit early
+      }
+
+      // Check if user is already riding
+      const ridersRef = collection(db, "carouselBeasts");
+      const ridersQuery = query(ridersRef, where("userId", "==", userId));
+      const ridersSnapshot = await getDocs(ridersQuery);
+
+      if (!ridersSnapshot.empty) {
+        console.log("User is already riding:", username);
+        return; // User is already riding, exit early
+      }
+
+      // Add user to the waitlist
+      await addDoc(waitlistRef, {
+        userId,
+        username,
+        imageUrl,
+        timestamp: serverTimestamp(),
+      });
+      console.log("User added to waitlist:", username);
+    } catch (error) {
+      console.error("Failed to add user to waitlist:", error);
+    }
+  };
+
+  const findAvailableBeast = () => {
+    console.log("Current riders state:", riders);
+    const occupiedBeasts = Object.keys(riders);
+    for (let i = 1; i <= 12; i++) {
+      const beastId = `beast${i}`;
+      if (!occupiedBeasts.includes(beastId)) {
+        console.log("Available beast found:", beastId);
+        return beastId;
+      }
+    }
+    console.log("No available beast found.");
+    return null;
+  };
+
+  const assignBeastFromWaitlist = async () => {
+    try {
+      console.log("Attempting to assign a beast from the waitlist...");
+
+      const waitlistRef = collection(db, "carouselWaitlist");
+      const waitlistQuery = query(
+        waitlistRef,
+        orderBy("timestamp", "asc"),
+        limit(1)
+      );
+      const snapshot = await getDocs(waitlistQuery);
+
+      if (!snapshot.empty) {
+        const nextUserDoc = snapshot.docs[0];
+        const userData = nextUserDoc.data();
+
+        console.log("Next user from waitlist:", userData);
+
+        const availableBeast = findAvailableBeast();
+        if (availableBeast) {
+          console.log("Assigning user to available beast:", availableBeast);
+
+          const beastRef = doc(db, "carouselBeasts", availableBeast);
+          await setDoc(beastRef, {
+            userId: userData.userId,
+            username: userData.username,
+            imageUrl: userData.imageUrl,
+            timestamp: serverTimestamp(),
+          });
+
+          await deleteDoc(nextUserDoc.ref);
+
+          console.log(
+            `Assigned beast ${availableBeast} to user: ${userData.username}`
+          );
+        } else {
+          console.log("No available beasts to assign.");
+        }
+      } else {
+        console.log("Waitlist is empty.");
+      }
+    } catch (error) {
+      console.error("Error assigning beast from waitlist:", error);
+    }
+  };
+  const [waitlist, setWaitlist] = useState([]);
+
+  const calculateWaitTime = (position) => {
+    if (position === 1) {
+      const rideDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
+      const now = Date.now();
+
+      const activeRiders = Object.values(riders).filter(
+        (r) => r && r.timestamp && typeof r.timestamp.toMillis === "function"
+      );
+
+      if (activeRiders.length > 0) {
+        const nextExpiringRider = activeRiders.reduce((prev, curr) =>
+          prev.timestamp.toMillis() < curr.timestamp.toMillis() ? prev : curr
+        );
+
+        const elapsedTime = now - nextExpiringRider.timestamp.toMillis();
+        const timeLeft = rideDuration - elapsedTime;
+
+        if (timeLeft > 0) {
+          const minutes = Math.floor(timeLeft / (1000 * 60));
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+          return `${minutes}m ${seconds}s`;
+        } else {
+          return "Time expired"; // Indicate wait time is over
+        }
+      }
+      return "0m 0s"; // Fallback for no active riders
+    }
+
+    const approximateWait = (position - 1) * 10 * 60 * 1000; // Add 10 minutes for each additional position
+    const minutes = Math.floor(approximateWait / (1000 * 60));
+    const seconds = Math.floor((approximateWait % (1000 * 60)) / 1000);
+    return `${minutes}m ${seconds}s`;
+  };
+  useEffect(() => {
+    console.log("Active riders:", riders);
+    console.log("Waitlist:", waitlist);
+  }, [riders, waitlist]);
+
+  useEffect(() => {
+    const waitlistRef = collection(db, "carouselWaitlist");
+    const unsubscribe = onSnapshot(waitlistRef, (snapshot) => {
+      const queue = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setWaitlist(queue);
+    });
+
+    return () => unsubscribe();
+  }, []);
+  const [waitTimes, setWaitTimes] = useState([]);
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const beastsSnapshot = await getDocs(collection(db, "carouselBeasts"));
+        const maxRideTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+        const currentTime = Date.now();
+
+        for (const doc of beastsSnapshot.docs) {
+          const rideData = doc.data();
+          const rideStartTime = rideData.timestamp?.toMillis();
+
+          if (!rideStartTime) {
+            console.error("Invalid rideStartTime. Skipping.");
+            continue;
+          }
+
+          const elapsedTime = currentTime - rideStartTime;
+
+          if (elapsedTime >= maxRideTime) {
+            console.log("Ride expired. Deleting beast and messages:", doc.id);
+
+            await deleteDoc(doc.ref);
+            await deleteMessagesForBeast(doc.id);
+
+            setRiders((prevRiders) => ({
+              ...prevRiders,
+              [doc.id]: null,
+            }));
+
+            setMessages((prevMessages) => ({
+              ...prevMessages,
+              [doc.id]: [],
+            }));
+
+            console.log("Attempting to assign from waitlist...");
+            await assignBeastFromWaitlist();
+          }
+        }
+      } catch (error) {
+        console.error("Error in ride expiration logic:", error);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [riders]);
+  useEffect(() => {
+    if (!activeBeastId || !riders[activeBeastId]?.timestamp) {
+      setTimeRemaining(null); // No active rider or invalid timestamp
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const rideDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
+      const now = Date.now();
+      const startTime = riders[activeBeastId]?.timestamp?.toMillis();
+
+      if (!startTime) {
+        setTimeRemaining("Invalid start time");
+        return;
+      }
+
+      const elapsedTime = now - startTime;
+      const remainingTime = rideDuration - elapsedTime;
+
+      if (remainingTime > 0) {
+        const minutes = Math.floor(remainingTime / (1000 * 60));
+        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+        setTimeRemaining(`${minutes}m ${seconds}s`);
+      } else {
+        setTimeRemaining("Time expired");
+        // Handle expiration logic here
+      }
+    }, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Cleanup interval on unmount
+  }, [activeBeastId, riders]);
   useEffect(() => {
     const unsubscribeRiders = onSnapshot(
       collection(db, "carouselBeasts"),
@@ -523,9 +926,9 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
         const updatedRiders = {};
         snapshot.forEach((doc) => {
           const data = doc.data();
-          console.log(`Firestore document change: ${doc.id}`, data); // Log every change
           updatedRiders[doc.id] = data;
         });
+        console.log("Updated riders from Firestore:", updatedRiders);
         setRiders(updatedRiders);
       }
     );
@@ -683,7 +1086,7 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
                     objectFit: "contain",
                   }}
                 />
-                <p>Ride this beast?</p>
+                <p>Ride it?</p>
                 <div
                   style={{
                     marginTop: "10px",
@@ -722,8 +1125,8 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
           <div
             className="chat-box-container"
             style={{
-              backgroundColor: "#ffc3ec",
-              border: "1px solid black",
+              // backgroundColor: "#ffc3ec",
+              // border: "1px solid black",
               padding: "10px",
               position: "fixed",
               zIndex: 9999,
@@ -758,6 +1161,7 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
                 fontSize: "2em",
                 overflowWrap: "normal",
                 zIndex: "1",
+                color: "#e1b67e",
               }}
             >
               Chat Box
@@ -797,17 +1201,32 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
                   cursor: rideActive ? "pointer" : "not-allowed",
                 }}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  className="bi bi-send"
-                  viewBox="0 0 16 16"
+                <div
+                  style={{
+                    backgroundColor: "#e1b67e", // Set the background color
+                    padding: "5px", // Add some padding to create space around the SVG
+                    borderRadius: "5px", // Optional: Add border radius for rounded corners
+                    display: "inline-block", // Ensure the div wraps tightly around the SVG
+                  }}
                 >
-                  <path d="M15.854.146a.5.5 0 0 1 .057.638l-6 9a.5.5 0 0 1-.888-.07L7.06 6.196 1.423 4.602a.5.5 0 0 1 .013-.975l14-4a.5.5 0 0 1 .418.519z" />
-                  <path d="M6.832 10.179a.5.5 0 0 1 .683.183L12 16a.5.5 0 0 1-.853.354L6.832 10.18z" />
-                </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    color="white"
+                    className="bi bi-send"
+                    viewBox="0 0 16 16"
+                    style={{
+                      fill: "white",
+                      // stroke: "black",
+                      // strokeWidth: "0.9",
+                    }} // Add fill and stroke styles
+                  >
+                    <path d="M15.854.146a.5.5 0 0 1 .057.638l-6 9a.5.5 0 0 1-.888-.07L7.06 6.196 1.423 4.602a.5.5 0 0 1 .013-.975l14-4a.5.5 0 0 1 .418.519z" />
+                    <path d="M6.832 10.179a.5.5 0 0 1 .683.183L12 16a.5.5 0 0 1-.853.354L6.832 10.18z" />
+                  </svg>
+                </div>
               </Button>
             </div>
             <p>Time Remaining: {timeRemaining}</p>
@@ -843,7 +1262,7 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
         <Text
           fontSize="2rem"
           fontWeight="bold"
-          fontFamily="UnifrakturCook"
+          fontFamily="Oleo Script"
           lineHeight="1"
           color="#c48901"
           marginBottom="-.5rem"
@@ -860,12 +1279,26 @@ const Carousel = ({ images, logos, setCarouselLoaded }) => {
         ></Text>
         <Text>
           {" "}
-          Charter a wild ride on the charts with your frens and fellow token
-          holders! Must be at least 36" tall and hold RL80 or PY80 tokens. 10
+          Charter a ride on the charts with your frens and fellow bag holders!
+          Must be at least 36" tall and hold RL80 or PY80 reward tokens. 10
           minutes per ride. Your username and avatar will be displayed live!
           Click on any available beast to ride.
         </Text>
       </Box>
+      {waitlist.length > 0 && (
+        <div className="waitlist-container">
+          <h4>Waiting List</h4>
+          <ul>
+            {waitlist.map((user, index) => (
+              <li key={user.id}>
+                <img src={user.imageUrl} alt={user.username} width="30" />
+                <span>{user.username}</span>
+                <span>Wait Time: {calculateWaitTime(index + 1)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Image, Text } from "@chakra-ui/react";
+import { Box, Image, Text, useDisclosure } from "@chakra-ui/react";
 import Carousel from "../components/Carousel";
 import NavBar from "../components/NavBar.client";
 import Communion from "../components/Communion";
@@ -7,13 +7,20 @@ import MusicPlayer from "../components/MusicPlayer2";
 import { Heading } from "@chakra-ui/react";
 import gsap from "gsap";
 import Loader from "../components/Loader";
+import dynamic from "next/dynamic";
+import { Link } from "react-router-dom";
+import MoonRoomModal from "../components/MoonRoomModal";
+import Bouncer from "../components/Bouncer";
 
 export default function CommunionPage() {
-  const [isLoading, setIsLoading] = useState(true); // Track the overall loading state
-  const [carouselLoaded, setCarouselLoaded] = useState(false); // Track when Hero is loaded
-  const [communionLoaded, setCommunionLoaded] = useState(false); // Track when Communion is loaded
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isLoading, setIsLoading] = useState(true);
+  const [carouselLoaded, setCarouselLoaded] = useState(false);
+  const [communionLoaded, setCommunionLoaded] = useState(false);
+
   useEffect(() => {
     if (carouselLoaded && communionLoaded) {
+      console.log("Both components loaded, hiding loader");
       setIsLoading(false);
     }
   }, [carouselLoaded, communionLoaded]);
@@ -173,7 +180,7 @@ export default function CommunionPage() {
           top: 0,
           left: 0,
           width: "100%",
-          height: "45%",
+          height: "42%",
         }}
       ></canvas>
       <div
@@ -185,6 +192,7 @@ export default function CommunionPage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 10,
         }}
       >
         {/* Container wrapping the Carousel and the sign */}
@@ -194,6 +202,10 @@ export default function CommunionPage() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            zIndex: 10,
+            opacity: isLoading ? 0 : 1,
+            transition: "opacity 0.5s ease-in-out",
+            visibility: isLoading ? "hidden" : "visible",
           }}
         >
           <Image src="/carouselSign.png" alt="sign" style={imgStyle} />
@@ -247,23 +259,54 @@ export default function CommunionPage() {
 
       <Box
         display="flex"
+        flexDirection={{ base: "column", md: "row" }} // Column on small screens, row on larger screens
         alignItems="center"
         justifyContent="center"
         marginBottom="2rem"
         position="relative"
         marginTop="1rem"
+        gap={4}
         zIndex={1} // Adjust z-index if needed
       >
-        <iframe
-          className="responsive-iframe"
-          src="https://open.spotify.com/embed/playlist/5wWiiVDG0Q83zVitjPf6fj?utm_source=generator"
-          width="100%"
-          height="352"
-          frameBorder="0"
-          allowfullscreen=""
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-        ></iframe>
+        <Box
+          display="flex"
+          alignItems="center"
+          width="30rem"
+          // border="3px solid goldenrod"
+          paddingTop="3rem"
+          borderRadius="10px"
+          justifyContent="center"
+          marginBottom="2rem"
+          position="relative"
+          marginTop="1rem"
+          zIndex={-1} // Adjust z-index if needed
+        >
+          <Bouncer onDoorClick={onOpen} disableBlockingBehavior={false} />
+
+          <MoonRoomModal isOpen={isOpen} onClose={onClose} />
+        </Box>
+
+        <Box
+          // display="flex"
+          // alignItems="center"
+          // // width="30rem"
+          // justifyContent="center"
+          // marginBottom="2rem"
+          // position="relative"
+          // marginTop="1rem"
+          // zIndex={-1} // Adjust z-index if needed
+          style={{ border: "3px solid goldenrod", borderRadius: "10px" }}
+        >
+          <iframe
+            src="https://open.spotify.com/embed/playlist/5wWiiVDG0Q83zVitjPf6fj?utm_source=generator"
+            width="100%"
+            height="352"
+            frameBorder="0"
+            allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          ></iframe>
+        </Box>
       </Box>
 
       <div
@@ -277,6 +320,22 @@ export default function CommunionPage() {
       </div>
       {/* </div> */}
       <Communion setCommunionLoaded={setCommunionLoaded} />
+
+      {/* Loader on top */}
+      {isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
+          }}
+        >
+          <Loader />
+        </div>
+      )}
     </>
   );
 }

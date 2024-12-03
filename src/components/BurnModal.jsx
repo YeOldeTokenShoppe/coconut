@@ -114,21 +114,19 @@ function BurnModal({
     const handleFetchImage = async () => {
       try {
         const userId = user?.id;
-        const resultRef = doc(db, "results", userId);
-        const resultSnap = await getDoc(resultRef);
-        if (resultSnap.exists()) {
-          const resultData = resultSnap.data();
-          const imageUrl = resultData.image.src;
+        const response = await fetch(`/api/fetchImageData?userId=${userId}`);
+        const resultData = await response.json();
 
-          setSelectedImage({
-            src: imageUrl,
-            isFirstImage: resultData.image.isFirstImage,
-            isVideo: resultData.image.isVideo,
-            frameChoice: resultData.image.frameChoice,
-          });
+        const imageUrl = resultData.image.src;
 
-          setSaveMessage(resultData.userMessage || "");
-        }
+        setSelectedImage({
+          src: imageUrl,
+          isFirstImage: resultData.image.isFirstImage,
+          isVideo: resultData.image.isVideo,
+          frameChoice: resultData.image.frameChoice,
+        });
+
+        setSaveMessage(resultData.userMessage || "");
       } catch (error) {
         console.error("Error fetching saved image:", error);
       }

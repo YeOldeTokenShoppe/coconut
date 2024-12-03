@@ -207,6 +207,18 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Limelight";
+  src: url("../styles/Limelight-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.limelight-regular {
+  font-family: "Limelight", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 html,
 body {
   max-width: 1400px;
@@ -3727,7 +3739,7 @@ div.css-161tt0w {
 .thelma1 {
   color: #8e662b;
   text-shadow: 4px 4px 6px #000, -1px -1px 5px pink;
-  font-size: 4rem; /* default to 4rem for small screens */
+  font-size: 3rem; /* default to 4rem for small screens */
   font-weight: 900;
   line-height: 0.8;
   transform: rotate(-8deg) skew(-15deg);
@@ -3736,7 +3748,7 @@ div.css-161tt0w {
 .thelma {
   color: #8e662b;
   text-shadow: 3px 3px 5px #000, -1px -1px 5px pink;
-  font-size: 5rem; /* default to 4rem for small screens */
+  font-size: 3rem; /* default to 4rem for small screens */
   font-weight: 900;
   line-height: 0.8;
   transform: rotate(-8deg) skew(-15deg);
@@ -3845,8 +3857,14 @@ div.css-161tt0w {
 .emoji {
   font-size: 80px;
   transform: rotate(-20deg);
-  animation: move 2s ease-in-out infinite;
+  animation: move 1.5s ease-in-out infinite;
 }
+.emoji {
+  font-size: 80px;
+  transform: rotate(-45deg);
+  animation: move 1s ease-in-out infinite;
+}
+
 .emoji-container {
   display: flex;
   /* align-items: flex-end; */
@@ -4772,16 +4790,17 @@ body {
 }
 /* Add this CSS to your stylesheet */
 .canvas-container {
-  width: 30vw;
+  width: 100vw;
   height: 100vh;
+  z-index: 22222;
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .canvas-container {
     width: 100vw;
     height: 100vh;
   }
-}
+} */
 .votiveContainer {
   position: relative;
   width: 70vw;
@@ -4802,4 +4821,276 @@ body {
   .responsive-iframe {
     width: 85%;
   }
+}
+
+.chandelier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 50%;
+
+  transform: translateX(-50%);
+  z-index: 22;
+  transition: top 0.3s ease-in-out; /* Smooth transition for position changes */
+}
+.chandelier {
+  top: -22rem !important; /* Default value */
+}
+@media (min-width: 600px) and (max-width: 768px) and (orientation: portrait) {
+  .chandelier {
+    top: -25rem; /* Default adjustment */
+  }
+}
+/* General iPad Mini adjustments */
+@media (min-device-width: 744px) and (max-device-width: 1133px) {
+  .chandelier {
+    top: -25rem; /* Default adjustment */
+  }
+}
+
+/* iPad Mini Portrait Mode */
+@media (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: portrait) {
+  .chandelier {
+    top: -35rem !important; /* Default adjustment */
+  }
+}
+
+/* iPad Mini Landscape Mode */
+@media (min-device-width: 744px) and (max-device-width: 1133px) and (orientation: landscape) {
+  .chandelier {
+    top: -21rem !important; /* Adjust for landscape */
+  }
+}
+
+@media (min-device-width: 1024px) and (max-device-width: 1376px) and (orientation: landscape) {
+  .chandelier {
+    top: -32rem; /* Adjust for landscape */
+  }
+}
+@media (min-device-width: 1024px) and (max-device-width: 1376px) and (orientation: portrait) {
+  .chandelier {
+    top: -38rem !important; /* Adjust for portrait */
+  }
+}
+
+@media (min-device-width: 768px) and (max-device-width: 1024px) {
+  .chandelier {
+    top: -250px;
+  }
+}
+
+/* For phones in landscape (576px or smaller) */
+@media (max-width: 576px) {
+  .chandelier {
+    top: -29rem !important;
+  }
+}
+
+/* For small phones in portrait (375px or smaller) */
+@media (max-width: 375px) {
+  .chandelier {
+    top: -22rem !important;
+  }
+}
+/* Default styles for larger screens */
+.canvas-container {
+  padding-bottom: 18rem;
+  margin-bottom: 3rem;
+  touch-action: pan-y;
+}
+
+/* For tablets */
+@media (max-width: 1024px) {
+  .canvas-container {
+    padding-bottom: 12rem; /* Reduce padding for tablets */
+    margin-bottom: 2rem;
+  }
+}
+
+/* For phones */
+@media (max-width: 768px) {
+  .canvas-container {
+    padding-bottom: 8rem; /* Adjust for smaller devices */
+    margin-bottom: 1rem;
+  }
+}
+
+/* For very small phones */
+@media (max-width: 480px) {
+  .canvas-container {
+    padding-bottom: 5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+@media (min-device-width: 1024px) and (max-device-width: 1376px) and (orientation: landscape) {
+  .canvas-container {
+    padding-bottom: 12rem !important; /* Adjust for landscape */
+  }
+}
+@media (min-device-width: 1024px) and (max-device-width: 1366px) and (orientation: portrait) {
+  .canvas-container {
+    padding-bottom: 1rem !important; /* Adjust for portrait */
+    margin-bottom: 6rem !important; /* Adjust for portrait */
+    /* background-color: #ffffff; */
+  }
+}
+.threejs-padding {
+  position: relative;
+  bottom: 30rem;
+  left: 0;
+  right: 0;
+  height: 15rem; /* Matches padding */
+  pointer-events: none; /* Pass clicks to the navbar */
+  z-index: 23; /* Matches the canvas z-index */
+  /* background-color: red; */
+}
+.threejs-wrapper {
+  position: relative;
+  z-index: 23; /* Matches the 3D object's z-index */
+}
+.annotation {
+  position: absolute;
+  /* top: 0;
+  left: 0; */
+  z-index: 9999;
+  margin-left: 15px;
+  margin-top: 15px;
+  padding: 1em;
+  width: 200px;
+  color: #fff;
+  border-radius: 0.5em;
+  font-size: 12px;
+  line-height: 1.2;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.annotation.visible {
+  opacity: 1;
+}
+
+.circleMark {
+  width: 3vw;
+  height: 3vw;
+  font-size: 2vw;
+  padding: 0.1vw;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  border: 2px solid #fff;
+  margin-bottom: 1vw;
+  cursor: pointer;
+}
+
+.box {
+  cursor: pointer;
+  .boxInner {
+    padding: 0.5vw 1vw;
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+.view-button {
+  background: #fff;
+  border-radius: 4px;
+  border: none;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.8);
+  display: block;
+  font-family: Futura, Helvetica Neue, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 128px;
+  overflow-wrap: break-word;
+  padding: 0.5em 1em;
+  position: absolute;
+  width: max-content;
+  height: max-content;
+  transform: translate3d(-50%, -50%, 0);
+  z-index: 10; /* Ensure buttons render above the canvas */
+}
+.circleMark {
+  width: 3vw;
+  height: 3vw;
+  font-size: 2vw;
+  padding: 0.1vw;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  color: #fff;
+  border: 2px solid #fff;
+  cursor: pointer;
+  z-index: 1000; /* Ensure it appears above the canvas */
+}
+.point {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.point:hover .text {
+  opacity: 1;
+}
+
+.point.visible .label {
+  transform: scale(1, 1);
+}
+
+.point .text {
+  /* display: none; */
+  position: absolute;
+  top: 10px;
+  left: -10px;
+  width: 200px;
+  padding: 20px;
+  border-radius: 4px;
+  background: #00000077;
+  color: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.3em;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.point .label {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #00000077;
+  border: 1px solid #ffffff77;
+  color: #ffffff;
+  font-family: Helvetica, Arial, sans-serif;
+  text-align: center;
+  line-height: 40px;
+  font-weight: 100;
+  font-size: 14px;
+}
+.marker-label {
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+.canvas {
+  pointer-events: auto;
+}
+
+.annotation {
+  z-index: 9999; /* Ensure it's on top of other elements */
 }

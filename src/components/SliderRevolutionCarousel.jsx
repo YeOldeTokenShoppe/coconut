@@ -6,7 +6,7 @@ function SliderRevolutionCarousel() {
 
   const iframeSrc = isSmallerThan30rem
     ? "https://rl80.com/562-2/"
-    : "https://rl80.com/520-2/";
+    : "https://rl80.com/645-2/";
 
   return (
     <div

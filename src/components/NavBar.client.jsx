@@ -11,6 +11,7 @@ export const NavBarContainer = styled.div`
   position: relative;
   padding: 0;
   overflow: visible;
+  zindex: 20;
 `;
 
 const FlexWrapper = styled.div`
@@ -18,6 +19,7 @@ const FlexWrapper = styled.div`
   align-items: center;
   position: relative;
   width: 820px;
+  zindex: 20;
 `;
 
 const NavBarStyled = styled.div`
@@ -26,6 +28,7 @@ const NavBarStyled = styled.div`
   flex-direction: row !important;
   align-items: center !important;
   overflow: hidden;
+  zindex: 20;
   gap: 10px;
   margin: 0;
   background: rgba(0, 0, 0, 0.2);
@@ -60,7 +63,7 @@ const Arrow = styled.button`
   color: #ffc4ec;
   line-height: 30px;
   text-align: center;
-  z-index: 2;
+  z-index: 20;
 `;
 
 const LeftArrow = styled(Arrow)`
@@ -94,6 +97,7 @@ const Tab = styled.div`
   width: 240px;
   height: 70px;
   position: relative;
+  zindex: 20;
   background-color: ${(props) =>
     props.$isHovered
       ? "#ffc4ec"
@@ -101,7 +105,7 @@ const Tab = styled.div`
       ? "#ffc4ec"
       : "#8f662c"};
   transform: translate(0px, 0px);
-  z-index: 90;
+
   &:hover ${Emoji} {
     transform: scale(1.15);
   }
@@ -136,6 +140,7 @@ const TabImage = styled.img.attrs((props) => ({
 
 const TabsWrapper = styled.div`
   display: flex;
+  zindex: 20;
   flex-direction: row;
   transition: transform 0.5s ease;
   width: auto;
